@@ -25,16 +25,16 @@ fitted = 1;
 %Time limit (in minutes), 0 if all to include in the dataset fitting
 %Starting time set
 nstarter = 0;
-ntimeend = 12.5;
+ntimeend = 0;
 
 % Define the time when the injection started (in minutes)
-ninject = 2.5;
+ninject = 5.0;
 
 %% 1. Load files from A_make_R1maps
 
 
 
-[gogo,PathName1,FilterIndex] = uigetfile(['/data/studies/' '/*R1info.mat'],'Choose R1 file'); 
+[gogo,PathName1,FilterIndex] = uigetfile(['C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1' '/*R1info.mat'],'Choose R1 file'); 
 
 % Load the data files
 directory = PathName1

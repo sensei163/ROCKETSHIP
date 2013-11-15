@@ -52,7 +52,7 @@ clear all
 % Toggle to 1 if you want to use a rod phantom to calibrate drift. Apply
 % only if you have placed a rod phantom in the image to correct for
 % potential MRI signal drift.
-drift = 1;
+drift = 0;
 
 % Toggle to re-calculate the average values only in the regions that the
 % voxel curvefit was able to give good fitting; ie. the viable regions.
@@ -60,7 +60,7 @@ drift = 1;
 viable= 0;
 
 % Set the root directory of your data
-directory = '/data/studies/COH';
+directory = 'C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1';
 
 %% DO NOT ALTER LINES BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
 %% 2. a) Load the files
@@ -68,10 +68,21 @@ directory = '/data/studies/COH';
 % Ask for file location
 place = '';
 [dynam,PathName1,FilterIndex] = uigetfile([directory '/*.nii'],'Choose DCE-MRI file');
+if dynam==0
+	return
+end
 [lv,PathName2,FilterIndex] = uigetfile([PathName1 '/*.nii'],'Choose T1 map of Arterial Input or Reference Region file');
+if lv==0
+	return
+end
 [tumor,PathName3,FilterIndex] = uigetfile([PathName2 '/*.nii'],'Choose T1 map of Tumor file');
+if tumor==0
+	return
+end
 [noise,PathName4,FilterIndex] = uigetfile([PathName3 '/*.img'],'Choose noise Region file');
-
+if noise==0
+	return
+end
 % Output name
 rootname = strrep(dynam,'.nii','_');
 
@@ -90,17 +101,17 @@ dynamname.fileprefix
 %Load TUMOR T1 map, find the voxels that encompass tumor ROI
 TUMOR = load_nii(fullfile(PathName3, place, tumor));
 TUMOR = double(TUMOR.img);
-tumind= find(TUMOR ~= 0);
+tumind= find(TUMOR > 0);
 
 %Load AIF dataset
 LV = load_nii(fullfile(PathName2, place, lv));
 LV = double(LV.img);
-lvind = find(LV ~= 0);
+lvind = find(LV > 0);
 
 %Load noise ROI files
 NOISE = load_nii(fullfile(PathName4, place, noise));
 NOISE = double(NOISE.img);
-noiseind = find(NOISE ~= 0);
+noiseind = find(NOISE > 0);
 
 % If viable toggle is on, choose the file that is generated with the
 % viable tumor region.
@@ -367,7 +378,7 @@ for j = 1:size(Stlv,2)
 end
 
 AB = A./B;
-return
+% return
 % AB should not be less than 0. We interpolate the timeseries to clean
 % this. Threshold is 0.5;
 % up.

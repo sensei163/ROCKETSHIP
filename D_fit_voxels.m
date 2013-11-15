@@ -1,43 +1,43 @@
 % 3. Fit to model VP on a voxel by voxel basis
 
-% function a = D_fit_AIFwithvp_voxels_COH(directory1, CPU, CHECK, r2filter)
-% 1. Load files from C_fit_AIFnoCP.m
+% Load files from C_fit_AIFnoCP.m
 
+% Toggle options
+%************************
 r2filter = 0; % Filter out all fits with r2 < r2filter
+
 number_cpus = 4; % Use only if you are doing multicore
-% CPU
 
-% Load the data files
+base_directory = 'C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1';
 
-rootname  = 'parker';
-[gogo,PathName1,FilterIndex] = uigetfile(['C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1' '/*AIF_with_vpFIT_ROI.mat'],'Choose R1 file');
+neuroecon =0;
 
-% Load the data files
-directory = PathName1
+% Select fitting model
+% 'aif_vp' = tofts with vascular compartment
+% 'aif' = tofts without vascular compartment
+% 'fxr' = not implemented
+% 'sauc' = not implemented 
+% 'ss' = not implemented 
+% 'fractal' = not implemented
+% 'auc' = not implemented
+% 'auc_rr' = not implemented
+model = 'aif';
+
+% End options
+%************************
+
+% a) Load the data files
+[gogo,PathName,FilterIndex] = uigetfile([base_directory '/*AIF_with_vpFIT_ROI.mat'],'Choose R1 file');
+
+directory = PathName
 rootname  = strrep(gogo, '.nii', '');
-load(fullfile(PathName1, gogo));
-% load(directory1)
-
-
-
-
+load(fullfile(PathName, gogo));
 
 xdata{1}.numvoxels = numvoxels;
 
-% totale = ceil(numvoxels/CPU);
-% %Split into rows by CPU.
-% for i = 1:totale
-%     STARTEND(i,1) = (i-1)*CPU+1;
-%     STARTEND(i,2) = min(numvoxels, i*CPU);
-% end
 
-%wholeCt = xdata{1}.Ct;
-
-%%% b) voxel by voxel fitting
-
-%Example scripts for scheduler.
-
-neuroecon =0;
+% b) voxel by voxel fitting
+%************************
 tic
 if(neuroecon)
     warning off
@@ -51,21 +51,17 @@ if(neuroecon)
         jj = createMatlabPoolJob(sched, 'PathDependencies', {p});
         
         set(jj, 'MaximumNumberOfWorkers', number_cpus)
-        set(jj, 'MinimumNumberOfWorkers', number_cpus)      
-%         
+        set(jj, 'MinimumNumberOfWorkers', number_cpus)        
 %         STARTEND(k,:)
 %         %We only feed the workers only the voxels that they can handle
 %         
 %         xdata{1}.Ct = wholeCt(:,STARTEND(k,1):STARTEND(k,2));
         
         %Schedule object, neuroecon
-        
-        t = createTask(jj, @FXLfit_withvpC, 1,{xdata, numvoxels});%numel(STARTEND(k,1):STARTEND(k,2))});
+        t = createTask(jj, @FXLfit_generic, 1,{xdata, numvoxels});%numel(STARTEND(k,1):STARTEND(k,2))});
         set(t, 'CaptureCommandWindowOutput', true);
    
         submit(jj)
-        
- 
         waitForState(jj,'finished')
         jj
         results = getAllOutputArguments(jj)
@@ -76,20 +72,20 @@ if(neuroecon)
        % x(STARTEND(k,1):STARTEND(k,2),:) = cell2mat(results);  
 else
 	matlabpool('local', number_cpus);
-    x = FXLfit_withvpC(xdata, numvoxels);
+    x = FXLfit_generic(xdata, numvoxels);
     size(x)
 	matlabpool close;
 end
 toc
 
-%% g) Save file
-
+% c) Save file
+%************************
 save(fullfile(fileparts(directory), [rootname 'AIF_with_vpFIT_voxels.mat']), 'x', 'tumind','dynamname', 'directory' , 'xdata')
 
-%% d) Check if physiologically possible, if not, remove
+% d) Check if physiologically possible, if not, remove
 
-%% Error
-
+% Error
+%************************
 % checkind = find(x(:,1) < 0);
 % x(checkind,:) = [];
 % tumind(checkind) = [];
@@ -136,8 +132,8 @@ vp     = x(:,3);
 r2     = x(:,4);
 
 
-%% f) Make maps
-
+% f) Make maps
+%************************
 KtransROI = zeros(size(currentimg));
 veROI     = zeros(size(currentimg));
 vpROI     = zeros(size(currentimg));
@@ -151,8 +147,8 @@ R2(tumind)        = r2;
 
 res = [0 0.25 0.25 2];
 
-%% h) Save image files
-
+% g) Save image files
+%************************
 [discard actual] = fileparts(strrep(dynamname.fileprefix, '\', '/'));
 
 save_nii(make_nii(KtransROI, res(2:4), [1 1 1]), fullfile(fileparts(directory), [actual '_Ktrans_withvp.nii']));

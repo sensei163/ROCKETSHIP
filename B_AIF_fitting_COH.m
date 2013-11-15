@@ -43,12 +43,12 @@ fit = 1;
 %Starting time set (in minutes, 0 if all)
 starter = 0;
 %Time limit (in minutes), 0 if all
-timeend = 25;
+timeend = 0;
 
 % The next two toggles define the start and end of the injection duration
 % (for convolution fitting) in minutes.
-start = 2.5;
-ended = 2.7; 
+start = 5.0;
+ended = 5.25; 
 
 % For testing only
 edit= 0;
@@ -62,7 +62,7 @@ replace = 0;
 
 %% 1. Load the data array from previous script
 
-    [gogoav1,PathName1av1,FilterIndex] = uigetfile(['/data/studies/' '/*R1info.mat'],'Choose original R1 file');
+    [gogoav1,PathName1av1,FilterIndex] = uigetfile(['C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1' '/*R1info.mat'],'Choose original R1 file');
     
     
     % Load the data files
