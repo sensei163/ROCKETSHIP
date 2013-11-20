@@ -18,10 +18,6 @@ for k = 1:numel(T1)
     % The time for T
     T = T1(1:k);
     CP= Cp(1:k);
-	
-    % Redundant
-%     T = T(:);
-%     CP= CP(:);
     
     F = CP.*exp((-Ktrans./ve).*(T(end)-T));
     
