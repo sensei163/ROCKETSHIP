@@ -22,7 +22,7 @@ function varargout = dce(varargin)
 
 % Edit the above text to modify the response to help dce
 
-% Last Modified by GUIDE v2.5 21-Nov-2013 17:14:06
+% Last Modified by GUIDE v2.5 22-Nov-2013 15:28:36
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -897,7 +897,25 @@ function run_e_Callback(hObject, eventdata, handles)
 
 results_d_path = get(handles.results_d_path,'String');
 background_image_path = get(handles.background_image_path,'String');
+show_original = get(handles.show_original,'Value');
+show_ci = get(handles.show_ci,'Value');
+
+compare_fits(results_d_path,background_image_path,show_original,show_ci);
 
 
-compare_fits(results_d_path,background_image_path);
+% --- Executes on button press in show_original.
+function show_original_Callback(hObject, eventdata, handles)
+% hObject    handle to show_original (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 
+% Hint: get(hObject,'Value') returns toggle state of show_original
+
+
+% --- Executes on button press in show_ci.
+function show_ci_Callback(hObject, eventdata, handles)
+% hObject    handle to show_ci (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of show_ci

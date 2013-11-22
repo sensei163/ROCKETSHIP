@@ -1,5 +1,4 @@
 %% FXLStep1AAIF, no vp
-% function Ct = FXLStep1AIF(xdata, Ktrans, ve)
 function Ct = FXLStep1AIF(x,xdata)
 
 Cp = xdata{1}.Cp;

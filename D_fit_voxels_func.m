@@ -31,34 +31,61 @@ close_pool = 0;		% Close matlabpool when done with processing
 %************************
 
 % a) Load the data files
-% [gogo,PathName,FilterIndex] = uigetfile([base_directory '/*AIF_with_vpFIT_ROI.mat'],'Choose R1 file');
-% if gogo==0
-% 	disp('User selected cancel');
-% 	return
-% end
-
-[PathName,base,ext] = fileparts(results_b_path);
-gogo = [base ext];
 load(results_b_path);
 
-directory = PathName;
-rootname  = strrep(gogo, '.nii', '');
-% load(fullfile(PathName, gogo));
+[PathName,base,ext] = fileparts(results_b_path);
+rootname  = base;
+rootname  = strrep(rootname, 'fitted_R1info', '');
 
 xdata{1}.numvoxels = numvoxels;
 disp(['Fitting data using the ' dce_model ' model']);
 disp(['Staring DCE processing on ' num2str(numvoxels) ' voxels...']);
 
+% Open pool if not open or improperly sized
+if matlabpool('size')~= number_cpus
+	if matlabpool('size')>0
+		matlabpool close;
+	end
+	matlabpool('local', number_cpus);
+end
+
+% Save original data
+xdata{1}.Ct_original = xdata{1}.Ct;
 
 % a1) smoothing in image domain
-% original_timepoint = NaN(size(currentimg));
-original_timepoint = zeros(size(currentimg));
-h = fspecial('average', [xy_smooth_size xy_smooth_size]);
-for i=1:size(xdata{1}.Ct,1)
-	original_timepoint(tumind) = xdata{1}.Ct(i,:);
-% 	imshow(smooth_timepoint.*20000)
-	smooth_timepoint = filter2(h, original_timepoint);
-	xdata{1}.Ct(i,:) = smooth_timepoint(tumind)';
+if xy_smooth_size~=0
+	% original_timepoint = NaN(size(currentimg));
+	original_timepoint = zeros(size(currentimg));
+	h = fspecial('gaussian', [xy_smooth_size xy_smooth_size],0.5);
+	for i=1:size(xdata{1}.Ct,1)
+		original_timepoint(tumind) = xdata{1}.Ct(i,:);
+	% 	imshow(smooth_timepoint.*20000)
+		smooth_timepoint = filter2(h, original_timepoint);
+		xdata{1}.Ct(i,:) = smooth_timepoint(tumind)';
+	end
+end
+
+% a2) smoothing in time domain
+if ~strcmp(time_smoothing,'none')
+	disp('Smoothing time domain');
+	
+	Ct_all = xdata{1}.Ct;
+	p = ProgressBar(size(Ct_all,2));
+	parfor i=1:size(Ct_all,2)
+		Ct_smooth = Ct_all(:,i);
+		if strcmp(time_smoothing,'moving')
+			Ct_smooth = smooth(Ct_smooth,time_smoothing_window,'moving');
+		elseif strcmp(time_smoothing,'rlowess')
+			Ct_smooth = smooth(Ct_smooth,time_smoothing_window/size(Ct_smooth,1),'rlowess');
+		else
+			% no smoothing
+		end
+
+		Ct_all(:,i) = Ct_smooth;
+		p.progress;
+	end
+	xdata{1}.Ct = Ct_all;
+	p.stop;
 end
 
 % b) voxel by voxel fitting
@@ -93,29 +120,22 @@ if(neuroecon)
         destroy(jj)
     
         clear jj
-        x = cell2mat(results);
+        fitting_results = cell2mat(results);
        % x(STARTEND(k,1):STARTEND(k,2),:) = cell2mat(results);  
 else
-	% Open pool if not open or improperly sized
-	if matlabpool('size')~= number_cpus
-		if matlabpool('size')>0
-			matlabpool close;
-		end
-		matlabpool('local', number_cpus);
-	end
-    x = FXLfit_generic(xdata, numvoxels, dce_model,time_smoothing,time_smoothing_window);
-	if close_pool
-		matlabpool close;
-	end
+	disp('Fitting Voxels');
+    fitting_results = FXLfit_generic(xdata, numvoxels, dce_model);
 end
 processing_time = toc;
 disp(['processing completed in ' datestr(processing_time/86400, 'HH:MM:SS') ' (hr:min:sec)']);
-
+if close_pool
+	matlabpool close;
+end
 
 % c) Save file
 %************************
-save(fullfile(fileparts(directory), [rootname dce_model '_FIT_voxels.mat']), 'x', 'tumind','dynamname', 'directory' , 'xdata')
-results = fullfile(fileparts(directory), [rootname dce_model '_FIT_voxels.mat']);
+save(fullfile(PathName, [rootname dce_model '_fit_voxels.mat']), 'fitting_results', 'tumind','dynamname', 'PathName' , 'xdata','time_smoothing','time_smoothing_window')
+results = fullfile(PathName, [rootname dce_model '_fit_voxels.mat']);
 
 % d) Check if physiologically possible, if not, remove
 %************************
@@ -169,32 +189,64 @@ if strcmp(dce_model, 'aif')
 	KtransROI = zeros(size(currentimg));
 	veROI     = zeros(size(currentimg));
 	residual  = zeros(size(currentimg));
+	ci_95_low_ktrans	= zeros(size(currentimg));
+	ci_95_high_ktrans	= zeros(size(currentimg));
+	ci_95_low_ve		= zeros(size(currentimg));
+	ci_95_high_ve		= zeros(size(currentimg));	
 
-	KtransROI(tumind) = x(:,1);
-	veROI(tumind)     = x(:,2);
-	residual(tumind)  = x(:,4);
+	KtransROI(tumind) = fitting_results(:,1);
+	veROI(tumind)     = fitting_results(:,2);
+	residual(tumind)  = fitting_results(:,4);
+	ci_95_low_ktrans(tumind)	= fitting_results(:,5);
+	ci_95_high_ktrans(tumind)	= fitting_results(:,6);
+	ci_95_low_ve(tumind)		= fitting_results(:,7);
+	ci_95_high_ve(tumind)		= fitting_results(:,8);
+	
 
-	save_nii(make_nii(KtransROI, res(2:4), [1 1 1]), fullfile(fileparts(directory), [actual '_' dce_model '_Ktrans.nii']));
-	save_nii(make_nii(veROI, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' dce_model '_ve.nii']));
-	save_nii(make_nii(residual, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' dce_model '_residual.nii']));
+	save_nii(make_nii(KtransROI, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_Ktrans.nii']) );
+	save_nii(make_nii(veROI, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_ve.nii']));
+	save_nii(make_nii(residual, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_residual.nii']));
+	save_nii(make_nii(ci_95_low_ktrans, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_ktrans_ci_low.nii']));
+	save_nii(make_nii(ci_95_high_ktrans, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_ktrans_ci_high.nii']));
+	save_nii(make_nii(ci_95_low_ve, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_ve_ci_low.nii']));
+	save_nii(make_nii(ci_95_high_ve, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_ve_ci_high.nii']));
+
 elseif strcmp(dce_model, 'aif_vp')
 	KtransROI = zeros(size(currentimg));
 	veROI     = zeros(size(currentimg));
 	vpROI     = zeros(size(currentimg));
 	residual  = zeros(size(currentimg));
-
-	KtransROI(tumind) = x(:,1);
-	veROI(tumind)     = x(:,2);
-	vpROI(tumind)     = x(:,3);
-	residual(tumind)  = x(:,4);
-
-	save_nii(make_nii(KtransROI, res(2:4), [1 1 1]), fullfile(fileparts(directory), [actual '_' dce_model '_Ktrans.nii']));
-	save_nii(make_nii(veROI, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' dce_model '_ve.nii']));
-	save_nii(make_nii(vpROI, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' dce_model '_vp.nii']));
-	save_nii(make_nii(residual, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' dce_model '_residual.nii']));
+	ci_95_low_ktrans	= zeros(size(currentimg));
+	ci_95_high_ktrans	= zeros(size(currentimg));
+	ci_95_low_ve		= zeros(size(currentimg));
+	ci_95_high_ve		= zeros(size(currentimg));	
+	ci_95_low_vp		= zeros(size(currentimg));
+	ci_95_high_vp		= zeros(size(currentimg));	
+	
+	KtransROI(tumind) = fitting_results(:,1);
+	veROI(tumind)     = fitting_results(:,2);
+	vpROI(tumind)     = fitting_results(:,3);
+	residual(tumind)  = fitting_results(:,4);
+	ci_95_low_ktrans(tumind)	= fitting_results(:,5);
+	ci_95_high_ktrans(tumind)	= fitting_results(:,6);
+	ci_95_low_ve(tumind)		= fitting_results(:,7);
+	ci_95_high_ve(tumind)		= fitting_results(:,8);
+	ci_95_low_vp(tumind)		= fitting_results(:,9);
+	ci_95_high_vp(tumind)		= fitting_results(:,10);
+	
+	save_nii(make_nii(KtransROI, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_Ktrans.nii']));
+	save_nii(make_nii(veROI, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_ve.nii']));
+	save_nii(make_nii(vpROI, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_vp.nii']));
+	save_nii(make_nii(residual, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_residual.nii']));
+	save_nii(make_nii(ci_95_low_ktrans, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_ktrans_ci_low.nii']));
+	save_nii(make_nii(ci_95_high_ktrans, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_ktrans_ci_high.nii']));
+	save_nii(make_nii(ci_95_low_ve, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_ve_ci_low.nii']));
+	save_nii(make_nii(ci_95_high_ve, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_ve_ci_high.nii']));
+	save_nii(make_nii(ci_95_low_vp, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_vp_ci_low.nii']));
+	save_nii(make_nii(ci_95_high_vp, res(2:4), [1 1 1]), fullfile(PathName, [rootname dce_model '_vp_ci_high.nii']));
 end
 
-
+disp('Finished D');
 
 
 

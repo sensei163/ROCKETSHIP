@@ -58,7 +58,7 @@ drift = 0;
 viable= 0;
 
 % Set the root directory of your data
-directory = 'C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1';
+% directory = 'C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1';
 
 %% DO NOT ALTER LINES BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
 %% 2. a) Load the files
@@ -461,7 +461,7 @@ end
 
 CC = make_nii(CTFILE, res(2:4), [1 1 1]);
 
-save_nii(CC, fullfile(PathName1, [rootname '_dynamicCt.nii']));
+save_nii(CC, fullfile(PathName1, [rootname 'dynamicCt.nii']));
 
 %% 11. Save as delta R1 values (May be useful if the Contrast agent has longer correlation time).
 
@@ -484,7 +484,7 @@ saveas(n,fullfile(PathName1, [rootname 'timecurves.fig']));
 save(fullfile(PathName1, [rootname 'R1info.mat']));
 results = fullfile(PathName1, [rootname 'R1info.mat']);
 
-
+disp('Finished A');
 
 
 
