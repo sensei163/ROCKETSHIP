@@ -1,5 +1,4 @@
 %% b) ROI fitting
-
 xdata{1}.timer = timer(starter:timeend)';
 timer          = xdata{1}.timer;
 CpROI          = mean(Cp,2);
@@ -9,12 +8,7 @@ xdata{1}.Cp    = CpROI';
 Cp1 = Cp1(starter:timeend,:);
 %Cp2 = Cp2(starter:timeend,:);
 
-
-
-
 %% threshold (Remove noise manually)
-
-
 if(threshold)
     
     ind = find(CpROI > threshold);

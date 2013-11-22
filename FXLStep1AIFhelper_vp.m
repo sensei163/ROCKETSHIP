@@ -1,5 +1,5 @@
 %% Helper Function for nonlinear curvefit to FXLAIF model, vp
-function x = FXLStep1AIFhelper_vp(xdata, voxel)
+function x = FXLStep1AIFhelper_vp(xdata, voxel, smooth_model,smoothing_window)
 if nargin < 3
     smooth_model = 0;
 end
@@ -17,10 +17,10 @@ else
     bad = 1;
 end
 
-if smooth_model==1
-	Ct = smooth(Ct,40,'moving');
-elseif smooth_model==2
-	Ct = smooth(Ct,0.05,'rlowess');
+if strcmp(smooth_model,'moving')
+	Ct = smooth(Ct,smoothing_window,'moving');
+elseif strcmp(smooth_model,'rlowess')
+	Ct = smooth(Ct,smoothing_window/size(Ct,1),'rlowess');
 else
 	% no smoothing
 end

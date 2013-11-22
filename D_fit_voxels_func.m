@@ -1,20 +1,20 @@
 % 3. Fit to model VP on a voxel by voxel basis
 
-% Load files from C_fit_AIFnoCP.m
+function results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,neuroecon)
 
 % Toggle options
 %************************
 r2filter = 0;		% Filter out all fits with r2 < r2filter
 
-number_cpus = 4;	% Use only if you are doing multicore
+% number_cpus = 4;	% Use only if you are doing multicore
 
 close_pool = 0;		% Close matlabpool when done with processing
 
-base_directory = 'C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1';
+% base_directory = 'C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1';
 
-neuroecon =0;
+% neuroecon =0;
 
-smooth_model = 2;	%0=none, 1=moving, 2=lowess
+% time_smoothing = 2;	%0=none, 1=moving, 2=rlowess
 
 % Select fitting model
 % 'aif_vp' = tofts with vascular compartment
@@ -25,30 +25,35 @@ smooth_model = 2;	%0=none, 1=moving, 2=lowess
 % 'fractal' = not implemented
 % 'auc' = not implemented
 % 'auc_rr' = not implemented
-model = 'aif';
+% dce_model = 'aif';
 
 % End options
 %************************
 
 % a) Load the data files
-[gogo,PathName,FilterIndex] = uigetfile([base_directory '/*AIF_with_vpFIT_ROI.mat'],'Choose R1 file');
-if gogo==0
-	disp('User selected cancel');
-	return
-end
+% [gogo,PathName,FilterIndex] = uigetfile([base_directory '/*AIF_with_vpFIT_ROI.mat'],'Choose R1 file');
+% if gogo==0
+% 	disp('User selected cancel');
+% 	return
+% end
+
+[PathName,base,ext] = fileparts(results_b_path);
+gogo = [base ext];
+load(results_b_path);
+
 directory = PathName;
 rootname  = strrep(gogo, '.nii', '');
-load(fullfile(PathName, gogo));
+% load(fullfile(PathName, gogo));
 
 xdata{1}.numvoxels = numvoxels;
-disp(['Fitting data using the ' model ' model']);
+disp(['Fitting data using the ' dce_model ' model']);
 disp(['Staring DCE processing on ' num2str(numvoxels) ' voxels...']);
 
 
 % a1) smoothing in image domain
 % original_timepoint = NaN(size(currentimg));
 original_timepoint = zeros(size(currentimg));
-h = fspecial('average', [2 2]);
+h = fspecial('average', [xy_smooth_size xy_smooth_size]);
 for i=1:size(xdata{1}.Ct,1)
 	original_timepoint(tumind) = xdata{1}.Ct(i,:);
 % 	imshow(smooth_timepoint.*20000)
@@ -78,7 +83,7 @@ if(neuroecon)
 %         xdata{1}.Ct = wholeCt(:,STARTEND(k,1):STARTEND(k,2));
         
         %Schedule object, neuroecon
-        t = createTask(jj, @FXLfit_generic, 1,{xdata, numvoxels, model,smooth_model});%numel(STARTEND(k,1):STARTEND(k,2))});
+        t = createTask(jj, @FXLfit_generic, 1,{xdata, numvoxels, dce_model,time_smoothing,time_smoothing_window});%numel(STARTEND(k,1):STARTEND(k,2))});
         set(t, 'CaptureCommandWindowOutput', true);
    
         submit(jj)
@@ -98,7 +103,7 @@ else
 		end
 		matlabpool('local', number_cpus);
 	end
-    x = FXLfit_generic(xdata, numvoxels, model,smooth_model);
+    x = FXLfit_generic(xdata, numvoxels, dce_model,time_smoothing,time_smoothing_window);
 	if close_pool
 		matlabpool close;
 	end
@@ -109,7 +114,8 @@ disp(['processing completed in ' datestr(processing_time/86400, 'HH:MM:SS') ' (h
 
 % c) Save file
 %************************
-save(fullfile(fileparts(directory), [rootname model '_FIT_voxels.mat']), 'x', 'tumind','dynamname', 'directory' , 'xdata')
+save(fullfile(fileparts(directory), [rootname dce_model '_FIT_voxels.mat']), 'x', 'tumind','dynamname', 'directory' , 'xdata')
+results = fullfile(fileparts(directory), [rootname dce_model '_FIT_voxels.mat']);
 
 % d) Check if physiologically possible, if not, remove
 %************************
@@ -159,7 +165,7 @@ save(fullfile(fileparts(directory), [rootname model '_FIT_voxels.mat']), 'x', 't
 [discard, actual] = fileparts(strrep(dynamname.fileprefix, '\', '/'));
 res = [0 0.25 0.25 2];
 
-if strcmp(model, 'aif')
+if strcmp(dce_model, 'aif')
 	KtransROI = zeros(size(currentimg));
 	veROI     = zeros(size(currentimg));
 	residual  = zeros(size(currentimg));
@@ -168,10 +174,10 @@ if strcmp(model, 'aif')
 	veROI(tumind)     = x(:,2);
 	residual(tumind)  = x(:,4);
 
-	save_nii(make_nii(KtransROI, res(2:4), [1 1 1]), fullfile(fileparts(directory), [actual '_' model '_Ktrans.nii']));
-	save_nii(make_nii(veROI, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' model '_ve.nii']));
-	save_nii(make_nii(residual, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' model '_residual.nii']));
-elseif strcmp(model, 'aif_vp')
+	save_nii(make_nii(KtransROI, res(2:4), [1 1 1]), fullfile(fileparts(directory), [actual '_' dce_model '_Ktrans.nii']));
+	save_nii(make_nii(veROI, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' dce_model '_ve.nii']));
+	save_nii(make_nii(residual, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' dce_model '_residual.nii']));
+elseif strcmp(dce_model, 'aif_vp')
 	KtransROI = zeros(size(currentimg));
 	veROI     = zeros(size(currentimg));
 	vpROI     = zeros(size(currentimg));
@@ -182,10 +188,10 @@ elseif strcmp(model, 'aif_vp')
 	vpROI(tumind)     = x(:,3);
 	residual(tumind)  = x(:,4);
 
-	save_nii(make_nii(KtransROI, res(2:4), [1 1 1]), fullfile(fileparts(directory), [actual '_' model '_Ktrans.nii']));
-	save_nii(make_nii(veROI, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' model '_ve.nii']));
-	save_nii(make_nii(vpROI, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' model '_vp.nii']));
-	save_nii(make_nii(residual, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' model '_residual.nii']));
+	save_nii(make_nii(KtransROI, res(2:4), [1 1 1]), fullfile(fileparts(directory), [actual '_' dce_model '_Ktrans.nii']));
+	save_nii(make_nii(veROI, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' dce_model '_ve.nii']));
+	save_nii(make_nii(vpROI, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' dce_model '_vp.nii']));
+	save_nii(make_nii(residual, res(2:4), [1 1 1]), fullfile(fileparts(directory),[actual '_' dce_model '_residual.nii']));
 end
 
 

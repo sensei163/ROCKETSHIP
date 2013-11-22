@@ -1,24 +1,38 @@
 
+function compare_fits(results_d_path,background_image_path)
 
+% base_directory = 'C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1';
+% load('C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1\20131106_000_sb01_06nov13_dynamic_01_s_AIF_with_vpFIT_ROI.mat')
+% % load('C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1\r20\20131106_000_sb01_06nov13_dynamic_01_s_AIF_with_vpFIT_ROI.mataif_FIT_voxels.mat')
+% [gogo,PathName,FilterIndex] = uigetfile([base_directory '/*aif_FIT_voxels'],'Choose results file');
+% if gogo==0
+% 	disp('User selected cancel');
+% 	return
+% end
+% load(fullfile(PathName, gogo));
 
-base_directory = 'C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1';
+load(results_d_path);
 
+% place = '';
+% [tumor,PathName3,FilterIndex] = uigetfile([base_directory '/*.nii'],'Choose Background Image');
+% if tumor==0
+% 	return
+% end
+% background_image = load_nii(fullfile(PathName3, place, tumor));
+background_image = load_nii(background_image_path);
+background_image = double(background_image.img);
 
-
-load('C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1\20131106_000_sb01_06nov13_dynamic_01_s_AIF_with_vpFIT_ROI.mat')
-% load('C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1\r20\20131106_000_sb01_06nov13_dynamic_01_s_AIF_with_vpFIT_ROI.mataif_FIT_voxels.mat')
-[gogo,PathName,FilterIndex] = uigetfile([base_directory '/*aif_FIT_voxels'],'Choose results file');
-if gogo==0
-	disp('User selected cancel');
-	return
+% background_image = zeros(size(currentimg));
+% background_image(tumind) = x(:,1);
+if size(background_image,3)~=1
+	background_image = background_image(:,:,floor(size(background_image,3)/2));
 end
-load(fullfile(PathName, gogo));
 
-
-background_image = zeros(size(currentimg));
-background_image(tumind) = x(:,2);
 figure(1);
-imshow(background_image'.*10,'InitialMagnification', 400);
+% imshow(background_image'.*1000,'InitialMagnification', 400);
+imshow(background_image',...
+	[prctile(reshape(background_image,1,[]),5) prctile(reshape(background_image,1,[]),95)],...
+	'InitialMagnification', 400);
 
 while 1
 	figure(1);
@@ -26,7 +40,7 @@ while 1
 	image_x = int32(image_x);
 	image_y = int32(image_y);
 	
-	size_y = size(currentimg,1);
+	size_y = size(background_image,1);
 	% X and Y are reversed because of the transpose above
 % 	image_id = image_y+(image_x-1)*size_y;
 	image_id = image_x+(image_y-1)*size_y;

@@ -1,5 +1,5 @@
 %% Helper Function for nonlinear curvefit to FXLAIF model, no vp
-function x = FXLStep1AIFhelper(xdata, voxel,smooth_model)
+function x = FXLStep1AIFhelper(xdata, voxel,smooth_model,smoothing_window)
 if nargin < 3
     smooth_model = 0;
 end
@@ -12,10 +12,10 @@ Ct = Ct(:,i);
 t = xdata{1}.timer;
 xdata{1}.timer = t(:);
 
-if smooth_model==1
-	Ct = smooth(Ct,8,'moving');
-elseif smooth_model==2
-	Ct = smooth(Ct,0.01,'rlowess');
+if strcmp(smooth_model,'moving')
+	Ct = smooth(Ct,smoothing_window,'moving');
+elseif strcmp(smooth_model,'rlowess')
+	Ct = smooth(Ct,smoothing_window/size(Ct,1),'rlowess');
 else
 	% no smoothing
 end
@@ -32,8 +32,11 @@ options.Diagnostics = 'off';
 options.Display     = 'off';
 options.Algorithm   = 'levenberg-marquardt';
 
-lb = [0 0.03];
-ub = [5 1];
+% lb = [0 0.03];
+% ub = [Inf 1];
+lb = [0 10^20];
+ub = [Inf Inf];
+
 % tic
 [x,resnorm,residual,exitflag,output,lambda,jacobian] = lsqcurvefit(@FXLStep1AIF, ...
     [0.005 0.01], xdata, ...
