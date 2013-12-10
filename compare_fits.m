@@ -19,6 +19,9 @@ if ~exist('fitting_results','var')
 	fitting_results = zeros(size(x,1),8);
 	fitting_results(:,1:4) = x;
 end
+if ~exist('dce_model','var')
+	dce_model = '';
+end
 
 while 1
 	figure(1);
@@ -49,9 +52,19 @@ while 1
 		figure(2);
 % 		fit_parameters = FXLStep1AIFhelper(xdata,voi,0);
 		fit_parameters = fitting_results(voi,:);
-		fit_curve = FXLStep1AIFcfit(fit_parameters(1),fit_parameters(2),xdata{1}.Cp,xdata{1}.timer);
-		fit_curve_low = FXLStep1AIFcfit(fit_parameters(5),fit_parameters(7),xdata{1}.Cp,xdata{1}.timer);
-		fit_curve_high = FXLStep1AIFcfit(fit_parameters(6),fit_parameters(8),xdata{1}.Cp,xdata{1}.timer);
+		if strcmp(dce_model,'aif')
+			fit_curve = FXLStep1AIFcfit(fit_parameters(1),fit_parameters(2),xdata{1}.Cp,xdata{1}.timer);
+			fit_curve_low = FXLStep1AIFcfit(fit_parameters(5),fit_parameters(7),xdata{1}.Cp,xdata{1}.timer);
+			fit_curve_high = FXLStep1AIFcfit(fit_parameters(6),fit_parameters(8),xdata{1}.Cp,xdata{1}.timer);
+		elseif strcmp(dce_model,'aif_vp')
+			fit_curve = FXLStep1AIF_vpcfit(fit_parameters(1),fit_parameters(2),fit_parameters(3),xdata{1}.Cp,xdata{1}.timer);
+			fit_curve_low = FXLStep1AIF_vpcfit(fit_parameters(5),fit_parameters(7),fit_parameters(9),xdata{1}.Cp,xdata{1}.timer);
+			fit_curve_high = FXLStep1AIF_vpcfit(fit_parameters(6),fit_parameters(8),fit_parameters(10),xdata{1}.Cp,xdata{1}.timer);
+		else
+			fit_curve = FXLStep1AIFcfit(fit_parameters(1),fit_parameters(2),xdata{1}.Cp,xdata{1}.timer);
+			fit_curve_low = FXLStep1AIFcfit(fit_parameters(5),fit_parameters(7),xdata{1}.Cp,xdata{1}.timer);
+			fit_curve_high = FXLStep1AIFcfit(fit_parameters(6),fit_parameters(8),xdata{1}.Cp,xdata{1}.timer);
+		end
 		
 		if show_original
 			p_original = plot(xdata{1}.timer,xdata{1}.Ct_original(:,voi));
@@ -79,11 +92,27 @@ while 1
 
 		plot_limits = axis;
 		% Estimate Error
-		ktrans_error = mean([abs(fit_parameters(1)-fit_parameters(5)) abs(fit_parameters(1)-fit_parameters(6))]);
-		ve_error = mean([abs(fit_parameters(2)-fit_parameters(7)) abs(fit_parameters(2)-fit_parameters(8))]);
-		plot_str(1) = {[' Ktrans = ' num2str(fit_parameters(1),2) '±' num2str(ktrans_error,2)]};
-		plot_str(2) = {[' Ve = ' num2str(fit_parameters(2),2) '±' num2str(ve_error,2)]};
-		plot_str(3) = {[' residual = ' num2str(fit_parameters(4))]};
+		if strcmp(dce_model,'aif')
+			ktrans_error = mean([abs(fit_parameters(1)-fit_parameters(5)) abs(fit_parameters(1)-fit_parameters(6))]);
+			ve_error = mean([abs(fit_parameters(2)-fit_parameters(7)) abs(fit_parameters(2)-fit_parameters(8))]);
+			plot_str(1) = {[' Ktrans = ' num2str(fit_parameters(1),2) '±' num2str(ktrans_error,2)]};
+			plot_str(2) = {[' Ve = ' num2str(fit_parameters(2),2) '±' num2str(ve_error,2)]};
+			plot_str(3) = {[' residual = ' num2str(fit_parameters(4))]};
+		elseif strcmp(dce_model,'aif_vp')
+			ktrans_error = mean([abs(fit_parameters(1)-fit_parameters(5)) abs(fit_parameters(1)-fit_parameters(6))]);
+			ve_error = mean([abs(fit_parameters(2)-fit_parameters(7)) abs(fit_parameters(2)-fit_parameters(8))]);
+			vp_error = mean([abs(fit_parameters(3)-fit_parameters(9)) abs(fit_parameters(3)-fit_parameters(10))]);
+			plot_str(1) = {[' Ktrans = ' num2str(fit_parameters(1),2) '±' num2str(ktrans_error,2)]};
+			plot_str(2) = {[' Ve = ' num2str(fit_parameters(2),2) '±' num2str(ve_error,2)]};
+			plot_str(3) = {[' Vp = ' num2str(fit_parameters(3),2) '±' num2str(vp_error,2)]};
+			plot_str(4) = {[' residual = ' num2str(fit_parameters(4))]};
+		else
+			ktrans_error = mean([abs(fit_parameters(1)-fit_parameters(5)) abs(fit_parameters(1)-fit_parameters(6))]);
+			ve_error = mean([abs(fit_parameters(2)-fit_parameters(7)) abs(fit_parameters(2)-fit_parameters(8))]);
+			plot_str(1) = {[' Ktrans = ' num2str(fit_parameters(1),2) '±' num2str(ktrans_error,2)]};
+			plot_str(2) = {[' Ve = ' num2str(fit_parameters(2),2) '±' num2str(ve_error,2)]};
+			plot_str(3) = {[' residual = ' num2str(fit_parameters(4))]};
+		end
 		text(plot_limits(1),plot_limits(3),plot_str,...
 			'Color', 'black',...
 			'VerticalAlignment','bottom',...

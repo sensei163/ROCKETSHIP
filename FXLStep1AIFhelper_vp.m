@@ -76,6 +76,6 @@ x(5) = confidence_interval(1,1);% (95 lower CI of ktrans)
 x(6) = confidence_interval(2,1);% (95 upper CI of ktrans)
 x(7) = confidence_interval(1,2);% (95 lower CI of ve)
 x(8) = confidence_interval(2,2);% (95 upper CI of ve)
-x(7) = confidence_interval(1,3);% (95 lower CI of vp)
-x(8) = confidence_interval(2,3);% (95 upper CI of vp)
+x(9) = confidence_interval(1,3);% (95 lower CI of vp)
+x(10) = confidence_interval(2,3);% (95 upper CI of vp)
 

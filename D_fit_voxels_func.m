@@ -134,7 +134,7 @@ end
 
 % c) Save file
 %************************
-save(fullfile(PathName, [rootname dce_model '_fit_voxels.mat']), 'fitting_results', 'tumind','dynamname', 'PathName' , 'xdata','time_smoothing','time_smoothing_window')
+save(fullfile(PathName, [rootname dce_model '_fit_voxels.mat']), 'fitting_results', 'tumind','dynamname', 'PathName' , 'xdata','time_smoothing','time_smoothing_window', 'dce_model')
 results = fullfile(PathName, [rootname dce_model '_fit_voxels.mat']);
 
 % d) Check if physiologically possible, if not, remove

@@ -47,9 +47,8 @@ figure, plot(t, Cp, 'b.'), title('choose the max');
 
 %[x y] = ginput(1);
 x = 1;
-temp = abs(x-t);
-
-ind  = find(temp == min(temp));
+% temp = abs(x-t);
+% ind  = find(temp == min(temp));
 
 timer = t;
 start = xdata{1}.step;
@@ -74,8 +73,8 @@ WW= sort(Cp.*step, 'descend');
 size(WW)
 size(Cp)
 ind(1) = find(Cp == WW(1));
-ind(2) = find(Cp == WW(2));
-ind(3) = find(Cp == WW(3));
+% ind(2) = find(Cp == WW(2));
+% ind(3) = find(Cp == WW(3));
 
 step(ind(1)+1:end) = 0;
 
@@ -99,7 +98,7 @@ Cp = Cp.*W;
 % Currently, we use AIF
 [x,resnorm,residual,exitflag,output,lambda,jacobian] = lsqcurvefit(@AIFbiexpcon, ...
     [1 1 1 1], xdata, ...
-    Cp','','',options);
+    Cp',lb,ub,options);
 
 x
 xdata{1}.timer = oldt;
