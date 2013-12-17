@@ -190,8 +190,10 @@ if(average_aif)
     
 end
 legend(M)
+root_modified = rootname;
+root_modified(end)='';
 hold off,
-title([rootname ' - AIF Bi-Exponential, Linear Upslope'], 'Interpreter', 'none'), ylabel('C_t (mM)'), xlabel('time (min)')
+title([root_modified ' - AIF Bi-Exponential, Linear Upslope'], 'Interpreter', 'none'), ylabel('C_t (mM)'), xlabel('time (min)')
 saveas(b, fullfile(PathName1av1, [rootname 'AIF_fitting.fig']));
 
 %% 6.  Save for voxel by voxel fitting, setup ready to go

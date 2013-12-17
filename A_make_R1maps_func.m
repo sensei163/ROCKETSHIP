@@ -335,6 +335,7 @@ end
 
 % Save the voxel IDs of the AIF pre filtering.
 oldvind = lvind;
+prefilter_number_aif_voxels = size(lvind,1);
 
 snrfilter = 0;
 for i = 1:size(DYNAM,1)
@@ -351,8 +352,11 @@ for i = 1:size(DYNAM,1)
     
 end
 
-disp(['SNR filter using SNR = ' num2str(snr_filter) ' had filtered out: ' num2str(snrfilter) ' voxels.']);
-
+disp(['User specified AIF voxels have SNR at all timepoints > ' num2str(snr_filter)]);
+disp(['AIF SNR filter has removed: ' num2str(snrfilter) ' of ' num2str(prefilter_number_aif_voxels) ' AIF voxels.']);
+if snrfilter>=prefilter_number_aif_voxels
+	error('Error SNR filter removed all AIF points, lower SNR filter requirement');
+end
 
 %% 7. Convert AIF/ Reference region to R1
 
