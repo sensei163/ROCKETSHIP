@@ -23,7 +23,7 @@ December 2011
 
 %}
 
-function results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_injection,end_injection,fit_aif,average_aif)
+function results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_injection,end_injection,fit_aif,average_aif,time_resolution)
 
 disp('Fitting AIF')
 

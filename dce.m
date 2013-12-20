@@ -22,7 +22,7 @@ function varargout = dce(varargin)
 
 % Edit the above text to modify the response to help dce
 
-% Last Modified by GUIDE v2.5 22-Nov-2013 15:28:36
+% Last Modified by GUIDE v2.5 19-Dec-2013 12:14:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -108,7 +108,7 @@ else
     set(handles.dce_path,'String',fullpath);
 end
 guidata(hObject, handles);
-
+uiremember;
 
 function dce_path_Callback(hObject, eventdata, handles)
 % hObject    handle to dce_path (see GCBO)
@@ -117,7 +117,7 @@ function dce_path_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of dce_path as text
 %        str2double(get(hObject,'String')) returns contents of dce_path as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function dce_path_CreateFcn(hObject, eventdata, handles)
@@ -130,7 +130,7 @@ function dce_path_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 % --- Executes on button press in browse_aif.
 function browse_aif_Callback(hObject, eventdata, handles)
@@ -156,7 +156,7 @@ else
     set(handles.t1_aif_path,'String',fullpath);
 end
 guidata(hObject, handles);
-
+uiremember;
 
 function t1_aif_path_Callback(hObject, eventdata, handles)
 % hObject    handle to t1_aif_path (see GCBO)
@@ -165,7 +165,7 @@ function t1_aif_path_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of t1_aif_path as text
 %        str2double(get(hObject,'String')) returns contents of t1_aif_path as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function t1_aif_path_CreateFcn(hObject, eventdata, handles)
@@ -178,7 +178,7 @@ function t1_aif_path_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 % --- Executes on button press in browse_roi.
 function browse_roi_Callback(hObject, eventdata, handles)
@@ -204,7 +204,7 @@ else
     set(handles.t1_roi_path,'String',fullpath);
 end
 guidata(hObject, handles);
-
+uiremember;
 
 function t1_roi_path_Callback(hObject, eventdata, handles)
 % hObject    handle to t1_roi_path (see GCBO)
@@ -213,7 +213,7 @@ function t1_roi_path_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of t1_roi_path as text
 %        str2double(get(hObject,'String')) returns contents of t1_roi_path as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function t1_roi_path_CreateFcn(hObject, eventdata, handles)
@@ -226,7 +226,7 @@ function t1_roi_path_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 % --- Executes on button press in browse_noise.
 function browse_noise_Callback(hObject, eventdata, handles)
@@ -252,7 +252,7 @@ else
     set(handles.noise_path,'String',fullpath);
 end
 guidata(hObject, handles);
-
+uiremember;
 
 function noise_path_Callback(hObject, eventdata, handles)
 % hObject    handle to noise_path (see GCBO)
@@ -261,7 +261,7 @@ function noise_path_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of noise_path as text
 %        str2double(get(hObject,'String')) returns contents of noise_path as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function noise_path_CreateFcn(hObject, eventdata, handles)
@@ -274,7 +274,7 @@ function noise_path_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 % --- Executes on button press in run_a.
 function run_a_Callback(hObject, eventdata, handles)
@@ -288,17 +288,17 @@ t1_roi_path = get(handles.t1_roi_path,'String');
 noise_path = get(handles.noise_path,'String');
 tr = str2num(get(handles.tr, 'String')); %#ok<ST2NM>
 fa = str2num(get(handles.fa, 'String')); %#ok<ST2NM>
-time_resolution = str2num(get(handles.time_resolution, 'String')); %#ok<ST2NM>
-time_resolution = time_resolution/60; %convert to minutes
 hematocrit = str2num(get(handles.hematocrit, 'String')); %#ok<ST2NM>
 snr_filter = str2num(get(handles.snr_filter, 'String')); %#ok<ST2NM>
 relaxivity = str2num(get(handles.relaxivity, 'String')); %#ok<ST2NM>
 injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
-water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
+% water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
+drift = get(handles.drift,'Value');
 
-saved_results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,time_resolution,hematocrit,snr_filter,relaxivity,injection_time,water_fraction);
+saved_results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift);
 % saved_results = 'aaa';
 set(handles.results_a_path,'String',saved_results);
+uiremember;
 
 function tr_Callback(hObject, eventdata, handles)
 % hObject    handle to tr (see GCBO)
@@ -307,7 +307,7 @@ function tr_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of tr as text
 %        str2double(get(hObject,'String')) returns contents of tr as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function tr_CreateFcn(hObject, eventdata, handles)
@@ -320,7 +320,7 @@ function tr_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 
 function hematocrit_Callback(hObject, eventdata, handles)
@@ -330,7 +330,7 @@ function hematocrit_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of hematocrit as text
 %        str2double(get(hObject,'String')) returns contents of hematocrit as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function hematocrit_CreateFcn(hObject, eventdata, handles)
@@ -343,7 +343,7 @@ function hematocrit_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 
 function water_fraction_Callback(hObject, eventdata, handles)
@@ -353,7 +353,7 @@ function water_fraction_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of water_fraction as text
 %        str2double(get(hObject,'String')) returns contents of water_fraction as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function water_fraction_CreateFcn(hObject, eventdata, handles)
@@ -366,7 +366,7 @@ function water_fraction_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 
 function fa_Callback(hObject, eventdata, handles)
@@ -376,7 +376,7 @@ function fa_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of fa as text
 %        str2double(get(hObject,'String')) returns contents of fa as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function fa_CreateFcn(hObject, eventdata, handles)
@@ -389,7 +389,7 @@ function fa_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 
 function snr_filter_Callback(hObject, eventdata, handles)
@@ -399,7 +399,7 @@ function snr_filter_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of snr_filter as text
 %        str2double(get(hObject,'String')) returns contents of snr_filter as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function snr_filter_CreateFcn(hObject, eventdata, handles)
@@ -412,7 +412,7 @@ function snr_filter_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 
 function injection_time_Callback(hObject, eventdata, handles)
@@ -422,7 +422,7 @@ function injection_time_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of injection_time as text
 %        str2double(get(hObject,'String')) returns contents of injection_time as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function injection_time_CreateFcn(hObject, eventdata, handles)
@@ -435,7 +435,7 @@ function injection_time_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 
 function time_resolution_Callback(hObject, eventdata, handles)
@@ -445,7 +445,7 @@ function time_resolution_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of time_resolution as text
 %        str2double(get(hObject,'String')) returns contents of time_resolution as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function time_resolution_CreateFcn(hObject, eventdata, handles)
@@ -458,7 +458,7 @@ function time_resolution_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 
 function relaxivity_Callback(hObject, eventdata, handles)
@@ -468,7 +468,7 @@ function relaxivity_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of relaxivity as text
 %        str2double(get(hObject,'String')) returns contents of relaxivity as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function relaxivity_CreateFcn(hObject, eventdata, handles)
@@ -481,7 +481,7 @@ function relaxivity_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 % --- Executes on button press in browse_results_a.
 function browse_results_a_Callback(hObject, eventdata, handles)
@@ -505,7 +505,7 @@ else
     set(handles.results_a_path,'String',fullpath);
 end
 guidata(hObject, handles);
-
+uiremember;
 
 function results_a_path_Callback(hObject, eventdata, handles)
 % hObject    handle to results_a_path (see GCBO)
@@ -514,7 +514,7 @@ function results_a_path_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of results_a_path as text
 %        str2double(get(hObject,'String')) returns contents of results_a_path as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function results_a_path_CreateFcn(hObject, eventdata, handles)
@@ -527,7 +527,7 @@ function results_a_path_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 % --- Executes on button press in average_aif.
 function average_aif_Callback(hObject, eventdata, handles)
@@ -536,7 +536,7 @@ function average_aif_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of average_aif
-
+uiremember;
 
 % --- Executes on button press in fit_aif.
 function fit_aif_Callback(hObject, eventdata, handles)
@@ -545,7 +545,7 @@ function fit_aif_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of fit_aif
-
+uiremember;
 
 
 function start_time_Callback(hObject, eventdata, handles)
@@ -555,7 +555,7 @@ function start_time_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of start_time as text
 %        str2double(get(hObject,'String')) returns contents of start_time as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function start_time_CreateFcn(hObject, eventdata, handles)
@@ -568,7 +568,7 @@ function start_time_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 
 function end_time_Callback(hObject, eventdata, handles)
@@ -578,7 +578,7 @@ function end_time_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of end_time as text
 %        str2double(get(hObject,'String')) returns contents of end_time as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function end_time_CreateFcn(hObject, eventdata, handles)
@@ -591,7 +591,7 @@ function end_time_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 
 function start_injection_Callback(hObject, eventdata, handles)
@@ -601,7 +601,7 @@ function start_injection_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of start_injection as text
 %        str2double(get(hObject,'String')) returns contents of start_injection as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function start_injection_CreateFcn(hObject, eventdata, handles)
@@ -614,7 +614,7 @@ function start_injection_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 
 function end_injection_Callback(hObject, eventdata, handles)
@@ -624,7 +624,7 @@ function end_injection_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of end_injection as text
 %        str2double(get(hObject,'String')) returns contents of end_injection as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function end_injection_CreateFcn(hObject, eventdata, handles)
@@ -637,7 +637,7 @@ function end_injection_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 % --- Executes on button press in run_b.
 function run_b_Callback(hObject, eventdata, handles)
@@ -651,13 +651,14 @@ start_time = str2num(get(handles.start_time, 'String')); %#ok<ST2NM>
 end_time = str2num(get(handles.end_time, 'String')); %#ok<ST2NM>
 start_injection = str2num(get(handles.start_injection, 'String')); %#ok<ST2NM>
 end_injection = str2num(get(handles.end_injection, 'String')); %#ok<ST2NM>
-
 fit_aif = get(handles.fit_aif, 'Value'); 
 average_aif = get(handles.average_aif, 'Value'); 
+time_resolution = str2num(get(handles.time_resolution, 'String')); %#ok<ST2NM>
+time_resolution = time_resolution/60; %convert to minutes
 
-saved_results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_injection,end_injection,fit_aif,average_aif);
-% saved_results = 'aaaa';
+saved_results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_injection,end_injection,fit_aif,average_aif,time_resolution);
 set(handles.results_b_path,'String',saved_results);
+uiremember;
 
 % --- Executes on button press in browse_results_b.
 function browse_results_b_Callback(hObject, eventdata, handles)
@@ -681,6 +682,7 @@ else
     set(handles.results_b_path,'String',fullpath);
 end
 guidata(hObject, handles);
+uiremember;
 
 
 function results_b_path_Callback(hObject, eventdata, handles)
@@ -690,7 +692,7 @@ function results_b_path_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of results_b_path as text
 %        str2double(get(hObject,'String')) returns contents of results_b_path as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function results_b_path_CreateFcn(hObject, eventdata, handles)
@@ -703,7 +705,7 @@ function results_b_path_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 % --- Executes on button press in neuroecon.
 function neuroecon_Callback(hObject, eventdata, handles)
@@ -712,7 +714,7 @@ function neuroecon_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of neuroecon
-
+uiremember;
 
 
 function number_cpus_Callback(hObject, eventdata, handles)
@@ -722,7 +724,7 @@ function number_cpus_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of number_cpus as text
 %        str2double(get(hObject,'String')) returns contents of number_cpus as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function number_cpus_CreateFcn(hObject, eventdata, handles)
@@ -735,7 +737,7 @@ function number_cpus_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 
 function xy_smooth_size_Callback(hObject, eventdata, handles)
@@ -745,7 +747,7 @@ function xy_smooth_size_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of xy_smooth_size as text
 %        str2double(get(hObject,'String')) returns contents of xy_smooth_size as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function xy_smooth_size_CreateFcn(hObject, eventdata, handles)
@@ -758,7 +760,7 @@ function xy_smooth_size_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 
 function time_smoothing_window_Callback(hObject, eventdata, handles)
@@ -768,7 +770,7 @@ function time_smoothing_window_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of time_smoothing_window as text
 %        str2double(get(hObject,'String')) returns contents of time_smoothing_window as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function time_smoothing_window_CreateFcn(hObject, eventdata, handles)
@@ -781,7 +783,7 @@ function time_smoothing_window_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 % --- Executes on button press in browse_results_d.
 function browse_results_d_Callback(hObject, eventdata, handles)
@@ -805,6 +807,7 @@ else
     set(handles.results_d_path,'String',fullpath);
 end
 guidata(hObject, handles);
+uiremember;
 
 
 function results_d_path_Callback(hObject, eventdata, handles)
@@ -814,7 +817,7 @@ function results_d_path_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of results_d_path as text
 %        str2double(get(hObject,'String')) returns contents of results_d_path as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function results_d_path_CreateFcn(hObject, eventdata, handles)
@@ -827,7 +830,7 @@ function results_d_path_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 % --- Executes on button press in browse_background_image.
 function browse_background_image_Callback(hObject, eventdata, handles)
@@ -853,7 +856,7 @@ else
     set(handles.background_image_path,'String',fullpath);
 end
 guidata(hObject, handles);
-
+uiremember;
 
 function background_image_path_Callback(hObject, eventdata, handles)
 % hObject    handle to background_image_path (see GCBO)
@@ -862,7 +865,7 @@ function background_image_path_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of background_image_path as text
 %        str2double(get(hObject,'String')) returns contents of background_image_path as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function background_image_path_CreateFcn(hObject, eventdata, handles)
@@ -875,7 +878,7 @@ function background_image_path_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 % --- Executes on button press in run_d.
 function run_d_Callback(hObject, eventdata, handles)
@@ -898,6 +901,7 @@ neuroecon = get(handles.neuroecon, 'Value');
 saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,neuroecon);
 % saved_results = 'aaaa';
 set(handles.results_d_path,'String',saved_results);
+uiremember;
 
 % --- Executes on button press in run_e.
 function run_e_Callback(hObject, eventdata, handles)
@@ -911,7 +915,7 @@ show_original = get(handles.show_original,'Value');
 show_ci = get(handles.show_ci,'Value');
 
 compare_fits(results_d_path,background_image_path,show_original,show_ci);
-
+uiremember;
 
 % --- Executes on button press in show_original.
 function show_original_Callback(hObject, eventdata, handles)
@@ -920,7 +924,7 @@ function show_original_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of show_original
-
+uiremember;
 
 % --- Executes on button press in show_ci.
 function show_ci_Callback(hObject, eventdata, handles)
@@ -929,3 +933,57 @@ function show_ci_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of show_ci
+uiremember;
+
+
+function aif_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+function aif_DeleteFcn(hObject, eventdata, handles)
+uiremember;
+
+function aif_vp_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+function aif_vp_DeleteFcn(hObject, eventdata, handles)
+uiremember;
+
+
+function none_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+function none_DeleteFcn(hObject, eventdata, handles)
+uiremember;
+
+function moving_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+function moving_DeleteFcn(hObject, eventdata, handles)
+uiremember;
+
+function rlowess_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+function rlowess_DeleteFcn(hObject, eventdata, handles)
+uiremember;
+
+
+% --- Executes on button press in drift.
+function drift_Callback(hObject, eventdata, handles)
+uiremember;
+
+% --- Executes during object creation, after setting all properties.
+function drift_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+% --- Executes during object creation, after setting all properties.
+function fit_aif_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+% --- Executes during object creation, after setting all properties.
+function show_original_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+% --- Executes during object creation, after setting all properties.
+function show_ci_CreateFcn(hObject, eventdata, handles)
+uirestore;

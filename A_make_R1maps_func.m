@@ -1,64 +1,69 @@
-%% A. Generate concentration versus time curves for the tumor region and the arterial input region. The setup follows Loveless et. al 2011 MRM method of AIF filtering based upon SNR.
-%{
-A_make_R1mapsCOH.m
+function results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time,drift)
 
-The script takes as input:
-1. The DCE-MRI file    - this is the NIFTI file that contains the dynamic
-dataset. Formated as volume x time points.
-2. T1 map of AIF       - this is the NIFTI file that contains the T1 map of
-the arterial input region (or the reference region in the case of the
-reference region method). This file also serves as the ROI delineation. 
-3. T1 map of the tumor - this is the NIFTI file that contains the T1 map of the tumor. Also serves as the ROI delination of the tumor.
-4. noise region        - this is a NIFTI/analyze file that delineates a
-noise region of the image. Used for SNR calculation.
+% A_make_R1maps_func - Generate concentration versus time curves for the
+% tumor region and the arterial input region. The setup follows Loveless
+% et. al 2011 MRM method of AIF filtering based upon SNR.
+% 
+% Inputs:
+%  dce_path           - NIFTI file that contains the dynamic
+%    dataset. Formated as volume x time points.
+%  t1_aif_path        - NIFTI file that contains the T1 map of
+%    the arterial input region (or the reference region in the case of
+%    the reference region method). All values outside of the AIF ROI set
+%    to <0
+%  t1_roi_path        - NIFTI file that contains the T1 map of
+%    the DCE region, the region that will have DCE values calculated.
+%    All values outside of the ROI set to <0
+%  noise_path         - NIFTI file that delineates a noise region of the
+%    image (not T1 map). Used for SNR calculation.
+%  tr                 - reptition time (in ms) of dynamic scan
+%  fa                 - flip angle (in degrees) of dynamic scan
+%  hematocrit         - hematocrit percent (0-1.00) of subject
+%  snr_filter         - snr required for AIF voxels, snr must exceed this
+%    value at all time points
+%  relaxivity         - r1 relaxivity (in mmol^-1*sec^-1) of contrast agent 
+%  steady_state_time  - in minutes, defines the steady state period
+%    before contrast injection. Two values, comma seperated. -1
+%    indicates users will be prompted to select them graphically
+%  drift              - boolean value, perform drift correction based on
+%    a rod phantom in image FOV
+% 
+% We assume that the T1 maps and the DCE-MRI files contain the same field of
+% view.
+% 
+% The script uses the T1 maps to calculate the R1 changes over time for the
+% dynamic dataset using the gradient echo signal equation. 
+% 
+% Voxels whereby the R1 calculation creates unreasonable values (e.g. complex
+% values) are filtered out.
+% 
+% For the AIF (or reference region), a SNR filter is applied. Voxels that
+% have SNR less than denoted will be filtered out. 
+% 
+% Concentration maps and time curves are saved. 
+% 
+% A matlab data .mat file is saved for further processing.
+% 
+% Requires:
+% niftitools
+% cleanAB.m
+% cleanR1t.m
+% 
+% 
+% Thomas Ng
+% Caltech, Dec 2011
+% Updated April 2012
+% Updated Dec 2013 Sam Barnes
 
-We assume that the T1 maps and the DCE-MRI files contain the same field of
-view.
 
-The script uses the T1 maps to calculate the R1 changes over time for the
-dynamic dataset using the gradient echo signal equation. 
-
-Voxels whereby the R1 calculation creates unreasonable values (e.g. complex
-values) are filtered out.
-
-For the AIF (or reference region), a SNR filter is applied. Voxels that
-have SNR less than denoted will be filtered out. 
-
-Concentration maps and time curves are saved. 
-
-A matlab data .mat file is saved for further processing.
-
-Requires:
-tilefigs.m
-niftitools
-removeBADVOXELS.m
-removeBADVOXELSiter.m
-cleanAB.m
-cleanR1t.m
-
-
-Thomas Ng
-Caltech, Dec 2011
-Updated April 2012
-
-%}
-function results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,time_resolution,hematocrit,snr_filter,relaxivity,injection_time,water_fraction)
 
 
 %% 1. Option Toggles
 
-% Toggle to 1 if you want to use a rod phantom to calibrate drift. Apply
-% only if you have placed a rod phantom in the image to correct for
-% potential MRI signal drift.
-drift = 0;
-
 % Toggle to re-calculate the average values only in the regions that the
 % voxel curvefit was able to give good fitting; ie. the viable regions.
-
 viable= 0;
 
-% Set the root directory of your data
-% directory = 'C:\Users\sbarnes\Documents\data\6 DCE Stroke\sb01_06nov13.mH1';
 
 %% DO NOT ALTER LINES BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
 %% 2. a) Load the files
@@ -126,30 +131,8 @@ end
 %Find the number of slices each volume dataset
 slices = size(TUMOR, 3);
 
-% % This is the prompt that asks for information to complete the data
-% % processing.
-% prompt={'TR (ms)',...
-%     'Flip Angle (degrees):',...
-%     'Rep injection time (set as "-1" if manual choose (via figure)', 'hematocrit', 'Contrast agent r1 (1/(s*mM))', 'SNR for AIF filter', 'Time Resolution (s)', 'Volume Fraction of water (f_{w})'};
-% name='Input for Peaks function';
-% numlines=1;
-% defaultanswer={'25','35', '-1', '0.45', '4.71', '5', '2', '0.8'};
-% options.Resize='on';
-% options.WindowStyle='normal';
-% options.Interpreter='tex';
-% 
-% answer=inputdlg(prompt,name,numlines,defaultanswer,options);
-% 
-% %parse the prompt answers TR in ms, FA in degrees
-% tr = str2num(answer{1});
-% fa = str2num(answer{2});
-% injection_time= str2num(answer{3});
-% hematocrit= str2num(answer{4});
-% relaxivity = str2num(answer{5});
-% snr_filter= str2num(answer{6});
-% time_resolution = str2num(answer{7});
-% water_fraction = str2num(answer{8});
-tr = tr/1000; % The TR is in ms
+% The TR is in ms
+tr = tr/1000; 
 
 %% 3. Setup the data for next step.
 
@@ -206,8 +189,6 @@ saveas(nn, fullfile(PathName1, [rootname 'image_ROI.fig']));
 % phantom to correct for the MR signal in the tissue of interest.
 
 if(drift)
-    
-    
     for j = 1:slices
         figure(nn);
         cumatchimg = (matchimg(:,:,j));
@@ -223,8 +204,7 @@ if(drift)
             OUT = [];
         else
         OUT = findRod(dynam(:,:,j), [x(1) y(1)],[x(2) y(2)], []);
-        
-        
+          
         title('');
         cumatchimg(OUT(:,1), OUT(:,2)) = 600000;
         
@@ -232,13 +212,9 @@ if(drift)
         end
         
         ROD{j}.OUT = OUT;
-        
-    end
-    
-    
+	end
     
     % Now we Drift correct the image
-    
     originalimg = dynam(:,:,1:1+(slices-1));
     
     DYNAM       = [];
@@ -247,20 +223,15 @@ if(drift)
     DYNAMNONVIA = [];
     counter = 1;
     for i = 1:slices:size(dynam,3)
-        
         currentimg       = dynam(:,:,i:i+(slices-1));
-        
-        for j = 1:slices
-            
+        for j = 1:slices 
             originalimgj = originalimg(:,:,j);
             currentimgj  = currentimg(:,:,j);
             
             % rod mean
-            
             OUT = ROD{j}.OUT;
             
             if(~isempty(OUT))
-                
                 ind = sub2ind(size(originalimgj), OUT(:,1), OUT(:,2));
                 scalefactor = mean(originalimgj(ind))/mean(currentimgj(ind));
                 
@@ -273,11 +244,8 @@ if(drift)
                 CORRECTED(counter,j) = mean(currentimgj(:));
                 
                 currentimg(:,:,j) = currentimgj;
-                
             end
         end
-        
-        
         
         DYNAM(end+1,:)   = currentimg(tumind);
         DYNAMLV(end+1,:) = currentimg(lvind);
@@ -294,7 +262,6 @@ if(drift)
     figure,
     
     for j = 1:slices
-        
         OUT = ROD{j}.OUT;
         
         if(~isempty(OUT))
@@ -305,17 +272,16 @@ if(drift)
         end
     end
 end
-% tilefigs
 
 
 %% 5. Manually select injection point, if required
-
-if(injection_time == -1)
+if(steady_state_time == -1)
     figure, hold on,plot(mean(DYNAM, 2), 'r'), plot(mean(DYNAMLV,2), 'b'),
     
     for i = 1:2
-        title(['Select timepoint ' num2str(i) ' before injection. (i.e. Click an interval (2 points) before contrast injection)'])
-        [injection_time(i) y] = ginput(1);
+        title(['Select timepoint ' num2str(i) ...
+			' before injection. (i.e. Select an interval (2 points) before contrast injection to define stead state)'])
+        [steady_state_time(i) y] = ginput(1);
     end
 end
 
@@ -326,9 +292,6 @@ RawLV  = mean(DYNAMLV,2);
 if(viable)
     RawNONVIA = mean(DYNAMNONVIA,2);
 end
-
-
-
 
 
 %% 6.  Filter out AIF points if SNR too low
@@ -365,7 +328,7 @@ T1       = T1LV;
 Stotallv = DYNAMLV;
 
 % Sss is the steady state Signal before injection
-Sss      = mean(Stotallv(round(injection_time(1)):round(injection_time(2)),:));
+Sss      = mean(Stotallv(round(steady_state_time(1)):round(steady_state_time(2)),:));
 Sstar    = ((1-exp(-tr./T1))./(1-cosd(fa).*exp(-tr./T1)));
 Stlv     = Stotallv;%(inj(2):end,:);
 
@@ -394,7 +357,7 @@ for j = 1:numel(T1LV)
     
     % Scale Sss values to T1 values
     
-    ScaleFactorlv = (1/T1LV(j)) - mean(R1tLV(round(injection_time(1)):round(injection_time(2)), j));
+    ScaleFactorlv = (1/T1LV(j)) - mean(R1tLV(round(steady_state_time(1)):round(steady_state_time(2)), j));
     
     R1tLV(:,j) = R1tLV(:,j) + ScaleFactorlv;
 end
@@ -405,7 +368,7 @@ T1TUM     = TUMOR(tumind);
 T1        = T1TUM;
 Stotaltum = DYNAM;
 
-Ssstum = mean(Stotaltum(round(injection_time(1)):round(injection_time(2)),:));
+Ssstum = mean(Stotaltum(round(steady_state_time(1)):round(steady_state_time(2)),:));
 Sstar    = ((1-exp(-tr./T1))./(1-cosd(fa).*exp(-tr./T1)));
 Sttum = Stotaltum;
 
@@ -425,7 +388,7 @@ R1tTOI = double((1/tr).*log(AB));
 
 for j = 1:numel(T1TUM)
     % Scale Sss values to T1 values
-    ScaleFactortum = (1/T1TUM(j)) - mean(R1tTOI(round(injection_time(1)):round(injection_time(2)), j));
+    ScaleFactortum = (1/T1TUM(j)) - mean(R1tTOI(round(steady_state_time(1)):round(steady_state_time(2)), j));
     R1tTOI(:,j) = R1tTOI(:,j) + ScaleFactortum;
 end
 
@@ -469,9 +432,9 @@ save_nii(CC, fullfile(PathName1, [rootname 'dynamicCt.nii']));
 
 %% 11. Save as delta R1 values (May be useful if the Contrast agent has longer correlation time).
 
-deltaR1LV = R1tLV-repmat(mean(R1tLV(round(injection_time(1)):round(injection_time(2)), :), 1), [size(R1tLV,1) 1]);
+deltaR1LV = R1tLV-repmat(mean(R1tLV(round(steady_state_time(1)):round(steady_state_time(2)), :), 1), [size(R1tLV,1) 1]);
 
-deltaR1TOI= R1tTOI-repmat(mean(R1tTOI(round(injection_time(1)):round(injection_time(2)), :), 1), [size(R1tTOI,1) 1]);
+deltaR1TOI= R1tTOI-repmat(mean(R1tTOI(round(steady_state_time(1)):round(steady_state_time(2)), :), 1), [size(R1tTOI,1) 1]);
 
 
 %% 12. Plot the time curves
