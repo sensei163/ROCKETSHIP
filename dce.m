@@ -22,7 +22,7 @@ function varargout = dce(varargin)
 
 % Edit the above text to modify the response to help dce
 
-% Last Modified by GUIDE v2.5 19-Dec-2013 12:14:23
+% Last Modified by GUIDE v2.5 19-Dec-2013 18:08:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,15 +58,19 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+% Create structure to hold roi list
+handles.roi_list = {};
+
 % check preference file withe verbose for invalid selections, use this to 
 % guard against typos
 parse_preference_file('dce_preferences.txt',1,...
 	{'aif_lower_limits' 'aif_upper_limits' 'aif_initial_values' ...
-	'aif_TolFun' 'aif_TolX' 'aif_MaxIter' 'aif_MaxFunEvals'...
+	'aif_TolFun' 'aif_TolX' 'aif_MaxIter' 'aif_MaxFunEvals' 'aif_Robust'...
 	'voxel_lower_limit_ktrans' 'voxel_upper_limit_ktrans' 'voxel_initial_value_ktrans' ...
 	'voxel_lower_limit_ve' 'voxel_upper_limit_ve' 'voxel_initial_value_ve' ...
 	'voxel_lower_limit_vp' 'voxel_upper_limit_vp' 'voxel_initial_value_vp' ...
-	'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals'});
+	'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals' ...
+	'voxel_Robust'});
 
 % UIWAIT makes dce wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -987,3 +991,91 @@ uirestore;
 % --- Executes during object creation, after setting all properties.
 function show_ci_CreateFcn(hObject, eventdata, handles)
 uirestore;
+
+
+% --- Executes on selection change in roi_box.
+function roi_box_Callback(hObject, eventdata, handles)
+% hObject    handle to roi_box (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns roi_box contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from roi_box
+
+
+% --- Executes during object creation, after setting all properties.
+function roi_box_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to roi_box (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in add_roi.
+function add_roi_Callback(hObject, eventdata, handles)
+guidata(hObject, handles);
+
+[filename, pathname, filterindex] = uigetfile( ...
+    {  '*.nii','Nifti Files (*.nii)'; ...
+    '*.hdr;*.img','Analyze Files (*.hdr, *.img)';...
+    '*.*',  'All Files (*.*)'}, ...
+    'Pick a file', ...
+    'MultiSelect', 'on'); %#ok<NASGU>
+if isequal(filename,0)
+    %disp('User selected Cancel')
+else
+    %disp(['User selected ', fullfile(pathname, filename)])
+    list = get(handles.roi_box,'String');
+    
+    % Combine path and filename together
+    fullpath = strcat(pathname,filename);
+    
+    % Stupid matlab uses a different datastructure if only one file
+    % is selected, handle special case
+    if ischar(list)
+        list = {list};
+    end
+    if ischar(filename)
+        filename = {filename};
+    end
+    if ischar(fullpath)
+        fullpath = {fullpath};
+    end
+
+    filename = filename';
+    fullpath = fullpath';
+        
+    % Add selected files to listbox
+	if strcmp(list,'No Files')
+		list = filename;
+		handles.roi_list = fullpath;
+	else
+		list = [list;  filename];
+		handles.roi_list = [handles.roi_list; fullpath];
+	end 
+	
+    set(handles.roi_box,'String',list, 'Value',1)
+end
+guidata(hObject, handles);
+
+
+% --- Executes on button press in remove_roi.
+function remove_roi_Callback(hObject, eventdata, handles)
+
+index_selected = get(handles.roi_box,'Value');
+list = get(handles.roi_box,'String');
+for n=size(index_selected,2):-1:1
+    % Remove from end of list first so resizing does not 
+    % change subsequent index numbers
+    %disp(['User removed ', list{index_selected(n)}]);
+    list(index_selected(n)) = [];
+    handles.roi_list(index_selected(n)) = [];
+end
+
+set(handles.roi_box,'String',list, 'Value',1)
+guidata(hObject, handles);

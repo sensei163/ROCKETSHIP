@@ -201,7 +201,7 @@ xdata{1}.timer = timer;
 xdata{1}.Ct    = Ct(start_time:end_time,:);
 numvoxels      = size(Ct,2);
 
-save(fullfile(PathName1, [rootname 'fitted_R1info.mat']));
+save(fullfile(PathName1, ['B_' rootname 'fitted_R1info.mat']));
 
 if(average_aif)
     % Save the fitted
@@ -223,6 +223,6 @@ if(average_aif)
 end
 
 
-results = fullfile(PathName1, [rootname 'fitted_R1info.mat']);
+results = fullfile(PathName1, ['B_' rootname 'fitted_R1info.mat']);
 
 disp('Finished B');

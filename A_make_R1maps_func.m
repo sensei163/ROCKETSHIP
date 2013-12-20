@@ -10,21 +10,22 @@ function results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_pat
 %  t1_aif_path        - NIFTI file that contains the T1 map of
 %    the arterial input region (or the reference region in the case of
 %    the reference region method). All values outside of the AIF ROI set
-%    to <0
+%    to <=0
 %  t1_roi_path        - NIFTI file that contains the T1 map of
 %    the DCE region, the region that will have DCE values calculated.
-%    All values outside of the ROI set to <0
+%    All values outside of the ROI set to <=0
 %  noise_path         - NIFTI file that delineates a noise region of the
-%    image (not T1 map). Used for SNR calculation.
+%    image (not T1 map). Used for SNR calculation. All values outside of
+%    the ROI set to <=0
 %  tr                 - reptition time (in ms) of dynamic scan
 %  fa                 - flip angle (in degrees) of dynamic scan
-%  hematocrit         - hematocrit percent (0-1.00) of subject
+%  hematocrit         - hematocrit percent (0 - 1.00) of subject
 %  snr_filter         - snr required for AIF voxels, snr must exceed this
-%    value at all time points
+%    value averaged over all time points
 %  relaxivity         - r1 relaxivity (in mmol^-1*sec^-1) of contrast agent 
-%  steady_state_time  - in minutes, defines the steady state period
-%    before contrast injection. Two values, comma seperated. -1
-%    indicates users will be prompted to select them graphically
+%  steady_state_time  - in image number, defines the steady state period
+%    before contrast injection. -1 indicates users will be prompted to
+%    select it graphically
 %  drift              - boolean value, perform drift correction based on
 %    a rod phantom in image FOV
 % 
@@ -282,7 +283,11 @@ if(steady_state_time == -1)
         title(['Select timepoint ' num2str(i) ...
 			' before injection. (i.e. Select an interval (2 points) before contrast injection to define stead state)'])
         [steady_state_time(i) y] = ginput(1);
-    end
+	end
+else
+	%No zero index in matlab
+	steady_state_time(2) = steady_state_time;
+	steady_state_time(1) = 1;
 end
 
 % Averaged timecurves for AIF and Tumor
@@ -301,31 +306,43 @@ oldvind = lvind;
 prefilter_number_aif_voxels = size(lvind,1);
 
 snrfilter = 0;
-for i = 1:size(DYNAM,1)
-    
-    currentSNR = DYNAMLV(i,:)./DYNAMNOISE(i);
-    
-    ind = find(currentSNR < snr_filter);
-    
-    lvind(ind) = [];
-    DYNAMLV(:,ind) = [];
-    
-    numel(ind);
-    snrfilter = snrfilter + numel(ind);
-    
-end
+%Dynam(time,voxels)
+DYNAMLV_time_average = mean(DYNAMLV,1);
+DYNAMNOISE_time_average = mean(DYNAMNOISE);
+voxelSNR = DYNAMLV_time_average./DYNAMNOISE_time_average;
 
-disp(['User specified AIF voxels have SNR at all timepoints > ' num2str(snr_filter)]);
+ind = find(voxelSNR < snr_filter);
+
+lvind(ind) = [];
+DYNAMLV(:,ind) = [];
+voxelSNR_filtered = voxelSNR;
+voxelSNR_filtered(ind) = [];
+
+snrfilter = snrfilter + numel(ind);  
+% for i = 1:size(DYNAM,1)
+%     currentSNR = DYNAMLV(i,:)./DYNAMNOISE(i);
+%     
+%     ind = find(currentSNR < snr_filter);
+%     
+%     lvind(ind) = [];
+%     DYNAMLV(:,ind) = [];
+%     
+%     numel(ind);
+%     snrfilter = snrfilter + numel(ind);  
+% end
+
+disp(['AIF SNR filter requires average SNR > ' num2str(snr_filter)]);
 disp(['AIF SNR filter has removed: ' num2str(snrfilter) ' of ' num2str(prefilter_number_aif_voxels) ' AIF voxels.']);
+disp(['After filter average AIF SNR (all voxels, all time points) = ' num2str(mean(voxelSNR_filtered))]);
 if snrfilter>=prefilter_number_aif_voxels
 	error('Error SNR filter removed all AIF points, lower SNR filter requirement');
 end
 
 %% 7. Convert AIF/ Reference region to R1
-
 T1LV     = LV(lvind);
 T1       = T1LV;
 Stotallv = DYNAMLV;
+
 
 % Sss is the steady state Signal before injection
 Sss      = mean(Stotallv(round(steady_state_time(1)):round(steady_state_time(2)),:));
@@ -448,8 +465,8 @@ subplot(428), plot(mean(deltaR1LV,2), 'r.'), title('Delta R1 blood'), subplot(42
 saveas(n,fullfile(PathName1, [rootname 'timecurves.fig']));
 %% 12. Save the file for the next Step
 
-save(fullfile(PathName1, [rootname 'R1info.mat']));
-results = fullfile(PathName1, [rootname 'R1info.mat']);
+save(fullfile(PathName1, ['A_' rootname 'R1info.mat']));
+results = fullfile(PathName1, ['A_' rootname 'R1info.mat']);
 
 disp('Finished A');
 

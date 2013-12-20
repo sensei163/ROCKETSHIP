@@ -28,7 +28,7 @@ t  = t(:);
 % Get preferences
 prefs = parse_preference_file('dce_preferences.txt',0,...
 	{'aif_lower_limits' 'aif_upper_limits' 'aif_initial_values' ...
-	'aif_TolFun' 'aif_TolX' 'aif_MaxIter' 'aif_MaxFunEvals'});
+	'aif_TolFun' 'aif_TolX' 'aif_MaxIter' 'aif_MaxFunEvals' 'aif_Robust'});
 lower_limits = str2num(prefs.aif_lower_limits);
 upper_limits = str2num(prefs.aif_upper_limits);
 initial_values = str2num(prefs.aif_initial_values);
@@ -36,6 +36,7 @@ TolFun = str2num(prefs.aif_TolFun);
 TolX = str2num(prefs.aif_TolX);
 MaxIter = str2num(prefs.aif_MaxIter);
 MaxFunEvals = str2num(prefs.aif_MaxFunEvals);
+Robust = prefs.aif_Robust;
 
 %configure the optimset for use with lsqcurvefit
 options = optimset('lsqcurvefit');
@@ -48,6 +49,7 @@ options.TolX        = TolX;
 options.Diagnostics = 'off';
 options.Display     = 'off';
 options.Algorithm   = 'levenberg-marquardt';
+options.Robust      = Robust;
 
 % Choose upper and lower bounds only for trust-region methods.
 % lb = [0 0 0 0];

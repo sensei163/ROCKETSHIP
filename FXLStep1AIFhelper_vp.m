@@ -1,21 +1,10 @@
 %% Helper Function for nonlinear curvefit to FXLAIF model, vp
 function x = FXLStep1AIFhelper_vp(xdata, voxel)
-if nargin < 3
-    smooth_model = 0;
-end
-
-% Fit the curve to brixfit
-% fitted = 0;
 
 warning off
 Ct = xdata{1}.Ct;
 i  = voxel;
 Ct = Ct(:,i);
-% if(fitted)
-%     [Ct bad] = smoothcurve(Ct, xdata, 0);
-% else
-%     bad = 1;
-% end
 
 % 	tic
 
@@ -51,7 +40,7 @@ prefs = parse_preference_file('dce_preferences.txt',0,...
 	{'voxel_lower_limit_ktrans' 'voxel_upper_limit_ktrans' 'voxel_initial_value_ktrans' ...
 	'voxel_lower_limit_ve' 'voxel_upper_limit_ve' 'voxel_initial_value_ve' ...
 	'voxel_lower_limit_vp' 'voxel_upper_limit_vp' 'voxel_initial_value_vp' ...
-	'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals'});
+	'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals' 'voxel_Robust'});
 lower_limit_ktrans = str2num(prefs.voxel_lower_limit_ktrans);
 upper_limit_ktrans = str2num(prefs.voxel_upper_limit_ktrans);
 initial_value_ktrans = str2num(prefs.voxel_initial_value_ktrans);
@@ -65,6 +54,8 @@ TolFun = str2num(prefs.voxel_TolFun);
 TolX = str2num(prefs.voxel_TolX);
 MaxIter = str2num(prefs.voxel_MaxIter);
 MaxFunEvals = str2num(prefs.voxel_MaxFunEvals);
+Robust = prefs.voxel_robust;
+
 % Use Curvefitting tool box instead of optimization toolbox (lsqcurvefit)
 % as curvefitting will easily return confidence intervals on the fit
 % performance of the two appears to be the same
@@ -77,7 +68,8 @@ options = fitoptions('Method', 'NonlinearLeastSquares',...
 	'Display', 'off',...
 	'Lower',[lower_limit_ktrans lower_limit_ve lower_limit_vp],...
 	'Upper', [upper_limit_ktrans upper_limit_ve upper_limit_vp],...
-	'StartPoint', [initial_value_ktrans initial_value_ve initial_value_vp]);
+	'StartPoint', [initial_value_ktrans initial_value_ve initial_value_vp],...
+	'Robust', Robust);
 ft = fittype('FXLStep1AIF_vpcfit( Ktrans, ve, vp, Cp, T1)',...
 	'independent', {'T1', 'Cp'},...
 	'coefficients',{'Ktrans', 've', 'vp'});
