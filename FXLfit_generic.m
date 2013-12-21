@@ -7,15 +7,23 @@ p = ProgressBar(number_voxels);
 if strcmp(model,'aif_vp');
 	% Preallocate for speed
 	GG = zeros([number_voxels 10],'double');
+	% Slice out needed variables for speed
+	Ct_data = xdata{1}.Ct;
+	Cp_data = xdata{1}.Cp;
+	timer_data = xdata{1}.timer;
 	parfor i = 1:number_voxels
-		GG(i,:) = FXLStep1AIFhelper_vp(xdata,i);
+		GG(i,:) = FXLStep1AIFhelper_vp(Ct_data(:,i),Cp_data,timer_data);
 		p.progress;
 	end;
 elseif strcmp(model,'aif');
 	% Preallocate for speed
 	GG = zeros([number_voxels 8],'double');
+	% Slice out needed variables for speed
+	Ct_data = xdata{1}.Ct;
+	Cp_data = xdata{1}.Cp;
+	timer_data = xdata{1}.timer;
 	parfor i = 1:number_voxels
-		GG(i,:) = FXLStep1AIFhelper(xdata,i);
+		GG(i,:) = FXLStep1AIFhelper(Ct_data(:,i),Cp_data,timer_data);
 		p.progress;
 	end;
 else

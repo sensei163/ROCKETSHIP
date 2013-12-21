@@ -34,4 +34,4 @@ voxel_TolX = 10^(-6)
 voxel_MaxIter = 50
 voxel_MaxFunEvals = 50
 %robust options no quotes: "off" "LAR" "Bisquare"
-voxel_Robust = Bisquare
+voxel_Robust = off

@@ -1,10 +1,10 @@
 %% Helper Function for nonlinear curvefit to FXLAIF model, vp
-function x = FXLStep1AIFhelper_vp(xdata, voxel)
+function x = FXLStep1AIFhelper_vp(Ct,Cp,timer)
 
 warning off
-Ct = xdata{1}.Ct;
-i  = voxel;
-Ct = Ct(:,i);
+% Ct = xdata{1}.Ct;
+% i  = voxel;
+% Ct = Ct(:,i);
 
 % 	tic
 
@@ -54,7 +54,7 @@ TolFun = str2num(prefs.voxel_TolFun);
 TolX = str2num(prefs.voxel_TolX);
 MaxIter = str2num(prefs.voxel_MaxIter);
 MaxFunEvals = str2num(prefs.voxel_MaxFunEvals);
-Robust = prefs.voxel_robust;
+Robust = prefs.voxel_Robust;
 
 % Use Curvefitting tool box instead of optimization toolbox (lsqcurvefit)
 % as curvefitting will easily return confidence intervals on the fit
@@ -73,7 +73,7 @@ options = fitoptions('Method', 'NonlinearLeastSquares',...
 ft = fittype('FXLStep1AIF_vpcfit( Ktrans, ve, vp, Cp, T1)',...
 	'independent', {'T1', 'Cp'},...
 	'coefficients',{'Ktrans', 've', 'vp'});
-[f, gof, output] = fit([xdata{1}.timer, xdata{1}.Cp'],Ct,ft, options);
+[f, gof, output] = fit([timer, Cp'],Ct,ft, options);
 confidence_interval = confint(f,0.95);
 % toc
 

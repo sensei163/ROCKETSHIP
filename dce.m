@@ -22,7 +22,7 @@ function varargout = dce(varargin)
 
 % Edit the above text to modify the response to help dce
 
-% Last Modified by GUIDE v2.5 19-Dec-2013 18:08:09
+% Last Modified by GUIDE v2.5 20-Dec-2013 16:57:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -898,11 +898,10 @@ time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
 time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
 xy_smooth_size = str2num(get(handles.xy_smooth_size, 'String')); %#ok<ST2NM>
 number_cpus = str2num(get(handles.number_cpus, 'String')); %#ok<ST2NM>
-
 neuroecon = get(handles.neuroecon, 'Value'); 
-
-
-saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,neuroecon);
+roi_list = handles.roi_list;
+fit_voxels = get(handles.fit_voxels,'Value');
+saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon);
 % saved_results = 'aaaa';
 set(handles.results_d_path,'String',saved_results);
 uiremember;
@@ -1079,3 +1078,12 @@ end
 
 set(handles.roi_box,'String',list, 'Value',1)
 guidata(hObject, handles);
+
+
+% --- Executes on button press in fit_voxels.
+function fit_voxels_Callback(hObject, eventdata, handles)
+uiremember;
+
+% --- Executes during object creation, after setting all properties.
+function fit_voxels_CreateFcn(hObject, eventdata, handles)
+uirestore;
