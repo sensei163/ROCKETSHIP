@@ -2,12 +2,16 @@
 % A./B, aka AB, needs to be positive, we interpolate to rid out noisy
 % components without taking out all the voxels indiscriminately.
 
-function [AB T1 ROIind BADspace GOODspace] = cleanAB(AB, T1, ROIind, type, pick, threshold);
+function [AB T1 ROIind BADspace GOODspace] = cleanAB(AB, T1, ROIind, type, pick, threshold)
 
 BADspace = [];
 CLEANspace = 0;
-timepoints = size(AB,1)
-spacepoints= size(AB,2)
+timepoints = size(AB,1);
+spacepoints= size(AB,2);
+disp(' ');
+disp(['Clean AB of ' type ' with interpolation'])
+disp(['time points = ' num2str(timepoints)])
+disp(['space points = ' num2str(spacepoints)])
 
 % Search each voxel to see if issues, interpolate if issues
 oneside = 0;

@@ -299,9 +299,11 @@ injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
 % water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
 drift = get(handles.drift,'Value');
 
+% Run Computation
 saved_results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift);
-% saved_results = 'aaa';
 set(handles.results_a_path,'String',saved_results);
+
+
 uiremember;
 
 function tr_Callback(hObject, eventdata, handles)
@@ -741,7 +743,12 @@ function number_cpus_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-uirestore;
+[status,status_str] = uirestore;
+if status==0
+    % Find the maximum cluster
+    myCluster = parcluster('local');
+    set(hObject, 'String', num2str(myCluster.NumWorkers));
+end
 
 
 function xy_smooth_size_Callback(hObject, eventdata, handles)
@@ -891,19 +898,18 @@ function run_d_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 disp('User selected Run D')
 results_b_path = get(handles.results_b_path,'String');
-
 dce_model = get(get(handles.dce_model,'SelectedObject'),'Tag');
 time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
-
 time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
 xy_smooth_size = str2num(get(handles.xy_smooth_size, 'String')); %#ok<ST2NM>
 number_cpus = str2num(get(handles.number_cpus, 'String')); %#ok<ST2NM>
 neuroecon = get(handles.neuroecon, 'Value'); 
 roi_list = handles.roi_list;
 fit_voxels = get(handles.fit_voxels,'Value');
+
 saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon);
-% saved_results = 'aaaa';
 set(handles.results_d_path,'String',saved_results);
+
 uiremember;
 
 % --- Executes on button press in run_e.

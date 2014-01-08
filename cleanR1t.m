@@ -1,11 +1,15 @@
 %% Clean up the R1 by interpolation
 
-function [R1t T1 ROIind BADspace GOODspace] = cleanR1t(R1t, T1, ROIind, type, pick, threshold);
+function [R1t T1 ROIind BADspace GOODspace] = cleanR1t(R1t, T1, ROIind, type, pick, threshold)
 
 BADspace = [];
 CLEANspace = 0;
-timepoints = size(R1t,1)
-spacepoints= size(R1t,2)
+timepoints = size(R1t,1);
+spacepoints= size(R1t,2);
+disp(' ');
+disp(['Clean R1t of ' type ' with interpolation'])
+disp(['time points = ' num2str(timepoints)])
+disp(['space points = ' num2str(spacepoints)])
 
 % Search each voxel to see if issues, interpolate if issues
 

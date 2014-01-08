@@ -94,7 +94,8 @@ plot_data.fit_parameters= handles.fit_data{1}.roi_results(selected_roi,:);
 plot_data.dce_model		= handles.fit_data{1}.dce_model;
 plot_data.show_original = handles.show_original{1};
 plot_data.show_ci		= handles.show_ci{1};
-			
+plot_data.title = ['ROI "' selected_name '"'];
+
 figure(2);
 plot_dce_curve(plot_data);
 

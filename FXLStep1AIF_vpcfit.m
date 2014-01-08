@@ -16,14 +16,14 @@ for k = 1:numel(T1)
     
 %     M = sampleintegration(T,F);
     if(numel(T) == 1)
-		%need this as trapz interprets non array as
-		%Y,DIM input instead of X,Y
-		M = 0;
-	else
-		% 54 times faster than sampleintegration
-		M = trapz(T,F);
-	end
-	
+        %need this as trapz interprets non array as
+        %Y,DIM input instead of X,Y
+        M = 0;
+    else
+        % 54 times faster than sampleintegration
+        M = trapz(T,F);
+    end
+    
     Ct(k) = Ktrans.*M+vp*Cp(k);
 end
 

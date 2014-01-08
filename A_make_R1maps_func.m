@@ -6,28 +6,30 @@ function results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_pat
 % 
 % Inputs:
 %  dce_path           - NIFTI file that contains the dynamic
-%    dataset. Formated as volume x time points.
+%                       dataset. Formated as volume x time points.
 %  t1_aif_path        - NIFTI file that contains the T1 map of
-%    the arterial input region (or the reference region in the case of
-%    the reference region method). All values outside of the AIF ROI set
-%    to <=0
-%  t1_roi_path        - NIFTI file that contains the T1 map of
-%    the DCE region, the region that will have DCE values calculated.
-%    All values outside of the ROI set to <=0
+%                       the arterial input region (or the reference region
+%                       in the case of the reference region method). All
+%                       values outside of the AIF ROI set to <=0
+%  t1_roi_path        - NIFTI file that contains the T1 map of the DCE
+%                       region, the region that will have DCE values
+%                       calculated. All values outside of the ROI set to
+%                       <=0
 %  noise_path         - NIFTI file that delineates a noise region of the
-%    image (not T1 map). Used for SNR calculation. All values outside of
-%    the ROI set to <=0
+%                       image (not T1 map). Used for SNR calculation. All
+%                       values outside of the ROI set to <=0
 %  tr                 - reptition time (in ms) of dynamic scan
 %  fa                 - flip angle (in degrees) of dynamic scan
 %  hematocrit         - hematocrit percent (0 - 1.00) of subject
 %  snr_filter         - snr required for AIF voxels, snr must exceed this
-%    value averaged over all time points
-%  relaxivity         - r1 relaxivity (in mmol^-1*sec^-1) of contrast agent 
-%  steady_state_time  - in image number, defines the steady state period
-%    before contrast injection. -1 indicates users will be prompted to
-%    select it graphically
+%                       value averaged over all time points
+%  relaxivity         - r1 relaxivity (in mmol^-1*sec^-1) of contrast agent
+%  steady_state_time  - in image number, defines the end of the steady
+%                       state period before contrast injection. -1
+%                       indicates users will be prompted to select it
+%                       graphically
 %  drift              - boolean value, perform drift correction based on
-%    a rod phantom in image FOV
+%                       a rod phantom in image FOV
 % 
 % We assume that the T1 maps and the DCE-MRI files contain the same field of
 % view.
@@ -67,8 +69,44 @@ viable= 0;
 
 
 %% DO NOT ALTER LINES BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
-%% 2. a) Load the files
+% Log input results
+[log_path,base,~] = fileparts(dce_path);
+log_path = fullfile(log_path, ['A_' base 'R1info.log']);
+if exist(log_path, 'file')==2
+  delete(log_path);
+end
+diary(log_path);
+fprintf('************** User Input **************\n\n');
+disp('User selected dce file: ');
+fprintf('%s\n\n',dce_path);
+disp('User selected T1 of AIF: ');
+fprintf('%s\n\n',t1_aif_path);
+disp('User selected T1 of region to process: ');
+fprintf('%s\n\n',t1_roi_path);
+disp('User selected noise region in image (not T1 map): ');
+fprintf('%s\n\n',noise_path);
+disp('User selected TR (ms): ');
+disp(tr);
+disp('User selected FA (degrees): ');
+disp(fa);
+disp('User selected hematocit (0 to 1.0): ');
+disp(hematocrit);
+disp('User selected SNR threshold for AIF: ');
+disp(snr_filter);
+disp('User selected contrast agent R1 relaxivity (/mmol/sec): ');
+disp(relaxivity);
+disp('User selected end of steady state time (image number): ');
+disp(steady_state_time);
+disp('User selected drift correction: ');
+disp(drift);
+fprintf('************** End User Input **************\n\n\n');
 
+disp('Starting Part A Processing')
+disp(datestr(now))
+disp(' ');
+tic
+
+%% 2. a) Load the files
 % Ask for file location
 place = '';
 
@@ -92,11 +130,9 @@ dynam = load_nii(fullfile(PathName1, place, dynam));
 
 %image resolution
 res  = dynam.hdr.dime.pixdim;
-
-dynamname = dynam;
+% save for part D
+dynam_name = dynam.fileprefix;
 dynam = double(dynam.img);
-dynamname.fileprefix
-
 
 
 %Load TUMOR T1 map, find the voxels that encompass tumor ROI
@@ -196,7 +232,7 @@ if(drift)
         
         subplot(2, slices,j), title('First left click in the rod region and then noise region, right click if no rod (twice)');
         
-        [x y button] = ginput(2);
+        [x, y, button] = ginput(2);
         x = round(x);
         y = round(y);
         
@@ -213,7 +249,7 @@ if(drift)
         end
         
         ROD{j}.OUT = OUT;
-	end
+    end
     
     % Now we Drift correct the image
     originalimg = dynam(:,:,1:1+(slices-1));
@@ -282,8 +318,8 @@ if(steady_state_time == -1)
     for i = 1:2
         title(['Select timepoint ' num2str(i) ...
 			' before injection. (i.e. Select an interval (2 points) before contrast injection to define stead state)'])
-        [steady_state_time(i) y] = ginput(1);
-	end
+        [steady_state_time(i), ~] = ginput(1);
+    end
 else
 	%No zero index in matlab
 	steady_state_time(2) = steady_state_time;
@@ -467,10 +503,18 @@ saveas(n,fullfile(PathName1, [rootname 'timecurves.fig']));
 
 save(fullfile(PathName1, ['A_' rootname 'R1info.mat']));
 results = fullfile(PathName1, ['A_' rootname 'R1info.mat']);
+Opt.Input = 'file';
+mat_md5 = DataHash(results, Opt);
+disp(' ')
+disp('MAT results saved to: ')
+disp(results)
+disp(['File MD5 hash: ' mat_md5])
 
+disp(' ');
 disp('Finished A');
-
-
+disp(datestr(now))
+toc
+diary off;
 
 
 

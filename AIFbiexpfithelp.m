@@ -87,8 +87,8 @@ hold on,
 % datapoints
 W = ones(size(Cp));
 WW= sort(Cp.*step, 'descend');
-size(WW)
-size(Cp)
+% size(WW)
+% size(Cp)
 ind(1) = find(Cp == WW(1));
 % ind(2) = find(Cp == WW(2));
 % ind(3) = find(Cp == WW(3));
@@ -117,10 +117,11 @@ Cp = Cp.*W;
     initial_values, xdata, ...
     Cp',lower_limits,upper_limits,options);
 
-x
+% x
 xdata{1}.timer = oldt;
 
-rsquare = 1 - resnorm / norm(Cp-mean(Cp))^2
+rsquare = 1 - resnorm / norm(Cp-mean(Cp))^2;
+disp(['R^2 of AIF fit = ' num2str(rsquare)]);
 
 out = AIFbiexpcon(x, xdata);
 
