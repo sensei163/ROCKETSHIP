@@ -38,6 +38,15 @@ MaxIter = str2num(prefs.aif_MaxIter);
 MaxFunEvals = str2num(prefs.aif_MaxFunEvals);
 Robust = prefs.aif_Robust;
 
+fprintf('lower_limits = %s\n',num2str(lower_limits));
+fprintf('upper_limits = %s\n',num2str(upper_limits));
+fprintf('initial_values = %s\n',num2str(initial_values));
+fprintf('TolFun = %s\n',num2str(TolFun));
+fprintf('TolX = %s\n',num2str(TolX));
+fprintf('MaxIter = %s\n',num2str(MaxIter));
+fprintf('MaxFunEvals = %s\n',num2str(MaxFunEvals));
+fprintf('Robust = %s\n\n',Robust);
+
 %configure the optimset for use with lsqcurvefit
 options = optimset('lsqcurvefit');
 

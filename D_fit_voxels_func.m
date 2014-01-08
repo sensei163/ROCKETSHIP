@@ -263,21 +263,20 @@ if(neuroecon)
 else
 	if number_rois~=0
 		disp(['Starting fitting for ' num2str(number_rois) ' ROIs...']);
-		% No logging, parfo messes up log
-		diary off;
+
 		roi_data{1}.Cp = xdata{1}.Cp;
 		roi_data{1}.timer = xdata{1}.timer;
 		roi_data{1}.Ct = roi_series;
 		roi_results = FXLfit_generic(roi_data, number_rois, dce_model);
-		diary on;
+
 		disp('ROI fitting done')
+        disp(' ')
 	end
 	if fit_voxels
 		disp(['Starting fitting for ' num2str(numvoxels) ' voxels...']);
-		% No logging, parfo messes up log
-		diary off;
+
 		fitting_results = FXLfit_generic(xdata, numvoxels, dce_model);
-		diary on;
+
 		disp('Voxel fitting done')
 	end
 end
