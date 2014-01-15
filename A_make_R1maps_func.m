@@ -136,13 +136,14 @@ dynam = double(dynam.img);
 
 
 %Load TUMOR T1 map, find the voxels that encompass tumor ROI
+%convert T1 from ms to sec
 TUMOR = load_nii(fullfile(PathName3, place, tumor));
-TUMOR = double(TUMOR.img);
+TUMOR = 1/1000.*double(TUMOR.img);
 tumind= find(TUMOR > 0);
 
-%Load AIF dataset
+%Load AIF dataset, convert T1 from ms to sec
 LV = load_nii(fullfile(PathName2, place, lv));
-LV = double(LV.img);
+LV = 1/1000.*double(LV.img);
 lvind = find(LV > 0);
 
 %Load noise ROI files
@@ -445,7 +446,9 @@ for j = 1:numel(T1TUM)
     R1tTOI(:,j) = R1tTOI(:,j) + ScaleFactortum;
 end
 
-n = figure; subplot(421),plot(mean(R1tTOI,2), 'r.'), title('R1 maps over image reps pre-filtering Tumor'), subplot(422), plot(mean(R1tLV,2), 'b.'), title('R1 maps over image reps pre-filtering AIF')
+n = figure; 
+subplot(421),plot(mean(R1tTOI,2), 'r.'), title('R1 maps pre-filtering ROI'), ylabel('sec^-1')
+subplot(422), plot(mean(R1tLV,2), 'b.'), title('R1 maps pre-filtering AIF'), ylabel('sec^-1')
 
 %% 9. Convert to concentrations
 
@@ -492,12 +495,13 @@ deltaR1TOI= R1tTOI-repmat(mean(R1tTOI(round(steady_state_time(1)):round(steady_s
 
 %% 12. Plot the time curves
 
-figure(n), subplot(423),plot(mean(Ct,2), 'r'), title('Ct maps over image reps pre-filtering Tumor'), subplot(424), plot(mean(Cp,2), 'b'), title('Cp maps over image reps pre-filtering LV')
-figure(n), subplot(425), plot(RawTUM, 'r'),
-
-subplot(426), plot(RawLV, 'b');
-
-subplot(428), plot(mean(deltaR1LV,2), 'r.'), title('Delta R1 blood'), subplot(427), plot(mean(deltaR1TOI,2), 'b.'), title('Delta R1 Tissue')
+figure(n), 
+subplot(423),plot(mean(Ct,2), 'r'), title('Ct maps pre-filtering ROI'), ylabel('mmol')
+subplot(424), plot(mean(Cp,2), 'b'), title('Cp maps pre-filtering AIF'), ylabel('mmol')
+subplot(425), plot(RawTUM, 'r'), title('T1-weighted ROI'), ylabel('a.u.')
+subplot(426), plot(RawLV, 'b'), title('T1-weighted AIF'), ylabel('a.u.')
+subplot(427), plot(mean(deltaR1TOI,2), 'b.'), title('Delta R1 ROI'), ylabel('sec^-1')
+subplot(428), plot(mean(deltaR1LV,2), 'r.'), title('Delta R1 AIF') , ylabel('sec^-1')
 saveas(n,fullfile(PathName1, [rootname 'timecurves.fig']));
 %% 12. Save the file for the next Step
 
