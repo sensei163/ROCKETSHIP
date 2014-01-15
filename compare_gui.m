@@ -96,6 +96,13 @@ plot_data.show_original = handles.show_original{1};
 plot_data.show_ci		= handles.show_ci{1};
 plot_data.title = ['ROI "' selected_name '"'];
 
+if strcmp(handles.fit_data{1}.dce_model,'fxr')
+    plot_data.R1o = handles.xdata{1}.roi_r1(selected_roi);
+    plot_data.R1i = handles.xdata{1}.roi_r1(selected_roi);
+    plot_data.r1 = handles.xdata{1}.relaxivity;
+    plot_data.fw = 0.8;
+end
+
 figure(2);
 plot_dce_curve(plot_data);
 

@@ -28,6 +28,10 @@ voxel_lower_limit_vp = 0
 voxel_upper_limit_vp = 1
 voxel_initial_value_vp = 0.02
 
+voxel_lower_limit_tau = 0
+voxel_upper_limit_tau = 100
+voxel_initial_value_tau = 0.01
+
 % Advanced Options
 voxel_TolFun = 10^(-12)
 voxel_TolX = 10^(-6)
@@ -35,3 +39,7 @@ voxel_MaxIter = 50
 voxel_MaxFunEvals = 50
 %robust options no quotes: "off" "LAR" "Bisquare"
 voxel_Robust = off
+
+% FXR options
+%%%%%%%%%%%%%%%%%%%%%%%
+fxr_fw = 0.8

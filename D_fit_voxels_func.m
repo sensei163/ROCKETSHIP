@@ -104,6 +104,12 @@ if matlabpool('size')~= number_cpus
 	diary on;
 end
 
+% Substitute R1 data for concentration data in curve to fit 
+% FXR model fits to the R1 data directly, not concentrations
+if strcmp(dce_model,'fxr')
+    xdata{1}.Ct = R1tTOI(start_time:end_time,:);
+end
+
 % Save original data
 xdata{1}.Ct_original = xdata{1}.Ct;
 
@@ -142,17 +148,28 @@ if ~isempty(roi_list) && ~strcmp('No Files',cell2mat(roi_list(1)))
 			roi_index{r}= find(single_roi > 0);
 		end
 
+        original_t1 = zeros(size(currentimg));
+        roi_r1 = zeros(number_rois,1);
 		original_timepoint = zeros(size(currentimg));
 		roi_series = zeros(size(xdata{1}.Ct,1),number_rois);
-		for t=1:size(xdata{1}.Ct,1)
-			original_timepoint(tumind) = xdata{1}.Ct(t,:);
+        for t=1:size(xdata{1}.Ct,1)
+            if strcmp(dce_model,'fxr')
+                original_timepoint(tumind) = R1tTOI(t,:);
+            else
+                original_timepoint(tumind) = xdata{1}.Ct(t,:);
+            end
 	% 		original_timepoint(roi_index{r}) = 1e-4;
 	% 		imshow(original_timepoint.*20000);
 			%Average ROI voxels, insert into time series
 			for r=number_rois:-1:1	
 				roi_series(t,r) = mean(original_timepoint(roi_index{r}));
 			end
-		end
+        end
+        % For FXR
+        original_t1(tumind) = T1TUM;
+        for r=number_rois:-1:1	
+            roi_r1(r) = 1./mean(original_t1(roi_index{r}));
+        end
 		%make backup
 		roi_series_original = roi_series;
 	end
@@ -267,6 +284,13 @@ else
 		roi_data{1}.Cp = xdata{1}.Cp;
 		roi_data{1}.timer = xdata{1}.timer;
 		roi_data{1}.Ct = roi_series;
+
+        if strcmp(dce_model,'fxr')
+            roi_data{1}.R1o = roi_r1;
+            roi_data{1}.R1i = roi_r1;
+            roi_data{1}.relaxivity = relaxivity;
+        end
+        
 		roi_results = FXLfit_generic(roi_data, number_rois, dce_model);
 
 		disp('ROI fitting done')
@@ -275,6 +299,12 @@ else
 	if fit_voxels
 		disp(['Starting fitting for ' num2str(numvoxels) ' voxels...']);
 
+        if strcmp(dce_model,'fxr')
+            xdata{1}.R1o = 1./T1TUM;
+            xdata{1}.R1i = 1./T1TUM;
+            xdata{1}.relaxivity = relaxivity;
+        end
+        
 		fitting_results = FXLfit_generic(xdata, numvoxels, dce_model);
 
 		disp('Voxel fitting done')
@@ -302,6 +332,10 @@ if number_rois~=0
 	xdata{1}.number_rois = number_rois;
 	fit_data.roi_results = roi_results;
 	fit_data.roi_name = roi_name;
+    if strcmp(dce_model,'fxr')
+        xdata{1}.roi_r1 = roi_r1;
+        xdata{1}.relaxivity = relaxivity;
+    end
 end
 if fit_voxels
 	fit_data.fitting_results  = fitting_results;
@@ -464,6 +498,62 @@ elseif strcmp(dce_model, 'aif_vp')
 		save_nii(make_nii(ci_95_high_ve, res(2:4), [1 1 1]), nii_path{8});
 		save_nii(make_nii(ci_95_low_vp, res(2:4), [1 1 1]), nii_path{9});
 		save_nii(make_nii(ci_95_high_vp, res(2:4), [1 1 1]), nii_path{10});
+	end
+elseif strcmp(dce_model, 'fxr')
+	% Write ROI results
+	if number_rois~=0
+		headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Tau','Residual', 'Ktrans 95% low', ...
+		'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Tau 95% low','Tau 95% high'};
+		xls_results = [roi_list roi_name mat2cell(roi_results,ones(1,size(roi_results,1)),ones(1,size(roi_results,2)))];
+		xls_results = [headings; xls_results];
+		xls_path = fullfile(PathName, [rootname dce_model '_rois.xls']);
+		xlswrite(xls_path,xls_results);
+	end
+	% Write voxel results
+	if fit_voxels
+		KtransROI = zeros(size(currentimg));
+		veROI     = zeros(size(currentimg));
+		tauROI     = zeros(size(currentimg));
+		residual  = zeros(size(currentimg));
+		ci_95_low_ktrans	= zeros(size(currentimg));
+		ci_95_high_ktrans	= zeros(size(currentimg));
+		ci_95_low_ve		= zeros(size(currentimg));
+		ci_95_high_ve		= zeros(size(currentimg));	
+		ci_95_low_tau		= zeros(size(currentimg));
+		ci_95_high_tau		= zeros(size(currentimg));	
+
+		KtransROI(tumind) = fitting_results(:,1);
+		veROI(tumind)     = fitting_results(:,2);
+		tauROI(tumind)     = fitting_results(:,3);
+		residual(tumind)  = fitting_results(:,4);
+		ci_95_low_ktrans(tumind)	= fitting_results(:,5);
+		ci_95_high_ktrans(tumind)	= fitting_results(:,6);
+		ci_95_low_ve(tumind)		= fitting_results(:,7);
+		ci_95_high_ve(tumind)		= fitting_results(:,8);
+		ci_95_low_tau(tumind)		= fitting_results(:,9);
+		ci_95_high_tau(tumind)		= fitting_results(:,10);
+
+		nii_path{1} = fullfile(PathName, [rootname dce_model '_Ktrans.nii']);
+		nii_path{2} = fullfile(PathName, [rootname dce_model '_ve.nii']);
+		nii_path{3} = fullfile(PathName, [rootname dce_model '_tau.nii']);
+		nii_path{4} = fullfile(PathName, [rootname dce_model '_residual.nii']);
+		nii_path{5} = fullfile(PathName, [rootname dce_model '_ktrans_ci_low.nii']);
+		nii_path{6} = fullfile(PathName, [rootname dce_model '_ktrans_ci_high.nii']);
+		nii_path{7} = fullfile(PathName, [rootname dce_model '_ve_ci_low.nii']);
+		nii_path{8} = fullfile(PathName, [rootname dce_model '_ve_ci_high.nii']);
+		nii_path{9} = fullfile(PathName, [rootname dce_model '_tau_ci_low.nii']);
+		nii_path{10} = fullfile(PathName, [rootname dce_model '_tau_ci_high.nii']);
+		
+		save_nii(make_nii(KtransROI, res(2:4), [1 1 1]), nii_path{1});
+		save_nii(make_nii(veROI, res(2:4), [1 1 1]), nii_path{2});
+		save_nii(make_nii(tauROI, res(2:4), [1 1 1]), nii_path{3});
+		save_nii(make_nii(residual, res(2:4), [1 1 1]), nii_path{4});
+		save_nii(make_nii(ci_95_low_ktrans, res(2:4), [1 1 1]), nii_path{5});
+		save_nii(make_nii(ci_95_high_ktrans, res(2:4), [1 1 1]), nii_path{6});
+		save_nii(make_nii(ci_95_low_ve, res(2:4), [1 1 1]), nii_path{7});
+		save_nii(make_nii(ci_95_high_ve, res(2:4), [1 1 1]), nii_path{8});
+		save_nii(make_nii(ci_95_low_tau, res(2:4), [1 1 1]), nii_path{9});
+		save_nii(make_nii(ci_95_high_tau, res(2:4), [1 1 1]), nii_path{10});
 	end
 end
 

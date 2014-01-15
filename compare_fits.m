@@ -70,6 +70,13 @@ if fit_data.fit_voxels
 			plot_data.show_ci = show_ci;
 			plot_data.title = ['Voxel Location (' num2str(image_x) ',' num2str(image_y) ')'];
             
+            if strcmp(fit_data.dce_model,'fxr')
+                plot_data.R1o = xdata{1}.R1o(voi);
+                plot_data.R1i = xdata{1}.R1i(voi);
+                plot_data.r1 = xdata{1}.relaxivity;
+                plot_data.fw = 0.8;
+            end
+            
 			figure(2);
 			plot_dce_curve(plot_data);
 		end
