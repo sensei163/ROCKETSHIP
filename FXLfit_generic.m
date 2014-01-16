@@ -39,12 +39,12 @@ if strcmp(model,'aif_vp');
     fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
     fprintf('Robust = %s\n',num2str(prefs.Robust));
 
-	% Preallocate for speed
-	GG = zeros([number_voxels 10],'double');
-	% Slice out needed variables for speed
-	Ct_data = xdata{1}.Ct;
-	Cp_data = xdata{1}.Cp;
-	timer_data = xdata{1}.timer;
+    % Preallocate for speed
+    GG = zeros([number_voxels 10],'double');
+    % Slice out needed variables for speed
+    Ct_data = xdata{1}.Ct;
+    Cp_data = xdata{1}.Cp;
+    timer_data = xdata{1}.timer;
     %Turn off diary if on as it doesn't work with progress bar
     diary_restore = 0;
     if strcmp(get(0,'Diary'),'on')
@@ -52,10 +52,10 @@ if strcmp(model,'aif_vp');
         diary_restore = 1;
     end
     p = ProgressBar(number_voxels);
-	parfor i = 1:number_voxels
-		GG(i,:) = FXLStep1AIFhelper_vp(Ct_data(:,i),Cp_data,timer_data,prefs);
-		p.progress;
-	end;
+    parfor i = 1:number_voxels
+        GG(i,:) = FXLStep1AIFhelper_vp(Ct_data(:,i),Cp_data,timer_data,prefs);
+        p.progress;
+    end;
     p.stop;
     if diary_restore, diary on, end;
 elseif strcmp(model,'aif');
@@ -88,22 +88,22 @@ elseif strcmp(model,'aif');
     fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
     fprintf('Robust = %s\n',num2str(prefs.Robust));
     
-	% Preallocate for speed
-	GG = zeros([number_voxels 8],'double');
-	% Slice out needed variables for speed
-	Ct_data = xdata{1}.Ct;
-	Cp_data = xdata{1}.Cp;
-	timer_data = xdata{1}.timer;
+    % Preallocate for speed
+    GG = zeros([number_voxels 8],'double');
+    % Slice out needed variables for speed
+    Ct_data = xdata{1}.Ct;
+    Cp_data = xdata{1}.Cp;
+    timer_data = xdata{1}.timer;
     %Turn off diary if on as it doesn't work with progress bar
     diary_restore = 0;
     if strcmp(get(0,'Diary'),'on')
         diary off;
         diary_restore = 1;
     end
-	p = ProgressBar(number_voxels);
+    p = ProgressBar(number_voxels);
     parfor i = 1:number_voxels
-		GG(i,:) = FXLStep1AIFhelper(Ct_data(:,i),Cp_data,timer_data,prefs);
-		p.progress;
+        GG(i,:) = FXLStep1AIFhelper(Ct_data(:,i),Cp_data,timer_data,prefs);
+        p.progress;
     end;
     p.stop;
     if diary_restore, diary on, end;
@@ -147,12 +147,12 @@ elseif strcmp(model,'fxr');
     fprintf('Robust = %s\n',num2str(prefs.Robust));
     fprintf('fxr_fw = %s\n',num2str(prefs.fxr_fw));
 
-	% Preallocate for speed
-	GG = zeros([number_voxels 10],'double');
-	% Slice out needed variables for speed
-	Ct_data = xdata{1}.Ct;
-	Cp_data = xdata{1}.Cp;
-	timer_data = xdata{1}.timer;
+    % Preallocate for speed
+    GG = zeros([number_voxels 10],'double');
+    % Slice out needed variables for speed
+    Ct_data = xdata{1}.Ct;
+    Cp_data = xdata{1}.Cp;
+    timer_data = xdata{1}.timer;
     R1o= xdata{1}.R1o;
     R1i= xdata{1}.R1i;
     r1 = xdata{1}.relaxivity;
@@ -164,15 +164,15 @@ elseif strcmp(model,'fxr');
         diary_restore = 1;
     end
     p = ProgressBar(number_voxels);
-	parfor i = 1:number_voxels
-		GG(i,:) = fxr_helper(Ct_data(:,i),Cp_data,timer_data,R1o(i),R1i(i),r1,fw,prefs);
-		p.progress;
-	end;
+    parfor i = 1:number_voxels
+        GG(i,:) = fxr_helper(Ct_data(:,i),Cp_data,timer_data,R1o(i),R1i(i),r1,fw,prefs);
+        p.progress;
+    end;
     p.stop;
     if diary_restore, diary on, end;
 else
-	warning(['Error, model ' model ' not yet implemented']);
-	return
+    warning(['Error, model ' model ' not yet implemented']);
+    return
 end
 
 

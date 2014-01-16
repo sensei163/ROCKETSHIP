@@ -135,34 +135,34 @@ if(average_aif)
     
     
     Cp = [Cp1 Cp2];
-	% Setup the xdata for processing is done with setupxdata and setupxdata3.
-	% These scripts sets ups the dataset to allow lsqcurvefit to work.
+    % Setup the xdata for processing is done with setupxdata and setupxdata3.
+    % These scripts sets ups the dataset to allow lsqcurvefit to work.
     setupxdata3 %@@@@@@@@@@@@@ Replace with function on inline code!
 else
     %% Setup data to allow lsqcurvefit to work
-	xdata{1}.timer = timer(start_time:end_time)';
-	timer          = xdata{1}.timer;
-	CpROI          = mean(Cp,2);
-	CpROI          = CpROI(start_time:end_time);
-	xdata{1}.Cp    = CpROI';
+    xdata{1}.timer = timer(start_time:end_time)';
+    timer          = xdata{1}.timer;
+    CpROI          = mean(Cp,2);
+    CpROI          = CpROI(start_time:end_time);
+    xdata{1}.Cp    = CpROI';
 
-	Cp1 = Cp1(start_time:end_time,:);
-	%Cp2 = Cp2(starter:timeend,:);
+    Cp1 = Cp1(start_time:end_time,:);
+    %Cp2 = Cp2(starter:timeend,:);
 
-	% threshold (Remove noise manually)
-	if(threshold)
-		ind = find(CpROI > threshold);
+    % threshold (Remove noise manually)
+    if(threshold)
+        ind = find(CpROI > threshold);
 
-		for j = 1:numel(ind)
-			CpROI(ind(j)) = [];
-			timer(ind(j)) = [];
-			Cp1(ind(j), :)= [];
-			Cp2(ind(j),:) = [];
-		end
+        for j = 1:numel(ind)
+            CpROI(ind(j)) = [];
+            timer(ind(j)) = [];
+            Cp1(ind(j), :)= [];
+            Cp2(ind(j),:) = [];
+        end
 
-		xdata{1}.Cp    = CpROI';
-		xdata{1}.timer = timer;
-	end
+        xdata{1}.Cp    = CpROI';
+        xdata{1}.timer = timer;
+    end
 end
 
 

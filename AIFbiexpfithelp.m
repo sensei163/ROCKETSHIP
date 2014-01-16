@@ -27,8 +27,8 @@ t  = t(:);
 
 % Get preferences
 prefs = parse_preference_file('dce_preferences.txt',0,...
-	{'aif_lower_limits' 'aif_upper_limits' 'aif_initial_values' ...
-	'aif_TolFun' 'aif_TolX' 'aif_MaxIter' 'aif_MaxFunEvals' 'aif_Robust'});
+    {'aif_lower_limits' 'aif_upper_limits' 'aif_initial_values' ...
+    'aif_TolFun' 'aif_TolX' 'aif_MaxIter' 'aif_MaxFunEvals' 'aif_Robust'});
 lower_limits = str2num(prefs.aif_lower_limits);
 upper_limits = str2num(prefs.aif_upper_limits);
 initial_values = str2num(prefs.aif_initial_values);

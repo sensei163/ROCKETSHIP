@@ -320,13 +320,13 @@ if(steady_state_time == -1)
     
     for i = 1:2
         title(['Select timepoint ' num2str(i) ...
-			' before injection. (i.e. Select an interval (2 points) before contrast injection to define stead state)'])
+            ' before injection. (i.e. Select an interval (2 points) before contrast injection to define stead state)'])
         [steady_state_time(i), ~] = ginput(1);
     end
 else
-	%No zero index in matlab
-	steady_state_time(2) = steady_state_time;
-	steady_state_time(1) = 1;
+    %No zero index in matlab
+    steady_state_time(2) = steady_state_time;
+    steady_state_time(1) = 1;
 end
 
 % Averaged timecurves for AIF and Tumor
@@ -374,7 +374,7 @@ disp(['AIF SNR filter requires average SNR > ' num2str(snr_filter)]);
 disp(['AIF SNR filter has removed: ' num2str(snrfilter) ' of ' num2str(prefilter_number_aif_voxels) ' AIF voxels.']);
 disp(['After filter average AIF SNR (all voxels, all time points) = ' num2str(mean(voxelSNR_filtered))]);
 if snrfilter>=prefilter_number_aif_voxels
-	error('Error SNR filter removed all AIF points, lower SNR filter requirement');
+    error('Error SNR filter removed all AIF points, lower SNR filter requirement');
 end
 
 %% 7. Convert AIF/ Reference region to R1
