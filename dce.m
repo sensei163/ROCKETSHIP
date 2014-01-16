@@ -55,11 +55,13 @@ function dce_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for dce
 handles.output = hObject;
 
+% Create structure to hold roi list
+handles.roi_list = {};
+
 % Update handles structure
 guidata(hObject, handles);
 
-% Create structure to hold roi list
-handles.roi_list = {};
+
 
 % check preference file withe verbose for invalid selections, use this to 
 % guard against typos

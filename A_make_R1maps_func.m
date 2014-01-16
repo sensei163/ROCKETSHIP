@@ -48,10 +48,12 @@ function results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_pat
 % A matlab data .mat file is saved for further processing.
 % 
 % Requires:
-% niftitools
+% A_make_R1maps_func.m
+% DataHash.m
 % cleanAB.m
 % cleanR1t.m
-% 
+% findRod.m
+% niftitools
 % 
 % Thomas Ng
 % Caltech, Dec 2011

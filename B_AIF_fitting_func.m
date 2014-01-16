@@ -27,11 +27,15 @@ function results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_i
 % multiday studies.
 % 
 % Requires:
-% timeresmaker.m
-% setupxdata2.m
-% setupxdata3.m
-% prepandsave.m
+% B_AIF_fitting_func.m
 % AIFbiexpfithelp.m
+% DataHash.m
+% AIFbiexpcon.m
+% parse_preference_file.m
+% timeresmaker.m *
+% setupxdata2.m *
+% setupxdata3.m *
+% prepandsave.m *
 % 
 % Thomas Ng 
 % Caltech

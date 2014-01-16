@@ -32,7 +32,15 @@ function results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,tim
 % Then it will fit a DCE curve according to various models
 % 
 % Requires:
-% ???
+% D_fit_voxels_func.m
+% DataHash.m
+% FXLfit_generic.m
+% ProgressBar.m
+% FXLStep1AIFhelper.m
+% FXLStep1AIFhelper_vp.m
+% fxr_helper.m
+% parse_preference_file.m
+% niftitools
 % 
 % Samuel Barnes
 % Caltech
@@ -325,11 +333,11 @@ fit_data.PathName = PathName;
 fit_data.time_smoothing = time_smoothing;
 fit_data.time_smoothing_window =time_smoothing_window;
 fit_data.dce_model =dce_model;
-	
+fit_data.number_rois = number_rois;
+
 if number_rois~=0
 	xdata{1}.roi_series = roi_series;
 	xdata{1}.roi_series_original = roi_series_original;
-	xdata{1}.number_rois = number_rois;
 	fit_data.roi_results = roi_results;
 	fit_data.roi_name = roi_name;
     if strcmp(dce_model,'fxr')

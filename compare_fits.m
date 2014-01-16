@@ -14,7 +14,14 @@ function compare_fits(results_d_path,background_image_path,show_original,show_ci
 % series data
 % 
 % Requires:
-% ???
+% compare_fits.m
+% compare_gui.m
+% plot_dce_curve.m
+% FXLStep1AIF_vpcfit.m
+% FXLStep1AIFcfit.m
+% fxr_cfit.m
+% niftitools
+%
 % 
 % Samuel Barnes
 % Caltech
@@ -23,7 +30,7 @@ function compare_fits(results_d_path,background_image_path,show_original,show_ci
 
 
 load(results_d_path);
-if xdata{1}.number_rois~=0
+if fit_data.number_rois~=0
 	compare_gui(xdata{1},fit_data,show_original,show_ci);
 end
 if fit_data.fit_voxels
