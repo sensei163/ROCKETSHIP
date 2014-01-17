@@ -76,11 +76,11 @@ for j = 1:spacepoints
 end
 
 GOODspace= setdiff([1:spacepoints], BADspace);
-perbad = numel(BADspace)/spacepoints;
+perbad = numel(BADspace)/spacepoints*100;
 
-disp([num2str(perbad) ' of total ' type ' voxels were removed from analysis.']);
+disp([num2str(perbad) '% of total ' type ' voxels were removed from analysis.']);
 
-disp([num2str(CLEANspace/numel(AB)) ' of total voxels were cleaned.']);
+disp([num2str(CLEANspace/numel(AB)*100) '% of total voxels were cleaned.']);
 
 AB(:, BADspace) = [];
 T1(BADspace)    = [];

@@ -15,19 +15,24 @@ disp(['space points = ' num2str(spacepoints)])
 
 for j = 1:spacepoints
     
-    TEST = R1t(:, j);
-    
-    TEST = imag(TEST);
-    
-    ind  = find(TEST > 0);
+    %First check for non-real numbers
+    R1t_imaginary = imag(R1t(:, j));
+    ind  = find(R1t_imaginary > 0);
     
     % if greater than threshold, remove
     if(ind > threshold*(timepoints))
         BADspace = [BADspace j];
     elseif(ind > 0)
-        
+        %Not greater than threshold remove imaginary part
+        R1t(:, j) = real(R1t(:, j));
+    end
+    
+    %Also check for non-finite values
+    ind = find(~isfinite((R1t(:, j))));
+    if(ind > threshold*(timepoints))
+        BADspace = [BADspace j];
+    elseif(ind > 0)
         for k = 1:numel(ind)
-            
             buffer = 3;
             
             bufferind = ind(k)-buffer:ind(k)+buffer;
@@ -41,24 +46,25 @@ for j = 1:spacepoints
             out = find(bufferind == ind(k));
             bufferind(out) = [];
             
-            CLEANspace = CLEANspace+1;
+            R1t(ind(k),j) = interp1(bufferind, R1t(bufferind,j), ind(k));
             
-            
-        end
-
-        TEST(ind(k)) = interp1(bufferind, TEST(bufferind), ind(k));
-        
-        R1t(:, j) = TEST;
-    else
+            if isfinite(R1t(ind(k),j))
+                CLEANspace = CLEANspace+1;
+            else
+                BADspace = [BADspace j];
+                break;
+            end
+        end  
     end
+    
 end
 
 GOODspace= setdiff([1:spacepoints], BADspace);
-perbad = numel(BADspace)/spacepoints;
+perbad = numel(BADspace)/spacepoints*100;
 
-disp([num2str(perbad) ' of total ' type ' voxels were removed from analysis.']);
+disp([num2str(perbad) '% of total ' type ' voxels were removed from analysis.']);
 
-disp([num2str(CLEANspace/numel(R1t)) ' of total voxels were cleaned.']);
+disp([num2str(CLEANspace/numel(R1t)*100) '% of total voxels were cleaned.']);
 
 R1t(:, BADspace) = [];
 T1(BADspace)    = [];
