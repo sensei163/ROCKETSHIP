@@ -404,7 +404,7 @@ disp(['File MD5 hash: ' mat_md5])
 % f) Make maps and Save image files
 %************************
 [discard, actual] = fileparts(strrep(dynam_name, '\', '/'));
-res = [0 0.25 0.25 2];
+res = [1 1 1];
 
 if strcmp(dce_model, 'aif')
     % Write ROI results
@@ -443,13 +443,13 @@ if strcmp(dce_model, 'aif')
         nii_path{6} = fullfile(PathName, [rootname dce_model '_ve_ci_low.nii']);
         nii_path{7} = fullfile(PathName, [rootname dce_model '_ve_ci_high.nii']);
 
-        save_nii(make_nii(KtransROI, res(2:4), [1 1 1]), nii_path{1});
-        save_nii(make_nii(veROI, res(2:4), [1 1 1]), nii_path{2});
-        save_nii(make_nii(residual, res(2:4), [1 1 1]), nii_path{3});
-        save_nii(make_nii(ci_95_low_ktrans, res(2:4), [1 1 1]), nii_path{4});
-        save_nii(make_nii(ci_95_high_ktrans, res(2:4), [1 1 1]), nii_path{5});
-        save_nii(make_nii(ci_95_low_ve, res(2:4), [1 1 1]), nii_path{6});
-        save_nii(make_nii(ci_95_high_ve, res(2:4), [1 1 1]), nii_path{7});
+        save_nii(make_nii(KtransROI, res, [1 1 1]), nii_path{1});
+        save_nii(make_nii(veROI, res, [1 1 1]), nii_path{2});
+        save_nii(make_nii(residual, res, [1 1 1]), nii_path{3});
+        save_nii(make_nii(ci_95_low_ktrans, res, [1 1 1]), nii_path{4});
+        save_nii(make_nii(ci_95_high_ktrans, res, [1 1 1]), nii_path{5});
+        save_nii(make_nii(ci_95_low_ve, res, [1 1 1]), nii_path{6});
+        save_nii(make_nii(ci_95_high_ve, res, [1 1 1]), nii_path{7});
     end
 elseif strcmp(dce_model, 'aif_vp')
     % Write ROI results
@@ -496,16 +496,16 @@ elseif strcmp(dce_model, 'aif_vp')
         nii_path{9} = fullfile(PathName, [rootname dce_model '_vp_ci_low.nii']);
         nii_path{10} = fullfile(PathName, [rootname dce_model '_vp_ci_high.nii']);
         
-        save_nii(make_nii(KtransROI, res(2:4), [1 1 1]), nii_path{1});
-        save_nii(make_nii(veROI, res(2:4), [1 1 1]), nii_path{2});
-        save_nii(make_nii(vpROI, res(2:4), [1 1 1]), nii_path{3});
-        save_nii(make_nii(residual, res(2:4), [1 1 1]), nii_path{4});
-        save_nii(make_nii(ci_95_low_ktrans, res(2:4), [1 1 1]), nii_path{5});
-        save_nii(make_nii(ci_95_high_ktrans, res(2:4), [1 1 1]), nii_path{6});
-        save_nii(make_nii(ci_95_low_ve, res(2:4), [1 1 1]), nii_path{7});
-        save_nii(make_nii(ci_95_high_ve, res(2:4), [1 1 1]), nii_path{8});
-        save_nii(make_nii(ci_95_low_vp, res(2:4), [1 1 1]), nii_path{9});
-        save_nii(make_nii(ci_95_high_vp, res(2:4), [1 1 1]), nii_path{10});
+        save_nii(make_nii(KtransROI, res, [1 1 1]), nii_path{1});
+        save_nii(make_nii(veROI, res, [1 1 1]), nii_path{2});
+        save_nii(make_nii(vpROI, res, [1 1 1]), nii_path{3});
+        save_nii(make_nii(residual, res, [1 1 1]), nii_path{4});
+        save_nii(make_nii(ci_95_low_ktrans, res, [1 1 1]), nii_path{5});
+        save_nii(make_nii(ci_95_high_ktrans, res, [1 1 1]), nii_path{6});
+        save_nii(make_nii(ci_95_low_ve, res, [1 1 1]), nii_path{7});
+        save_nii(make_nii(ci_95_high_ve, res, [1 1 1]), nii_path{8});
+        save_nii(make_nii(ci_95_low_vp, res, [1 1 1]), nii_path{9});
+        save_nii(make_nii(ci_95_high_vp, res, [1 1 1]), nii_path{10});
     end
 elseif strcmp(dce_model, 'fxr')
     % Write ROI results
@@ -552,16 +552,16 @@ elseif strcmp(dce_model, 'fxr')
         nii_path{9} = fullfile(PathName, [rootname dce_model '_tau_ci_low.nii']);
         nii_path{10} = fullfile(PathName, [rootname dce_model '_tau_ci_high.nii']);
         
-        save_nii(make_nii(KtransROI, res(2:4), [1 1 1]), nii_path{1});
-        save_nii(make_nii(veROI, res(2:4), [1 1 1]), nii_path{2});
-        save_nii(make_nii(tauROI, res(2:4), [1 1 1]), nii_path{3});
-        save_nii(make_nii(residual, res(2:4), [1 1 1]), nii_path{4});
-        save_nii(make_nii(ci_95_low_ktrans, res(2:4), [1 1 1]), nii_path{5});
-        save_nii(make_nii(ci_95_high_ktrans, res(2:4), [1 1 1]), nii_path{6});
-        save_nii(make_nii(ci_95_low_ve, res(2:4), [1 1 1]), nii_path{7});
-        save_nii(make_nii(ci_95_high_ve, res(2:4), [1 1 1]), nii_path{8});
-        save_nii(make_nii(ci_95_low_tau, res(2:4), [1 1 1]), nii_path{9});
-        save_nii(make_nii(ci_95_high_tau, res(2:4), [1 1 1]), nii_path{10});
+        save_nii(make_nii(KtransROI, res, [1 1 1]), nii_path{1});
+        save_nii(make_nii(veROI, res, [1 1 1]), nii_path{2});
+        save_nii(make_nii(tauROI, res, [1 1 1]), nii_path{3});
+        save_nii(make_nii(residual, res, [1 1 1]), nii_path{4});
+        save_nii(make_nii(ci_95_low_ktrans, res, [1 1 1]), nii_path{5});
+        save_nii(make_nii(ci_95_high_ktrans, res, [1 1 1]), nii_path{6});
+        save_nii(make_nii(ci_95_low_ve, res, [1 1 1]), nii_path{7});
+        save_nii(make_nii(ci_95_high_ve, res, [1 1 1]), nii_path{8});
+        save_nii(make_nii(ci_95_low_tau, res, [1 1 1]), nii_path{9});
+        save_nii(make_nii(ci_95_high_tau, res, [1 1 1]), nii_path{10});
     end
 end
 

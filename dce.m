@@ -307,8 +307,6 @@ saved_results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,t
 set(handles.results_a_path,'String',saved_results);
 
 
-uiremember;
-
 function tr_Callback(hObject, eventdata, handles)
 % hObject    handle to tr (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -667,7 +665,7 @@ time_resolution = time_resolution/60; %convert to minutes
 
 saved_results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_injection,end_injection,fit_aif,average_aif,time_resolution);
 set(handles.results_b_path,'String',saved_results);
-uiremember;
+
 
 % --- Executes on button press in browse_results_b.
 function browse_results_b_Callback(hObject, eventdata, handles)
@@ -913,8 +911,6 @@ fit_voxels = get(handles.fit_voxels,'Value');
 saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon);
 set(handles.results_d_path,'String',saved_results);
 
-uiremember;
-
 % --- Executes on button press in run_e.
 function run_e_Callback(hObject, eventdata, handles)
 % hObject    handle to run_e (see GCBO)
@@ -927,7 +923,6 @@ show_original = get(handles.show_original,'Value');
 show_ci = get(handles.show_ci,'Value');
 
 compare_fits(results_d_path,background_image_path,show_original,show_ci);
-uiremember;
 
 % --- Executes on button press in show_original.
 function show_original_Callback(hObject, eventdata, handles)
