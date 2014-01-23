@@ -42,8 +42,11 @@ function [ p, Fstat, df1, df2 ] = ftest(n,np1,np2,chi1,chi2)
 %%% check ordering. np2 should be > np1 and chi2 should be < chi1
 % i.e., second model should have more parameters and better fit
 if np2 == np1
-    disp('number of model parameters are the same in both cases!')
+%     disp('number of model parameters are the same in both cases!')
     p = 1;
+    Fstat = nan;
+    df1 = nan;
+    df2 = nan;
     return
 elseif np2 < np1        % np1 should be less than np2. If not, just swap.
     nptemp = np1; np1 = np2; np2 = nptemp;
@@ -51,8 +54,11 @@ elseif np2 < np1        % np1 should be less than np2. If not, just swap.
 end
 
 if chi2 >= chi1
-    disp('misfit higher for model with more parameters!')
+%     disp('misfit higher for model with more parameters!')
     p = 1;
+    Fstat = nan;
+    df1 = nan;
+    df2 = nan;
     return
 end
 
