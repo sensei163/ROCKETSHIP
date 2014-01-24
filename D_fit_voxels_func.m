@@ -332,7 +332,7 @@ fit_data.dynam_name = dynam_name;
 fit_data.PathName = PathName;
 fit_data.time_smoothing = time_smoothing;
 fit_data.time_smoothing_window =time_smoothing_window;
-fit_data.dce_model =dce_model;
+fit_data.model_name =dce_model;
 fit_data.number_rois = number_rois;
 xdata{1}.dimensions = size(currentimg);
 

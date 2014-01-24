@@ -633,7 +633,7 @@ function noisepixels_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of noisepixels
 guidata(hObject, handles);
 set(handles.noisefile, 'Value', 0);
-set(handes.noise_path, 'Enable', 'off');
+set(handles.noise_path, 'Enable', 'off');
 set(handles.noisepixsize, 'Enable', 'on');
 
 

@@ -48,14 +48,18 @@ set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
     function mouseClick (object, eventdata)
         coords=get(gca,'CurrentPoint');
         
-        % X and Y are reversed because of the transpose above
-        image_y = int32(coords(1, 1));
-        image_x = int32(coords(1, 2));
-        image_z = round(get(slider_handle,'Value'));
+        image_x = int32(coords(1, 1));
+        image_y = int32(coords(1, 2));
+        if slider_handle==0
+            image_z = 1;
+        else
+            image_z = round(get(slider_handle,'Value'));
+        end
 
+        % X and Y are reversed because of the transpose above
         size_y = size(background_image,1);
         size_x = size(background_image,2);
-        image_id = image_y+(image_x-1)*size_y+(image_z-1)*size_x*size_y;
+        image_id = image_x+(image_y-1)*size_y+(image_z-1)*size_x*size_y;
         
         if sum(strcmp(fit_data.model_name,{'aif' 'aif_vp' 'fxr'}))
             voi = find(fit_data.tumind==image_id);
@@ -84,14 +88,14 @@ set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
             if fit_data.fitting_results(image_id,1)>0
                 % Assume it is a decay model then
                 plot_data.x_values = xdata{1}.x_values;
-                plot_data.y_values = squeeze(xdata{1}.y_values(image_y,image_x,image_z,:));
+                plot_data.y_values = squeeze(xdata{1}.y_values(image_x,image_y,image_z,:));
                 plot_data.x_units = xdata{1}.x_units;
                 plot_data.y_units =  xdata{1}.y_units;
                 plot_data.fit_parameters = fit_data.fitting_results(image_id,:);
                 plot_data.model_name = fit_data.model_name;
                 plot_data.show_original = show_original;
                 plot_data.show_ci = show_ci;
-                plot_data.title = ['Voxel Location (' num2str(image_y) ',' num2str(image_x) ',' num2str(image_z) ')'];
+                plot_data.title = ['Voxel Location (' num2str(image_x) ',' num2str(image_y) ',' num2str(image_z) ')'];
 
                 figure(2);
                 plot_curve(plot_data);
