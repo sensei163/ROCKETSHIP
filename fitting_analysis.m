@@ -1,35 +1,35 @@
-function varargout = dce_compare(varargin)
-% DCE_COMPARE MATLAB code for dce_compare.fig
-%      DCE_COMPARE, by itself, creates a new DCE_COMPARE or raises the existing
+function varargout = fitting_analysis(varargin)
+% FITTING_ANALYSIS MATLAB code for fitting_analysis.fig
+%      FITTING_ANALYSIS, by itself, creates a new FITTING_ANALYSIS or raises the existing
 %      singleton*.
 %
-%      H = DCE_COMPARE returns the handle to a new DCE_COMPARE or the handle to
+%      H = FITTING_ANALYSIS returns the handle to a new FITTING_ANALYSIS or the handle to
 %      the existing singleton*.
 %
-%      DCE_COMPARE('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in DCE_COMPARE.M with the given input arguments.
+%      FITTING_ANALYSIS('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in FITTING_ANALYSIS.M with the given input arguments.
 %
-%      DCE_COMPARE('Property','Value',...) creates a new DCE_COMPARE or raises the
+%      FITTING_ANALYSIS('Property','Value',...) creates a new FITTING_ANALYSIS or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before dce_compare_OpeningFcn gets called.  An
+%      applied to the GUI before fitting_analysis_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to dce_compare_OpeningFcn via varargin.
+%      stop.  All inputs are passed to fitting_analysis_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help dce_compare
+% Edit the above text to modify the response to help fitting_analysis
 
-% Last Modified by GUIDE v2.5 22-Jan-2014 18:42:34
+% Last Modified by GUIDE v2.5 24-Jan-2014 15:07:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @dce_compare_OpeningFcn, ...
-                   'gui_OutputFcn',  @dce_compare_OutputFcn, ...
+                   'gui_OpeningFcn', @fitting_analysis_OpeningFcn, ...
+                   'gui_OutputFcn',  @fitting_analysis_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,15 +44,15 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before dce_compare is made visible.
-function dce_compare_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before fitting_analysis is made visible.
+function fitting_analysis_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to dce_compare (see VARARGIN)
+% varargin   command line arguments to fitting_analysis (see VARARGIN)
 
-% Choose default command line output for dce_compare
+% Choose default command line output for fitting_analysis
 handles.output = hObject;
 handles.roi_data_ready = 0;
 handles.voxel_data_ready = 0;
@@ -61,12 +61,12 @@ handles.voxel_data_ready = 0;
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes dce_compare wait for user response (see UIRESUME)
+% UIWAIT makes fitting_analysis wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = dce_compare_OutputFcn(hObject, eventdata, handles) 
+function varargout = fitting_analysis_OutputFcn(hObject, eventdata, handles) 
 varargout{1} = handles.output;
 
 
