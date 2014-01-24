@@ -181,12 +181,12 @@ if handles.roi_data_ready
     plot_data.Cp			= handles.xdata.Cp;
     plot_data.timer			= handles.xdata.timer;
     plot_data.fit_parameters= handles.fit_data.roi_results(selected_roi,:);
-    plot_data.dce_model		= handles.fit_data.dce_model;
+    plot_data.model_name		= handles.fit_data.model_name;
     plot_data.show_original = get(handles.show_original,'Value');
     plot_data.show_ci		= get(handles.show_ci,'Value');
     plot_data.title = ['ROI "' selected_name '"'];
 
-    if strcmp(handles.fit_data.dce_model,'fxr')
+    if strcmp(handles.fit_data.model_name,'fxr')
         plot_data.R1o = handles.xdata.roi_r1(selected_roi);
         plot_data.R1i = handles.xdata.roi_r1(selected_roi);
         plot_data.r1 = handles.xdata.relaxivity;
@@ -247,7 +247,7 @@ try
         end
     end
         
-    information_string = {['Fit Model: ' handles.fit_data.dce_model],...
+    information_string = {['Fit Model: ' handles.fit_data.model_name],...
         ['Fitted ROIs: ' num2str(handles.fit_data.number_rois)],...
         ['Fitted Voxels: ' num2str(handles.xdata.numvoxels*handles.fit_data.fit_voxels)]};
     
@@ -259,8 +259,9 @@ catch err
         ready_message = 'results file not found';
     elseif ~exist('xdata','var') || ~exist('fit_data','var')
         ready_message = 'results file does not contain fit data';
-    elseif ~exist('handles.fit_data.fit_voxels','var') ||...
-            ~exist('handles.fit_data.number_rois','var')
+    elseif ~isfield(handles.fit_data,'fit_voxels') ||...
+            ~isfield(handles.fit_data,'number_rois') ||...
+            ~isfield(handles.fit_data,'model_name')
         ready_message = 'fit data is incomplete, rerun fit';
     else
         rethrow(err);
@@ -384,8 +385,8 @@ if handles.ftest_ready
         [base_path, ~, ~] = fileparts(results_cfit_path);
         [~, base_name, ~] = fileparts(handles.fit_data.dynam_name);
         save_path = fullfile(base_path,[base_name '_' ...
-            handles.fit_data.dce_model '_' ...
-            handles.lower_model_fit_data.dce_model '_ftest.nii']);
+            handles.fit_data.model_name '_' ...
+            handles.lower_model_fit_data.model_name '_ftest.nii']);
     
         p_matrix     = zeros([256 256]);
         p_matrix(handles.fit_data.tumind) = p_voxels;
@@ -399,13 +400,13 @@ set(handles.ready_display,'String',status_string);
 set(handles.ready_display, 'ForegroundColor', color);
 
 function [sse1, fp1, sse2, fp2, n]=get_sse_and_fp(handles)
-if strcmp(handles.lower_model_fit_data.dce_model,'aif')
+if strcmp(handles.lower_model_fit_data.model_name,'aif')
     sse1 = handles.lower_model_fit_data.fitting_results(:,4);
     fp1 = 2;
-elseif strcmp(handles.lower_model_fit_data.dce_model,'aif_vp')
+elseif strcmp(handles.lower_model_fit_data.model_name,'aif_vp')
     sse1 = handles.lower_model_fit_data.fitting_results(:,4);
     fp1 = 3;
-elseif strcmp(handles.lower_model_fit_data.dce_model,'fxr')
+elseif strcmp(handles.lower_model_fit_data.model_name,'fxr')
     sse1 = handles.lower_model_fit_data.fitting_results(:,4);
     fp1 = 3;
 else
@@ -413,13 +414,13 @@ else
     return
 end
 
-if strcmp(handles.fit_data.dce_model,'aif')
+if strcmp(handles.fit_data.model_name,'aif')
     sse2 = handles.fit_data.fitting_results(:,4);
     fp2 = 2;
-elseif strcmp(handles.fit_data.dce_model,'aif_vp')
+elseif strcmp(handles.fit_data.model_name,'aif_vp')
     sse2 = handles.fit_data.fitting_results(:,4);
     fp2 = 3;
-elseif strcmp(handles.fit_data.dce_model,'fxr')
+elseif strcmp(handles.fit_data.model_name,'fxr')
     sse2 = handles.fit_data.fitting_results(:,4);
     fp2 = 3;
 else
@@ -474,8 +475,8 @@ if handles.ftest_ready
         [base_path, ~, ~] = fileparts(results_cfit_path);
         [~, base_name, ~] = fileparts(handles.fit_data.dynam_name);
         save_path = fullfile(base_path,[base_name '_' ...
-            handles.fit_data.dce_model '_' ...
-            handles.lower_model_fit_data.dce_model '_aic.nii']);
+            handles.fit_data.model_name '_' ...
+            handles.lower_model_fit_data.model_name '_aic.nii']);
     
         aic_matrix     = zeros([256 256]);
         aic_matrix(handles.fit_data.tumind) = aic_voxels;

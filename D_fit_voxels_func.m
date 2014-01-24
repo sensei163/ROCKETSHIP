@@ -334,6 +334,7 @@ fit_data.time_smoothing = time_smoothing;
 fit_data.time_smoothing_window =time_smoothing_window;
 fit_data.dce_model =dce_model;
 fit_data.number_rois = number_rois;
+xdata{1}.dimensions = size(currentimg);
 
 if number_rois~=0
     xdata{1}.roi_series = roi_series;
