@@ -19,6 +19,14 @@ if levels == 1
     elseif filevolume == 2
         % 3D volumes
         
+        % Check if there are more than 1 file in the volume, if not, then
+        % return
+        
+        if numel(fullpath) < 2 && numel(handles.batchdata) < 2
+            errormsg = 'Not enough files defined for 3D volume.';
+            return;
+        end
+        
         % Check if subject rootname defined, if not, then try to figure out
         % the root
         
@@ -43,6 +51,14 @@ if levels == 1
         
     elseif filevolume == 3
         % 2D volumes
+        
+         % Check if there are more than 1 file in the volume, if not, then
+        % return
+        
+        if numel(fullpath) < 2 && numel(handles.batchdata) < 2
+            errormsg = 'Not enough files defined for 2D volume.';
+            return;
+        end
         
         % Check if subject rootname defined, if not, then try to figure out
         % the root
@@ -78,10 +94,29 @@ elseif levels == 2
     if filevolume == 1
         % 4D volume, nothing to do, just update GUI
         
-        [visual_listA, ~, ~] = visualize_list_dce(handles, filevolume);
+        [visual_listA, visual_listB, visual_listC] = visualize_list_dce(handles, filevolume);
         set(handles.DCEfilesA, 'String', visual_listA, 'Value', 1);
+        set(handles.DCEfilesB, 'String', visual_listB, 'Value', 1);
+        set(handles.DCEfilesC, 'String', visual_listC, 'Value', 1);
+        set(handles.DCEfilesB, 'Enable', 'off');
+        set(handles.DCEfilesC, 'Enable', 'off');
     elseif filevolume == 2
         % 3D volumes
+        
+         % Check if there are more than 1 file in the volume, if not, then
+        % return
+        
+        if numel(fullpath) < 2 && numel(handles.batchdata) < 2
+            errormsg = 'Not enough files defined for 3D volume.';
+            
+            [visual_listA, visual_listB, visual_listC] = visualize_list_dce(handles, filevolume);
+        set(handles.DCEfilesA, 'String', visual_listA, 'Value', 1);
+        set(handles.DCEfilesB, 'String', visual_listB, 'Value', 1);
+        set(handles.DCEfilesC, 'String', visual_listC, 'Value', 1);
+        set(handles.DCEfilesB, 'Enable', 'off');
+ 
+            return;
+        end
 
         [visual_listA, visual_listB, ~] = visualize_list_dce(handles,filevolume);
         
@@ -96,6 +131,20 @@ elseif levels == 2
     elseif filevolume == 3
         % 2D volumes
         
+         % Check if there are more than 1 file in the volume, if not, then
+        % return
+        
+        if numel(fullpath) < 2 && numel(handles.batchdata) < 2
+            errormsg = 'Not enough files defined for 2D volume.';
+            
+            [visual_listA, visual_listB, visual_listC] = visualize_list_dce(handles, filevolume);
+        set(handles.DCEfilesA, 'String', visual_listA, 'Value', 1);
+        set(handles.DCEfilesB, 'String', visual_listB, 'Value', 1);
+        set(handles.DCEfilesC, 'String', visual_listC, 'Value', 1);
+        set(handles.DCEfilesB, 'Enable', 'off');
+
+            return;
+        end
         
         [visual_listA, visual_listB, visual_listC] = visualize_list_dce(handles,filevolume);
         
@@ -124,10 +173,34 @@ elseif levels == 3
         
         %handles.batchdata(1).files = fullpath;
         
-        [visual_listA, ~, ~] = visualize_list_dce(handles, filevolume);
+        if numel(fullpath) > 1
+            errormsg = 'More than 1 file present';
+            return;
+        end
+        
+        [visual_listA, visual_listB, visual_listC] = visualize_list_dce(handles, filevolume);
         set(handles.DCEfilesA, 'String', visual_listA, 'Value', 1);
+        set(handles.DCEfilesB, 'String', visual_listB, 'Value', 1);
+        set(handles.DCEfilesC, 'String', visual_listC, 'Value', 1);
+        set(handles.DCEfilesB, 'Enable', 'off');
+        set(handles.DCEfilesC, 'Enable', 'off');
     elseif filevolume == 2
         % 3D volumes
+         % Check if there are more than 1 file in the volume, if not, then
+        % return
+        
+        if numel(fullpath) < 2 && numel(handles.batchdata) < 2
+            errormsg = 'Not enough files defined for 3D volume.';
+            
+            return
+            [visual_listA, visual_listB, visual_listC] = visualize_list_dce(handles, filevolume);
+        set(handles.DCEfilesA, 'String', visual_listA, 'Value', 1);
+        set(handles.DCEfilesB, 'String', visual_listB, 'Value', 1);
+        set(handles.DCEfilesC, 'String', visual_listC, 'Value', 1);
+        set(handles.DCEfilesB, 'Enable', 'off');
+
+            return;
+        end
         
         % Check if subject rootname defined, if not, then try to figure out
         % the root
@@ -154,6 +227,23 @@ elseif levels == 3
     elseif filevolume == 3
         % 2D volumes
         
+         % Check if there are more than 1 file in the volume, if not, then
+        % return
+        
+        if numel(fullpath) < 2 && numel(handles.batchdata) < 2
+            errormsg = 'Not enough files defined for 2D volume.';
+     
+            return
+        elseif numel(handles.batchdata) < 2
+            errormsg = 'Not enough files defined for 2D volume';
+            return
+        end
+%             [visual_listA, visual_listB, visual_listC] = visualize_list_dce(handles, filevolume);
+%         set(handles.DCEfilesA, 'String', visual_listA, 'Value', 1);
+%         set(handles.DCEfilesB, 'String', visual_listB, 'Value', 1);
+%         set(handles.DCEfilesC, 'String', visual_listC, 'Value', 1);
+            return;
+        end
         % Check if subject rootname defined, if not, then try to figure out
         % the root
         

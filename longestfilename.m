@@ -1,13 +1,9 @@
-function sizer = longestfilename(batchdata);
+function sizer = longestfilename(filelist);
 sizer = 0;
 
-for i = 1:numel(batchdata)
-    
-    tempfiles = batchdata(i).files;
-    
-    for j = 1:numel(tempfiles)
-        
-        namer = tempfiles{j};
+for i = 1:numel(filelist)
+
+        namer = filelist{i};
         [~, namer, ~] = fileparts(namer);
         sizer = max(sizer, numel(namer));
     end

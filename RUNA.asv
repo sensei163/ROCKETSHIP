@@ -316,31 +316,10 @@ end
 disp('Loading image volumes')
 
 [TUMOR, LV, NOISE, T1MAP, DYNAMIC, hdr, res, errormsg] = loadIMGVOL(handles);
-
-if ~isempty(errormsg)
-    
-    disp_error(errormsg, handles);
-    return;
-end
-
-
-
-% image parameters
-quant     = get(handles.quant, 'Value');
-aiforRR = get(handles.aiforrr, 'Value');
-tr = str2num(get(handles.tr, 'String')); %#ok<ST2NM>
-fa = str2num(get(handles.fa, 'String')); %#ok<ST2NM>
-time_resolution = str2num(get(handles.time_resolution, 'String')); %#ok<ST2NM>
-hematocrit = str2num(get(handles.hematocrit, 'String')); %#ok<ST2NM>
-snr_filter = str2num(get(handles.snr_filter, 'String')); %#ok<ST2NM>
-relaxivity = str2num(get(handles.relaxivity, 'String')); %#ok<ST2NM>
-injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
-water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
+disp_error(notemsg, handles);
 
 time_resolution = time_resolution/60; %convert to minutes
-saved_results = A_make_R1maps_func(DYNAMIC, T1MAP, LV, TUMOR, NOISE, hdr, res,quant, aiforRR, ... 
-    tr,fa,time_resolution,hematocrit,snr_filter,relaxivity,injection_time,water_fraction);
-
+saved_results = A_make_R1maps_func(DYNAMIC, T1MAP, dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,time_resolution,hematocrit,snr_filter,relaxivity,injection_time,water_fraction);
 % saved_results = 'aaa';
 set(handles.results_a_path,'String',saved_results);
 

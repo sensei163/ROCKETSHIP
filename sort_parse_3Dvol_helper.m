@@ -21,16 +21,17 @@ for i = 1:numel(fullpath)
     for j = 1:numel(numbers)
         
         newnum = [num2str(zeros(1, natdigits-numel(numbers{j}))) numbers{j}];
-        
-        tempstr(ind(j):ind(j)+numel(natdigits)) = newnum;
+        newnum = strrep(newnum,' ', '');
+
+        tempstr(ind(j):(ind(j)+natdigits-1)) = newnum;
     end
     
-    editlist{i} = tempstr;
+    editlist{i} = [subjectID tempstr];
 end
 
 % Now sort the list
 
-[sort_list, ind] = sort(editlist, 'ascend');
+[sort_list, ind] = sort(editlist);%, 'ascend');
 
 for i = 1:numel(fullpath)
     sortedfullpath(i) = fullpath(ind(i));
