@@ -44,7 +44,7 @@ Updated April 2012
 %}
 %function results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,time_resolution,hematocrit,snr_filter,relaxivity,injection_time,water_fraction)
 
-function results = A_make_R1maps_func(DYNAMIC, T1MAP, LV, TUMOR, NOISE, hdr, res,quant, aiforRR, ... 
+function results = A_make_R1maps_func(DYNAMIC, T1MAP, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, aiforRR, ... 
     tr,fa,time_resolution,hematocrit,snr_filter,relaxivity,injection_time,water_fraction);
 
 %% 1. Option Toggles
