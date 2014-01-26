@@ -42,8 +42,10 @@ Caltech, Dec 2011
 Updated April 2012
 
 %}
-function results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,time_resolution,hematocrit,snr_filter,relaxivity,injection_time,water_fraction)
+%function results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,time_resolution,hematocrit,snr_filter,relaxivity,injection_time,water_fraction)
 
+function results = A_make_R1maps_func(DYNAMIC, T1MAP, LV, TUMOR, NOISE, hdr, res,quant, aiforRR, ... 
+    tr,fa,time_resolution,hematocrit,snr_filter,relaxivity,injection_time,water_fraction);
 
 %% 1. Option Toggles
 
@@ -63,31 +65,31 @@ viable= 0;
 %% DO NOT ALTER LINES BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
 %% 2. a) Load the files
 
-% Ask for file location
-place = '';
+% % Ask for file location
+% place = '';
+% 
+% [PathName1,base,ext] = fileparts(dce_path);
+% dynam = [base ext];
+% 
+% [PathName2,base,ext] = fileparts(t1_aif_path);
+% lv = [base ext];
+% 
+% [PathName3,base,ext] = fileparts(t1_roi_path);
+% tumor = [base ext];
+% 
+% [PathName4,base,ext] = fileparts(noise_path);
+% noise = [base ext];
+% 
+% % Output name
+% rootname = strrep(dynam,'.nii','_');
+% 
+% %Load DCE dataset
+% dynam = load_nii(fullfile(PathName1, place, dynam));
+% 
+% %image resolution
+% res  = dynam.hdr.dime.pixdim;
 
-[PathName1,base,ext] = fileparts(dce_path);
-dynam = [base ext];
-
-[PathName2,base,ext] = fileparts(t1_aif_path);
-lv = [base ext];
-
-[PathName3,base,ext] = fileparts(t1_roi_path);
-tumor = [base ext];
-
-[PathName4,base,ext] = fileparts(noise_path);
-noise = [base ext];
-
-% Output name
-rootname = strrep(dynam,'.nii','_');
-
-%Load DCE dataset
-dynam = load_nii(fullfile(PathName1, place, dynam));
-
-%image resolution
-res  = dynam.hdr.dime.pixdim;
-
-dynamname = dynam;
+% dynamname = dynam;
 dynam = double(dynam.img);
 dynamname.fileprefix
 

@@ -1,4 +1,4 @@
-function [TUMOR, LV, NOISE, T1MAP, DYNAMIC, hdr, res, errormsg] = loadIMGVOL(handles);
+function [TUMOR, LV, NOISE, T1MAP, DYNAMIC, dynampath, rootname hdr, res, errormsg] = loadIMGVOL(handles)
 
 % Takes handles, loads the image files and outputs image volume.
 
@@ -16,6 +16,8 @@ t1roifiles = handles.t1roifiles;
 t1mapfiles = handles.t1mapfiles;
 noisefiles = handles.noisefiles;
 filelist   = handles.filelist;
+
+rootname   = handles.rootname;
 
 fileorder = get(get(handles.fileorder,'SelectedObject'),'Tag');
 
@@ -285,7 +287,8 @@ if ~strcmp(fileorder, 'xyzt')
 end
         
 
-
+dynampath  = fileparts(filelist{1});
+disp(['Write path: ' dynampath]);
 
 
 

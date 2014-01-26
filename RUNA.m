@@ -315,7 +315,7 @@ end
 
 disp('Loading image volumes')
 
-[TUMOR, LV, NOISE, T1MAP, DYNAMIC, hdr, res, errormsg] = loadIMGVOL(handles);
+[TUMOR, LV, NOISE, T1MAP, DYNAMIC, dynampath, rootname, hdr, res, errormsg] = loadIMGVOL(handles);
 
 if ~isempty(errormsg)
     
@@ -338,7 +338,7 @@ injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
 water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
 
 time_resolution = time_resolution/60; %convert to minutes
-saved_results = A_make_R1maps_func(DYNAMIC, T1MAP, LV, TUMOR, NOISE, hdr, res,quant, aiforRR, ... 
+saved_results = A_make_R1maps_func(DYNAMIC, T1MAP, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, aiforRR, ... 
     tr,fa,time_resolution,hematocrit,snr_filter,relaxivity,injection_time,water_fraction);
 
 % saved_results = 'aaa';
