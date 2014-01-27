@@ -32,7 +32,7 @@ gui_State = struct('gui_Name',       mfilename, ...
                    'gui_OutputFcn',  @fitting_analysis_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
-if nargin && ischar(varargin{1})
+if nargin && ischar(varargin{1}) && ~strcmp(varargin{1},'results_path')
     gui_State.gui_Callback = str2func(varargin{1});
 end
 
@@ -57,6 +57,12 @@ handles.output = hObject;
 handles.roi_data_ready = 0;
 handles.voxel_data_ready = 0;
 
+% Get function inputs
+if nargin>1 && strcmp(varargin{1},'results_path')
+    set(handles.results_cfit_path,'String',varargin{2});
+    % Update cfit structures
+    handles = cfit_path_changed(handles);
+end
 
 % Update handles structure
 guidata(hObject, handles);

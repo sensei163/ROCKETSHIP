@@ -115,7 +115,6 @@ else
     set(handles.dce_path,'String',fullpath);
 end
 guidata(hObject, handles);
-uiremember;
 
 function dce_path_Callback(hObject, eventdata, handles)
 % hObject    handle to dce_path (see GCBO)
@@ -163,7 +162,6 @@ else
     set(handles.t1_aif_path,'String',fullpath);
 end
 guidata(hObject, handles);
-uiremember;
 
 function t1_aif_path_Callback(hObject, eventdata, handles)
 % hObject    handle to t1_aif_path (see GCBO)
@@ -211,7 +209,6 @@ else
     set(handles.t1_roi_path,'String',fullpath);
 end
 guidata(hObject, handles);
-uiremember;
 
 function t1_roi_path_Callback(hObject, eventdata, handles)
 % hObject    handle to t1_roi_path (see GCBO)
@@ -259,7 +256,6 @@ else
     set(handles.noise_path,'String',fullpath);
 end
 guidata(hObject, handles);
-uiremember;
 
 function noise_path_Callback(hObject, eventdata, handles)
 % hObject    handle to noise_path (see GCBO)
@@ -512,7 +508,6 @@ else
     set(handles.results_a_path,'String',fullpath);
 end
 guidata(hObject, handles);
-uiremember;
 
 function results_a_path_Callback(hObject, eventdata, handles)
 % hObject    handle to results_a_path (see GCBO)
@@ -689,7 +684,6 @@ else
     set(handles.results_b_path,'String',fullpath);
 end
 guidata(hObject, handles);
-uiremember;
 
 
 function results_b_path_Callback(hObject, eventdata, handles)
@@ -910,6 +904,7 @@ fit_voxels = get(handles.fit_voxels,'Value');
 
 saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon);
 set(handles.results_d_path,'String',saved_results);
+fitting_analysis('results_path', saved_results)
 
 % --- Executes on button press in run_e.
 function run_e_Callback(hObject, eventdata, handles)
