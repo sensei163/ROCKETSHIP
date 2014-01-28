@@ -58,7 +58,7 @@ handles.roi_data_ready = 0;
 handles.voxel_data_ready = 0;
 
 % Get function inputs
-if nargin>1 && strcmp(varargin{1},'results_path')
+if nargin>1 && numel(varargin)>1 && strcmp(varargin{1},'results_path')
     set(handles.results_cfit_path,'String',varargin{2});
     % Update cfit structures
     handles = cfit_path_changed(handles);
@@ -162,6 +162,10 @@ if handles.voxel_data_ready
     show_ci = get(handles.show_ci,'Value');
 
     compare_fits(results_cfit_path,background_image_path,show_original,show_ci);
+else
+    handles = load_check_data(handles,'voxel');
+    % Update handles structure
+    guidata(hObject, handles);
 end
 
 
@@ -225,13 +229,19 @@ return_handles = handles;
 
 
 
-function return_handles = load_check_data(handles)
+function return_handles = load_check_data(handles,verbose)
+if nargin<2
+    verbose = 'default';
+end
 results_cfit_path = get(handles.results_cfit_path,'String');
 background_image_path = get(handles.background_image_path,'String');
 lower_model_path = get(handles.lower_model_path,'String');
 handles.roi_data_ready = 0;
 handles.voxel_data_ready = 0;
 handles.ftest_ready = 0;
+voxel_message = 'No results file selected';
+roi_message = 'No results file selected';
+ftest_message = 'No primary results file selected';
 
 % Load data and check if ready for voxel and ROI analysis
 try
@@ -244,13 +254,17 @@ try
     
     if handles.fit_data.number_rois~=0
         handles.roi_data_ready = 1;
+    else
+        roi_message = 'No ROI results in file';
     end
     if handles.fit_data.fit_voxels 
         if exist(background_image_path,'file')
             handles.voxel_data_ready = 1;
         else
-            ready_message = 'Selected background image does not exist';
+            voxel_message = 'Selected background image does not exist';
         end
+    else
+        voxel_message = 'No voxel results in file';
     end
         
     information_string = {['Fit Model: ' handles.fit_data.model_name],...
@@ -272,6 +286,9 @@ catch err
     else
         rethrow(err);
     end
+    voxel_message = ready_message;
+    roi_message = ready_message;
+    ftest_message = ready_message;
 end
 
 % Now setup for ftest
@@ -284,25 +301,47 @@ try
 catch err
     handles.ftest_ready = 0;
     if ~exist(lower_model_path,'file')
+        ftest_message = 'comparison model file not selected';
         if ~isempty(lower_model_path)
-            ready_message = 'lower model file not found';
+            ftest_message = 'comparison model file not found';
         end
     elseif ~exist('lower_model.xdata','var') || ~exist('lower_model.fit_data','var')
-        if ~isempty(lower_model_path)
-            ready_message = 'lower model file does not contain fit data';
-        end
+        ftest_message = 'comparison model file does not contain fit data';
     else
         rethrow(err);
+    end
+    if ~isempty(lower_model_path)
+        ready_message = ftest_message;
     end
 end
 
 % Display info messages
 set(handles.cfit_information,'String',information_string);
 
-if handles.voxel_data_ready || handles.roi_data_ready
-    update_status(handles,ready_message, 'black');
-else
-    update_status(handles,ready_message, 'red');
+if strcmp(verbose,'default')
+    if handles.voxel_data_ready || handles.roi_data_ready
+        update_status(handles,ready_message, 'black');
+    else
+        update_status(handles,ready_message, 'red');
+    end
+elseif strcmp(verbose,'voxel')
+    if handles.voxel_data_ready
+        update_status(handles,voxel_message, 'black');
+    else
+        update_status(handles,voxel_message, 'red');
+    end
+elseif strcmp(verbose,'roi')
+    if handles.roi_data_ready
+        update_status(handles,roi_message, 'black');
+    else
+        update_status(handles,roi_message, 'red');
+    end
+elseif strcmp(verbose,'ftest')
+    if handles.ftest_ready
+        update_status(handles,ftest_message, 'black');
+    else
+        update_status(handles,ftest_message, 'red');
+    end
 end
 
 % Update handles structure
@@ -357,34 +396,72 @@ handles = load_check_data(handles);
 % Update handles structure
 guidata(hObject, handles);
 
-
+% --- Executes on button press in button_akaike.
+function button_akaike_Callback(hObject, eventdata, handles)
+run_comparison(handles,2)
 
 % --- Executes on button press in button_ftest.
 function button_ftest_Callback(hObject, eventdata, handles)
+run_comparison(handles,1)
+
+function run_comparison(handles,test_index)
 if handles.ftest_ready
-    if handles.lower_model_fit_data.fit_voxels && handles.fit_data.fit_voxels 
+    compare_voxels = (handles.lower_model_fit_data.fit_voxels && handles.fit_data.fit_voxels);
+    compare_rois = (handles.lower_model_fit_data.number_rois>0 && handles.fit_data.number_rois>0);
+    information_string = get(handles.cfit_information,'String');
+    information_string = information_string(1:3);
+    information_string(end+1) = {['Compare Model: ' handles.lower_model_fit_data.model_name]};
+    % Create custum strings
+    if test_index==1
+        stat_name = 'p value';
+        path_suffix = '_ftest';
+        test_name = 'f-test';
+    elseif test_index==2
+        stat_name = 'relative likelihood';
+        path_suffix = '_aic';
+        test_name = 'Akaike information criteria';
+    end
+        
+    if compare_voxels 
+        disp(['Starting ' test_name ' on voxels']);
         [sse_lower,fp_lower,sse_higher,fp_higher,n]=...
-            get_sse_and_fp(handles);
+            get_sse_and_fp(handles,1);
         
         % Sanity check
         if fp_lower>=fp_higher
             update_status(handles,'lower model must be a lower number of free parameters','red');
+            disp('stopping');
             return;
         end
         
         % Run Test
         number_voxels = numel(sse_higher);
-        p_voxels = 2.*ones(number_voxels,1);
+        stat_voxels = 2.*ones(number_voxels,1);
         for i=1:number_voxels
-            [ p, Fstat, df1, df2 ] = ftest(n,fp_lower,...
-                fp_higher,sse_lower(i),sse_higher(i));
-            p_voxels(i) = p;
+            if test_index==1
+                [ p, Fstat, df1, df2 ] = ftest(n,fp_lower,...
+                    fp_higher,sse_lower(i),sse_higher(i));
+                stat_voxels(i) = p;
+            elseif test_index==2
+                aic_lower = n*log(sse_lower(i)/n)+2*fp_lower;
+                aic_higher = n*log(sse_higher(i)/n)+2*fp_higher;
+                relative_likelihood = exp((aic_lower-aic_higher)/2);
+                if relative_likelihood>1
+                    relative_likelihood = -1+1/relative_likelihood;
+                else
+                    relative_likelihood = 1-relative_likelihood;
+                end
+                % positive, relative likelihood lower model minimizes information loss
+                % negative, relative likelihood higher model minimizes information loss
+                % near +1 lower model better, near -1 higher model better near
+                % zero poor inference
+                stat_voxels(i) = relative_likelihood;
+            end
         end
-        mean_p = mean(p_voxels);
-        information_string = get(handles.cfit_information,'String');
-        information_string(end+1) = {['Average p value = ' num2str(mean_p)]};
-        information_string(end+1) = {'lower p value indicates higher order model is better fit'};
-        set(handles.cfit_information,'String',information_string);
+        
+        mean_stat = mean(stat_voxels);  
+        disp(['Average voxel ' stat_name ' = ' num2str(mean_stat)]);
+        information_string(end+1) = {['Average voxel ' stat_name ' = ' num2str(mean_stat)]};
         
         % Save results
         results_cfit_path = get(handles.results_cfit_path,'String');
@@ -392,28 +469,106 @@ if handles.ftest_ready
         [~, base_name, ~] = fileparts(handles.fit_data.dynam_name);
         save_path = fullfile(base_path,[base_name '_' ...
             handles.fit_data.model_name '_' ...
-            handles.lower_model_fit_data.model_name '_ftest.nii']);
+            handles.lower_model_fit_data.model_name path_suffix '.nii']);
     
-        p_matrix     = zeros([256 256]);
-        p_matrix(handles.fit_data.tumind) = p_voxels;
-        save_nii(make_nii(p_matrix, [1 1 1], [1 1 1]), save_path);
+        stat_matrix     = zeros([256 256]);
+        stat_matrix(handles.fit_data.tumind) = stat_voxels;
+        save_nii(make_nii(stat_matrix, [1 1 1], [1 1 1]), save_path);
+        disp(['Completed ' test_name ' on voxels']);
     end
-end
+    if compare_rois
+        disp(['Starting ' test_name ' on ROIs']);
+        [sse_lower,fp_lower,sse_higher,fp_higher,n]=...
+            get_sse_and_fp(handles,2);
+        
+        % Sanity check
+        if fp_lower>=fp_higher
+            update_status(handles,'lower model must be a lower number of free parameters','red');
+            disp('stopping');
+            return;
+        end
+        
+        % Run Test
+        number_rois = numel(sse_higher);
+        stat_rois = 2.*ones(number_rois,1);
+        f_rois = 2.*ones(number_rois,1);
+        for i=1:number_rois
+            if test_index==1
+                [ p, Fstat, df1, df2 ] = ftest(n,fp_lower,...
+                    fp_higher,sse_lower(i),sse_higher(i));
+                stat_rois(i) = p;
+                f_rois(i) = Fstat;
+            elseif test_index==2
+                aic_lower = n*log(sse_lower(i)/n)+2*fp_lower;
+                aic_higher = n*log(sse_higher(i)/n)+2*fp_higher;
+                relative_likelihood = exp((aic_lower-aic_higher)/2);
+                if relative_likelihood>1
+                    relative_likelihood = -1+1/relative_likelihood;
+                else
+                    relative_likelihood = 1-relative_likelihood;
+                end
+                % positive, relative likelihood lower model minimizes information loss
+                % negative, relative likelihood higher model minimizes information loss
+                % near +1 lower model better, near -1 higher model better near
+                % zero poor inference
+                stat_rois(i) = relative_likelihood;
+            end
+        end
+        mean_stat = mean(stat_rois);  
+        disp(['Average ROI ' stat_name ' = ' num2str(mean_stat)]);
+        information_string(end+1) = {['Average ROI ' stat_name ' = ' num2str(mean_stat)]};
+        
+        % Save results
+        results_cfit_path = get(handles.results_cfit_path,'String');
+        [base_path, ~, ~] = fileparts(results_cfit_path);
+        [~, base_name, ~] = fileparts(handles.fit_data.dynam_name);
+        save_path = fullfile(base_path,[base_name '_' ...
+            handles.fit_data.model_name '_' ...
+            handles.lower_model_fit_data.model_name path_suffix '.xls']);
     
+        headings = {'ROI', stat_name, ['Residual ' handles.fit_data.model_name],...
+            ['Residual ' handles.lower_model_fit_data.model_name]};
+        xls_results = [handles.fit_data.roi_name num2cell(stat_rois) num2cell(sse_higher) num2cell(sse_lower)];
+        xls_results = [headings; xls_results];
+        
+        xlswrite(save_path,xls_results);
+               
+        disp(['Completed ' test_name ' on ROIs']);
+    end
+    
+    if ~compare_rois && ~compare_voxels
+        update_status(handles,'cannot compare, same regions not fitted','red');
+    else
+        information_string(end+1) = {['lower ' stat_name ' indicates higher order model is better fit']};
+        set(handles.cfit_information,'String',information_string);
+        disp(['lower ' stat_name ' indicates higher order model is better fit']);
+    end
+else
+    handles = load_check_data(handles,'ftest');
+    % Update handles structure
+    guidata(hObject, handles);
+end
     
 function update_status(handles,status_string,color)
 set(handles.ready_display,'String',status_string);
 set(handles.ready_display, 'ForegroundColor', color);
 
-function [sse1, fp1, sse2, fp2, n]=get_sse_and_fp(handles)
-if strcmp(handles.lower_model_fit_data.model_name,'aif')
+function [sse1, fp1, sse2, fp2, n]=get_sse_and_fp(handles,region)
+if region==1
+    % Voxel results
     sse1 = handles.lower_model_fit_data.fitting_results(:,4);
+    sse2 = handles.fit_data.fitting_results(:,4);
+elseif region==2
+    % ROI results
+    sse1 = handles.lower_model_fit_data.roi_results(:,4);
+    sse2 = handles.fit_data.roi_results(:,4);
+end
+
+if strcmp(handles.lower_model_fit_data.model_name,'aif')
     fp1 = 2;
 elseif strcmp(handles.lower_model_fit_data.model_name,'aif_vp')
-    sse1 = handles.lower_model_fit_data.fitting_results(:,4);
     fp1 = 3;
 elseif strcmp(handles.lower_model_fit_data.model_name,'fxr')
-    sse1 = handles.lower_model_fit_data.fitting_results(:,4);
     fp1 = 3;
 else
     update_status(handles,'selected model not implemented','red');
@@ -421,13 +576,10 @@ else
 end
 
 if strcmp(handles.fit_data.model_name,'aif')
-    sse2 = handles.fit_data.fitting_results(:,4);
     fp2 = 2;
 elseif strcmp(handles.fit_data.model_name,'aif_vp')
-    sse2 = handles.fit_data.fitting_results(:,4);
     fp2 = 3;
 elseif strcmp(handles.fit_data.model_name,'fxr')
-    sse2 = handles.fit_data.fitting_results(:,4);
     fp2 = 3;
 else
     update_status(handles,'selected model not implemented','red');
@@ -446,46 +598,3 @@ end
 n=n_higher;
 
 
-% --- Executes on button press in button_akaike.
-function button_akaike_Callback(hObject, eventdata, handles)
-if handles.ftest_ready
-    if handles.lower_model_fit_data.fit_voxels && handles.fit_data.fit_voxels 
-        [sse_lower,fp_lower,sse_higher,fp_higher,n]=...
-            get_sse_and_fp(handles);
-        
-        % Run Test
-        number_voxels = numel(sse_higher);
-        aic_voxels = 2.*ones(number_voxels,1);
-        for i=1:number_voxels
-            aic_lower = n*log(sse_lower(i)/n)+2*fp_lower;
-            aic_higher = n*log(sse_higher(i)/n)+2*fp_higher;
-            relative_likelihood = exp((aic_lower-aic_higher)/2);
-            if relative_likelihood>1
-                relative_likelihood = -1+1/relative_likelihood;
-            else
-                relative_likelihood = 1-relative_likelihood;
-            end
-            % positive, relative likelihood lower model minimizes information loss
-            % negative, relative likelihood higher model minimizes information loss
-            % near +1 lower model better, near -1 higher model better near
-            % zero poor inference
-            aic_voxels(i) = relative_likelihood;
-        end
-        mean_aic = mean(aic_voxels);
-        information_string = get(handles.cfit_information,'String');
-        information_string(end+1) = {['Average relative likelihood value = ' num2str(mean_aic)]};
-        set(handles.cfit_information,'String',information_string);
-        
-        % Save results
-        results_cfit_path = get(handles.results_cfit_path,'String');
-        [base_path, ~, ~] = fileparts(results_cfit_path);
-        [~, base_name, ~] = fileparts(handles.fit_data.dynam_name);
-        save_path = fullfile(base_path,[base_name '_' ...
-            handles.fit_data.model_name '_' ...
-            handles.lower_model_fit_data.model_name '_aic.nii']);
-    
-        aic_matrix     = zeros([256 256]);
-        aic_matrix(handles.fit_data.tumind) = aic_voxels;
-        save_nii(make_nii(aic_matrix, [1 1 1], [1 1 1]), save_path);
-    end
-end
