@@ -22,11 +22,7 @@ function varargout = RUNA(varargin)
 
 % Edit the above text to modify the response to help RUNA
 
-<<<<<<< HEAD
-% Last Modified by GUIDE v2.5 29-Jan-2014 00:05:43
-=======
 % Last Modified by GUIDE v2.5 28-Jan-2014 16:57:40
->>>>>>> refs/remotes/origin/tommy_devel2
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -319,11 +315,7 @@ end
 
 disp('Loading image volumes')
 
-<<<<<<< HEAD
-[TUMOR, LV, NOISE, DYNAMIC, dynampath, dynamname, rootname, hdr, res, errormsg] = loadIMGVOL(handles);
-=======
 [TUMOR, LV, NOISE, DYNAMIC, dynampath, rootname, hdr, res, errormsg] = loadIMGVOL(handles);
->>>>>>> refs/remotes/origin/tommy_devel2
 
 if ~isempty(errormsg)
     
@@ -344,18 +336,10 @@ snr_filter = str2num(get(handles.snr_filter, 'String')); %#ok<ST2NM>
 relaxivity = str2num(get(handles.relaxivity, 'String')); %#ok<ST2NM>
 injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
 %water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
-<<<<<<< HEAD
-drift = get(handles.drift, 'Value');
-
-%time_resolution = time_resolution/60; %convert to minutes
-saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynamname,aiforRR, ... 
-    tr,fa,hematocrit,snr_filter,relaxivity,injection_time, drift);
-=======
 
 %time_resolution = time_resolution/60; %convert to minutes
 saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, aiforRR, ... 
     tr,fa,hematocrit,snr_filter,relaxivity,injection_time);
->>>>>>> refs/remotes/origin/tommy_devel2
 
 % saved_results = 'aaa';
 %set(handles.results_a_path,'String',saved_results);
@@ -580,15 +564,9 @@ end
 fullpath = fullpath';
 
 % Add new files to hashtable
-<<<<<<< HEAD
 
 [handles, errormsg] = ADDLUT(handles, fullpath);
 
-=======
-
-[handles, errormsg] = ADDLUT(handles, fullpath);
-
->>>>>>> refs/remotes/origin/tommy_devel2
 [handles] = visualize_list_dce(handles, 1,1,1);
 
 disp_error(errormsg, handles);
@@ -1227,15 +1205,3 @@ function roimaskroi_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-<<<<<<< HEAD
-
-
-% --- Executes on button press in drift.
-function drift_Callback(hObject, eventdata, handles)
-% hObject    handle to drift (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of drift
-=======
->>>>>>> refs/remotes/origin/tommy_devel2
