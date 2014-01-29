@@ -1,4 +1,4 @@
-function [subjectID, nomatch] = finduniqueIDhelper(current, pre)
+function [subjectID, nomatch] = finduniqueIDhelperB(current, pre)
 
 nomatch = 0;
 
@@ -9,16 +9,14 @@ if isempty(pre)
       IDlength = 1;
 else
     
-    %Search through the whole string of pre to find the longest contiguous
+    %Search through the whole string of pre from the front to find the longest contiguous
     %string that is found is current
     
     IDlength = 0;
     
     for i = 1:numel(pre)
-        
-        for j = i:numel(pre)
-            
-            compstr = pre(i:j);
+         
+            compstr = pre(1:i);
             
             ans = strfind(current, compstr);
             
@@ -33,7 +31,7 @@ else
             end
         end
     end
-end
+
 
 if IDlength == 0
     %No match

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 function [TUMOR, LV, NOISE, DYNAMIC, dynampath, dynamname, rootname, hdr, res, errormsg] = loadIMGVOL(handles)
+=======
+function [TUMOR, LV, NOISE, DYNAMIC, dynampath, rootname, hdr, res, errormsg] = loadIMGVOL(handles)
+>>>>>>> refs/remotes/origin/tommy_devel2
 
 % Takes handles, loads the image files and outputs image volume.
 
@@ -297,7 +301,11 @@ if ~strcmp(fileorder, 'xyzt')
 end
         
 
+<<<<<<< HEAD
 [dynampath, dynamname]  = fileparts(filelist{1});
+=======
+dynampath  = fileparts(filelist{1});
+>>>>>>> refs/remotes/origin/tommy_devel2
 disp(['Write path: ' dynampath]);
 
 

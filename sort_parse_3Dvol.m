@@ -9,6 +9,7 @@ end
 
 %number of digits to have in order to facilitate natural
 %order sorting
+
 natdigits = 6;
 
 [sortedfullpath, sort_list] = sort_parse_3Dvol_helper(subjectID, fullpath, natdigits);

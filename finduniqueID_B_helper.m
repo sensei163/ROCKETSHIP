@@ -1,16 +1,14 @@
-function [subjectID, nomatch] = finduniqueIDhelper(current, pre)
-
-nomatch = 0;
-
+function subjectID = finduniqueID_B_helper(current, subjectIDA, pre);
 
 if isempty(pre)
     %initialize
-    subjectID = current;
-      IDlength = 1;
+    subjectID = strrep(current, subjectIDA, '');
 else
-    
     %Search through the whole string of pre to find the longest contiguous
     %string that is found is current
+    
+    pre = strrep(pre, subjectIDA, '');
+    current = strrep(current, subjectIDA, '');
     
     IDlength = 0;
     
@@ -34,9 +32,5 @@ else
         end
     end
 end
-
-if IDlength == 0
-    %No match
-    nomatch = 1;
-    subjectID = '';
-end
+    
+    
