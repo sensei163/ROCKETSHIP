@@ -296,21 +296,21 @@ function run_a_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 disp('User selected Run A')
-dce_path = get(handles.dce_path,'String');
-t1_aif_path = get(handles.t1_aif_path,'String');
-t1_roi_path = get(handles.t1_roi_path,'String');
-noise_path = get(handles.noise_path,'String');
-tr = str2num(get(handles.tr, 'String')); %#ok<ST2NM>
-fa = str2num(get(handles.fa, 'String')); %#ok<ST2NM>
-hematocrit = str2num(get(handles.hematocrit, 'String')); %#ok<ST2NM>
-snr_filter = str2num(get(handles.snr_filter, 'String')); %#ok<ST2NM>
-relaxivity = str2num(get(handles.relaxivity, 'String')); %#ok<ST2NM>
-injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
-% water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
-drift = get(handles.drift,'Value');
+% dce_path = get(handles.dce_path,'String');
+% t1_aif_path = get(handles.t1_aif_path,'String');
+% t1_roi_path = get(handles.t1_roi_path,'String');
+% noise_path = get(handles.noise_path,'String');
+% tr = str2num(get(handles.tr, 'String')); %#ok<ST2NM>
+% fa = str2num(get(handles.fa, 'String')); %#ok<ST2NM>
+% hematocrit = str2num(get(handles.hematocrit, 'String')); %#ok<ST2NM>
+% snr_filter = str2num(get(handles.snr_filter, 'String')); %#ok<ST2NM>
+% relaxivity = str2num(get(handles.relaxivity, 'String')); %#ok<ST2NM>
+% injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
+% % water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
+% drift = get(handles.drift,'Value');
 
 % Run Computation
-saved_results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift);
+saved_results = RUNA;%A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift);
 set(handles.results_a_path,'String',saved_results);
 
 

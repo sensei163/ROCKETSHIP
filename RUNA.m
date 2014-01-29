@@ -22,7 +22,7 @@ function varargout = RUNA(varargin)
 
 % Edit the above text to modify the response to help RUNA
 
-% Last Modified by GUIDE v2.5 21-Jan-2014 01:46:41
+% Last Modified by GUIDE v2.5 29-Jan-2014 00:05:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,6 +54,21 @@ function RUNA_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for RUNA
 handles.output = hObject;
+
+handles.filelist =   [];
+
+%Parallel list for sorting comparison
+handles.sortlist =   [];
+%Rootname
+handles.subjectID =  [];
+handles.rootname  = [];
+%Hashtable % row is 3D volume, % column referes to 2D slice 
+handles.LUT= [];
+
+handles.t1aiffiles = [];
+handles.t1roifiles = [];
+handles.noisefiles = [];
+handles.t1mapfiles = [];
 
 % Update handles structure
 guidata(hObject, handles);
@@ -101,7 +116,13 @@ function DCEfilesB_Callback(hObject, eventdata, handles)
 % hObject    handle to DCEfilesB (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+    DCEA = get(handles.DCEfilesA, 'Value');
+    DCEB = get(handles.DCEfilesB, 'Value');
+  
+    [handles] = visualize_list_dce(handles, DCEA,DCEB,1);
+    
+    % Update handles structure
+guidata(hObject, handles);
 % Hints: contents = cellstr(get(hObject,'String')) returns DCEfilesB contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from DCEfilesB
 
@@ -156,25 +177,18 @@ list = get(handles.DCEfilesB,'String');
 if strcmp(list, 'No files selected') || isempty(list)
     % do nothing
 else
-    fileselected = get(handles.DCEfilesB, 'Value');
     
-    if fileselected > 1
-        
-        %Get datasets
-        batchdata = handles.batchdata;
-        newbatchdata=batchdata;
-        
-        newbatchdata(file_selected-1) = batchdata(file_selected);
-        newbatchdata(file_selected)   = batchdata(file_selected-1);
-        
-        handles.batchdata = newbatchdata;
-        
-        filevolume = get(handles.filevolume, 'Value');
-        fileorder  = get(get(handles.fileorder,'SelectedObject'),'Tag');
-        
-        [handles, errormsg] = update_segmentlist(handles, '', 2);
-        disp_error(errormsg, handles);
-    end
+    %
+    up = 1;
+    dim= 1;
+    [handles] = reorderLUT(handles, up, dim);
+    
+    DCEA = get(handles.DCEfilesA, 'Value');
+    DCEB = get(handles.DCEfilesB, 'Value');
+    DCEC = get(handles.DCEfilesC, 'Value');
+  
+    [handles] = visualize_list_dce(handles, DCEA,DCEB,DCEC);
+
 end
 
 % Update handles structure
@@ -198,25 +212,18 @@ list = get(handles.DCEfilesB,'String');
 if strcmp(list, 'No files selected') || isempty(list)
     % do nothing
 else
-    fileselected = get(handles.DCEfilesB, 'Value');
+     %
+    up = 0;
+    dim= 1;
+    [handles] = reorderLUT(handles, up, dim);
     
-    %Get datasets
-    batchdata = handles.batchdata;
+    DCEA = get(handles.DCEfilesA, 'Value');
+    DCEB = get(handles.DCEfilesB, 'Value');
+    DCEC = get(handles.DCEfilesC, 'Value');
+
+    [handles] = visualize_list_dce(handles, DCEA,DCEB,DCEC);
     
-    if fileselected < numel(batchdata)
-        newbatchdata=batchdata;
-        
-        newbatchdata(file_selected+1) = batchdata(file_selected);
-        newbatchdata(file_selected)   = batchdata(file_selected+1);
-        
-        handles.batchdata = newbatchdata;
-        
-        filevolume = get(handles.filevolume, 'Value');
-        fileorder  = get(get(handles.fileorder,'SelectedObject'),'Tag');
-        
-        [handles, errormsg] = update_segmentlist(handles, '', 2);
-        disp_error(errormsg, handles);
-    end
+
 end
 
 % Update handles structure
@@ -237,26 +244,18 @@ list = get(handles.DCEfilesC,'String');
 if strcmp(list, 'No files selected') || isempty(list)
     % do nothing
 else
-    fileselectedB = get(handles.DCEfilesB, 'Value');
-    fileselectedC = get(handles.DCEfilesC, 'Value');
-    %Get datasets
-    batchdata     = handles.batchdata;
-    curfileslist  = batchdata(fileselectedB).files;
+  %
+    up = 1;
+    dim= 2;
+    [handles] = reorderLUT(handles, up, dim);
     
-    if fileselectedC > 1
-        newcurfileslist = curfileslist;
-        
-        newcurfileslist(fileselectedC -1) = curfileslist(fileselectedC);
-        newcurfileslist(fileselectedC) = curfileslist(fileselectedC-1);
-        
-        batchdata(fileselectedB).files = newcurfileslist;
-        handles.batchdata = batchdata;
-        filevolume = get(handles.filevolume, 'Value');
-        fileorder  = get(get(handles.fileorder,'SelectedObject'),'Tag');
-        
-        [handles, errormsg] = update_segmentlist(handles, '', 2);
-        disp_error(errormsg, handles);
-    end
+    DCEA = get(handles.DCEfilesA, 'Value');
+    DCEB = get(handles.DCEfilesB, 'Value');
+    DCEC = get(handles.DCEfilesC, 'Value');
+    
+    [handles] = visualize_list_dce(handles, DCEA,DCEB,DCEC);
+    
+
 end
 % Update handles structure
 guidata(hObject, handles);
@@ -276,26 +275,18 @@ list = get(handles.DCEfilesC,'String');
 if strcmp(list, 'No files selected') || isempty(list)
     % do nothing
 else
-    fileselectedB = get(handles.DCEfilesB, 'Value');
-    fileselectedC = get(handles.DCEfilesC, 'Value');
-    %Get datasets
-    batchdata     = handles.batchdata;
-    curfileslist  = batchdata(fileselectedB).files;
+     %
+    up = 0;
+    dim= 2;
+    [handles] = reorderLUT(handles, up, dim);
     
-    if fileselectedC < numel(curfileslist)
-        newcurfileslist = curfileslist;
-        
-        newcurfileslist(fileselectedC +1) = curfileslist(fileselectedC);
-        newcurfileslist(fileselectedC) = curfileslist(fileselectedC+1);
-        
-        batchdata(fileselectedB).files = newcurfileslist;
-        handles.batchdata = batchdata;
-        filevolume = get(handles.filevolume, 'Value');
-        fileorder  = get(get(handles.fileorder,'SelectedObject'),'Tag');
-        
-        [handles, errormsg] = update_segmentlist(handles, '', 2);
-        disp_error(errormsg, handles);
-    end
+    DCEA = get(handles.DCEfilesA, 'Value');
+    DCEB = get(handles.DCEfilesB, 'Value');
+    DCEC = get(handles.DCEfilesC, 'Value');
+    
+    [handles] = visualize_list_dce(handles, DCEA,DCEB,DCEC);
+    
+ 
 end
 % Update handles structure
 guidata(hObject, handles);
@@ -309,25 +300,52 @@ function done_Callback(hObject, eventdata, handles)
 
 % NEED TO EDIT
 disp('User selected Run A')
-dce_path = get(handles.dce_path,'String');
-t1_aif_path = get(handles.t1_aif_path,'String');
-t1_roi_path = get(handles.t1_roi_path,'String');
-noise_path = get(handles.noise_path,'String');
+
+disp('Consistency checks before running');
+
+[notemsg, errormsg] = consistencyCHECKRUNA(handles);
+
+if ~isempty(errormsg)
+    
+    disp_error(errormsg, handles);
+    return;
+else
+    disp_error(notemsg, handles);
+end
+
+disp('Loading image volumes')
+
+[TUMOR, LV, NOISE, DYNAMIC, dynampath, dynamname, rootname, hdr, res, errormsg] = loadIMGVOL(handles);
+
+if ~isempty(errormsg)
+    
+    disp_error(errormsg, handles);
+    return;
+end
+
+
+
+% image parameters
+quant     = get(handles.quant, 'Value');
+aiforRR = get(handles.aiforrr, 'Value');
 tr = str2num(get(handles.tr, 'String')); %#ok<ST2NM>
 fa = str2num(get(handles.fa, 'String')); %#ok<ST2NM>
 time_resolution = str2num(get(handles.time_resolution, 'String')); %#ok<ST2NM>
-time_resolution = time_resolution/60; %convert to minutes
 hematocrit = str2num(get(handles.hematocrit, 'String')); %#ok<ST2NM>
 snr_filter = str2num(get(handles.snr_filter, 'String')); %#ok<ST2NM>
 relaxivity = str2num(get(handles.relaxivity, 'String')); %#ok<ST2NM>
 injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
-water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
+%water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
+drift = get(handles.drift, 'Value');
 
-saved_results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,time_resolution,hematocrit,snr_filter,relaxivity,injection_time,water_fraction);
+%time_resolution = time_resolution/60; %convert to minutes
+saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynamname,aiforRR, ... 
+    tr,fa,hematocrit,snr_filter,relaxivity,injection_time, drift);
+
 % saved_results = 'aaa';
-set(handles.results_a_path,'String',saved_results);
+%set(handles.results_a_path,'String',saved_results);
 
-varargout{1} = 'moo'; %handles.output;
+varargout{1} = saved_results; %handles.output;
 delete(handles.figure1);
 
 
@@ -387,9 +405,10 @@ guidata(hObject, handles);
 [filename, pathname, filterindex] = uigetfile( ...
     {  '*.nii','Nifti Files (*.nii)'; ...
     '*2dseq','Bruker Files (2dseq)'; ...
+    '*dcm', 'DICOM Files (dcm)'; ...
     '*.hdr;*.img','Analyze Files (*.hdr, *.img)';...
     '*.*',  'All Files (*.*)'}, ...
-    'Choose T1 map of AIF or Ref Region'); %#ok<NASGU>
+    'Choose ROI of AIF or Ref Region', 'MultiSelect', 'on'); %#ok<NASGU>
 if isequal(filename,0)
     %disp('User selected Cancel')
 else
@@ -398,7 +417,25 @@ else
     % Combine path and filename together
     fullpath = strcat(pathname,filename);
     
-    set(handles.aifRRtxt,'String',fullpath);
+    if ischar(fullpath)
+        fullpath = {fullpath};
+    end
+    % if isempty(list)
+    %     list = {''};
+    % end
+    
+    %filename = filename';
+    fullpath = fullpath';
+    
+    if numel(fullpath) > 1
+        visualpath = [fullpath{1} ' -> ' num2str(numel(fullpath)) ' files'];
+    else
+        visualpath = fullpath{1};
+    end
+    set(handles.aifRRtxt,'String',visualpath);
+    
+    handles.t1aiffiles = fullpath;
+    
 end
 guidata(hObject, handles);
 
@@ -413,9 +450,10 @@ guidata(hObject, handles);
 [filename, pathname, filterindex] = uigetfile( ...
     {  '*.nii','Nifti Files (*.nii)'; ...
     '*2dseq','Bruker Files (2dseq)'; ...
+    '*dcm', 'DICOM Files (dcm)'; ...
     '*.hdr;*.img','Analyze Files (*.hdr, *.img)';...
     '*.*',  'All Files (*.*)'}, ...
-    'Choose T1 map of ROI'); %#ok<NASGU>
+    'Choose ROI image of region of interest', 'MultiSelect', 'on'); %#ok<NASGU>
 if isequal(filename,0)
     %disp('User selected Cancel')
 else
@@ -424,8 +462,26 @@ else
     % Combine path and filename together
     fullpath = strcat(pathname,filename);
     
-    set(handles.t1_roi_path,'String',fullpath);
+    if ischar(fullpath)
+        fullpath = {fullpath};
+    end
+    % if isempty(list)
+    %     list = {''};
+    % end
+    
+    %filename = filename';
+    fullpath = fullpath';
+    
+    if numel(fullpath) > 1
+        visualpath = [fullpath{1} ' -> ' num2str(numel(fullpath)) ' files'];
+    else
+        visualpath = fullpath{1};
+    end
+    
+    set(handles.t1_roi_path,'String',visualpath);
 end
+
+handles.t1roifiles = fullpath;
 guidata(hObject, handles);
 
 
@@ -439,7 +495,14 @@ function filevolume_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns filevolume contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from filevolume
 
-[handles, errormsg] = update_segmentlist(handles, '', 3);
+
+% if ~isempty(handles.batchdata)
+%     [handles, errormsg] = update_segmentlist(handles, '', 3);
+%     disp_error(errormsg, handles);
+% end
+
+[handles, errormsg] = visualize_list_dce(handles, 1,1,1);
+
 disp_error(errormsg, handles);
 guidata(hObject, handles);
 
@@ -475,10 +538,12 @@ if isequal(filename,0)
     return;
 end
 
-list = get(handles.DCEfilesA,'String');
-
 % Combine path and filename together
 fullpath = strcat(pathname,filename);
+
+
+% Check if there is a dataset already. If not, do nothing.
+list = get(handles.DCEfilesA,'String');
 
 % Stupid matlab uses a different datastructure if only one file
 % is selected, handle special case
@@ -486,26 +551,27 @@ if ischar(list)
     list = {list};
 else
 end
-if ischar(filename)
-    filename = {filename};
-end
+% if ischar(filename)
+%     filename = {filename};
+% end
 if ischar(fullpath)
     fullpath = {fullpath};
 end
-if isempty(list)
-    list = {''};
-end
+% if isempty(list)
+%     list = {''};
+% end
 
-filename = filename';
+%filename = filename';
 fullpath = fullpath';
 
-% Add selected files to listbox
+% Add new files to hashtable
 
-filevolume = get(handles.filevolume, 'Value');
-fileorder  = get(get(handles.fileorder,'SelectedObject'),'Tag');
-[handles, errormsg] = update_segmentlist(handles, fullpath, 1);
+[handles, errormsg] = ADDLUT(handles, fullpath);
+
+[handles] = visualize_list_dce(handles, 1,1,1);
 
 disp_error(errormsg, handles);
+
 guidata(hObject, handles);
 
 
@@ -526,43 +592,13 @@ if strcmp(list, 'No files selected') || isempty(list)
 else
     
     fileselectedA = get(handles.DCEfilesA, 'Value');
-    toberemoved   = list(fileselectedA);
+    toberemoved   = list(fileselectedA,:);
     
-    %Get datasets
-    batchdata     = handles.batchdata;
-    
-    % Remove selected file
-    removelistB = [];
-    for i = 1:numel(batchdata)
-        files = batchdata(i).files;
-        
-        removelistC = [];
-        for j = 1:numel(files)
-            
-            curfile = files(j);
-            
-            if ~isempty(strfind(curfile, toberemoved))
-                % Match
-                removelistC = [removelistC j];
-            end
-        end
-        
-        for j = 1:numel(removelistC)
-            files(removelistC(j)) = [];
-        end
-        
-        if numel(files) < 1
-            removelistB = [removelistB i];
-        end
-        batchdata(i).files = files;
-    end
-    
-    for j = 1:numel(removelistB)
-        batchdata(removelistB(j)) = [];
-    end
-    handles.batchdata = batchdata;
-    
-    [handles, errormsg] = update_segmentlist(handles, '', 2);
+    % Remove files from hashtable
+
+[handles, errormsg] = REMOVELUT(handles,  toberemoved);
+ disp_error(errormsg, handles);
+[handles, errormsg] = visualize_list_dce(handles, fileselectedA,1,1);
     
     disp_error(errormsg, handles);
 end
@@ -606,9 +642,10 @@ set(handles.noisepixsize, 'Enable', 'off');
 [filename, pathname, filterindex] = uigetfile( ...
     {  '*.nii','Nifti Files (*.nii)'; ...
     '*2dseq','Bruker Files (2dseq)'; ...
+    '*dcm', 'DICOM Files (dcm)'; ...
     '*.hdr;*.img','Analyze Files (*.hdr, *.img)';...
     '*.*',  'All Files (*.*)'}, ...
-    'Choose Noise Region'); %#ok<NASGU>
+    'Choose T1 map of AIF or Ref Region', 'MultiSelect', 'on'); %#ok<NASGU>
 if isequal(filename,0)
     %disp('User selected Cancel')
 else
@@ -617,8 +654,26 @@ else
     % Combine path and filename together
     fullpath = strcat(pathname,filename);
     
-    set(handles.noise_path,'String',fullpath);
+    if ischar(fullpath)
+        fullpath = {fullpath};
+    end
+    % if isempty(list)
+    %     list = {''};
+    % end
+    
+    %filename = filename';
+    fullpath = fullpath';
+    
+    if numel(fullpath) > 1
+        visualpath = [fullpath{1} ' -> ' num2str(numel(fullpath)) ' files'];
+    else
+        visualpath = fullpath{1};
+    end
+    
+    set(handles.noise_path,'String',visualpath);
 end
+
+handles.noisefiles = fullpath;
 guidata(hObject, handles);
 
 
@@ -980,3 +1035,183 @@ function fileorder_SelectionChangeFcn(hObject, eventdata, handles)
 %	OldValue: handle of the previously selected object or empty if none was selected
 %	NewValue: handle of the currently selected object
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on key press with focus on DCEfilesB and none of its controls.
+function DCEfilesB_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to DCEfilesB (see GCBO)
+% eventdata  structure with the following fields (see UICONTROL)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes when figure1 is resized.
+function figure1_ResizeFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in t1mapfile.
+function t1mapfile_Callback(hObject, eventdata, handles)
+% hObject    handle to t1mapfile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+guidata(hObject, handles);
+
+[filename, pathname, filterindex] = uigetfile( ...
+    {  '*.nii','Nifti Files (*.nii)'; ...
+    '*2dseq','Bruker Files (2dseq)'; ...
+    '*dcm', 'DICOM Files (dcm)'; ...
+    '*.hdr;*.img','Analyze Files (*.hdr, *.img)';...
+    '*.*',  'All Files (*.*)'}, ...
+    'Choose T1 map', 'MultiSelect', 'on'); %#ok<NASGU>
+if isequal(filename,0)
+    %disp('User selected Cancel')
+else
+    %disp(['User selected ', fullfile(pathname, filename)])
+    
+    % Combine path and filename together
+    fullpath = strcat(pathname,filename);
+    
+    if ischar(fullpath)
+        fullpath = {fullpath};
+    end
+    % if isempty(list)
+    %     list = {''};
+    % end
+    
+    %filename = filename';
+    fullpath = fullpath';
+    
+    if numel(fullpath) > 1
+        visualpath = [fullpath{1} ' -> ' num2str(numel(fullpath)) ' files'];
+    else
+        visualpath = fullpath{1};
+    end
+    
+    set(handles.t1mappath,'String',visualpath);
+end
+
+handles.t1mapfiles = fullpath;
+guidata(hObject, handles);
+
+
+
+function t1mappath_Callback(hObject, eventdata, handles)
+% hObject    handle to t1mappath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of t1mappath as text
+%        str2double(get(hObject,'String')) returns contents of t1mappath as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function t1mappath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to t1mappath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in quant.
+function quant_Callback(hObject, eventdata, handles)
+% hObject    handle to quant (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of quant
+
+if get(handles.quant, 'Value')
+    set(handles.aifRRtxt, 'Enable', 'on');
+    set(handles.aiforrr, 'Enable', 'on');
+    set(handles.roi_path, 'Enable', 'on');
+    set(handles.t1mappath, 'Enable', 'on');
+else
+    set(handles.aifRRtxt, 'Enable', 'on');
+    set(handles.aiforrr, 'Enable', 'off');
+    set(handles.roi_path, 'Enable', 'on');
+    set(handles.t1mappath, 'Enable', 'off');
+end
+    
+
+
+% --- Executes on selection change in aifmaskroi.
+function aifmaskroi_Callback(hObject, eventdata, handles)
+% hObject    handle to aifmaskroi (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns aifmaskroi contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from aifmaskroi
+
+if get(handles.roimaskroi, 'Value') == 2 && get(handles.aifmaskroi, 'Value') == 2
+    % The input is a mask, so we don't need a T1 map
+    set(handles.t1mapfile, 'Enable', 'off');
+    set(handles.t1mappath, 'Enable', 'off');
+elseif get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1
+    set(handles.t1mapfile, 'Enable', 'on');
+    set(handles.t1mappath, 'Enable', 'on');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function aifmaskroi_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to aifmaskroi (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in roimaskroi.
+function roimaskroi_Callback(hObject, eventdata, handles)
+% hObject    handle to roimaskroi (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns roimaskroi contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from roimaskroi
+
+if get(handles.roimaskroi, 'Value') == 2 && get(handles.aifmaskroi, 'Value') == 2
+    % The input is a mask, so we don't need a T1 map
+    set(handles.t1mapfile, 'Enable', 'off');
+    set(handles.t1mappath, 'Enable', 'off');
+elseif get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1
+    set(handles.t1mapfile, 'Enable', 'on');
+    set(handles.t1mappath, 'Enable', 'on');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function roimaskroi_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to roimaskroi (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in drift.
+function drift_Callback(hObject, eventdata, handles)
+% hObject    handle to drift (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of drift

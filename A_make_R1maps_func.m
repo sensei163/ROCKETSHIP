@@ -1,23 +1,34 @@
-function results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time,drift)
+function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynamname, aiforRR, ... 
+    tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time, drift);
 
 % A_make_R1maps_func - Generate concentration versus time curves for the
 % tumor region and the arterial input region. The setup follows Loveless
 % et. al 2011 MRM method of AIF filtering based upon SNR.
 % 
 % Inputs:
-%  dce_path           - NIFTI file that contains the dynamic
+%  DYNAMIC            - Image matrix that contains the dynamic
 %                       dataset. Formated as volume x time points.
-%  t1_aif_path        - NIFTI file that contains the T1 map of
+%  LV                 - Image matrix  that contains the T1 map of
 %                       the arterial input region (or the reference region
 %                       in the case of the reference region method). All
 %                       values outside of the AIF ROI set to <=0
-%  t1_roi_path        - NIFTI file that contains the T1 map of the DCE
+%  TUMOR              - Image matrix  that contains the T1 map of the DCE
 %                       region, the region that will have DCE values
 %                       calculated. All values outside of the ROI set to
 %                       <=0
-%  noise_path         - NIFTI file that delineates a noise region of the
+%  NOISE              - Image matrix  that delineates a noise region of the
 %                       image (not T1 map). Used for SNR calculation. All
 %                       values outside of the ROI set to <=0
+%  hdr                - Image header of NIFTI or DICOM file read from DCE
+%                       region
+%  res                - vector with voxel size
+%  quant              - boolean value indicating whether to pursue
+%                       quantitative DCE vs. semi-quant values
+%  rootname           - Name of output file
+%  dynampath          - Name of output path
+%  dynamname          - Name of final file for part D
+%  aiforRR            - Toggle indicating whether the auxiliary ROI is AIF (1)
+%                       or reference region (2)
 %  tr                 - reptition time (in ms) of dynamic scan
 %  fa                 - flip angle (in degrees) of dynamic scan
 %  hematocrit         - hematocrit percent (0 - 1.00) of subject
@@ -59,6 +70,7 @@ function results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_pat
 % Caltech, Dec 2011
 % Updated April 2012
 % Updated Dec 2013 Sam Barnes
+% Updated Jan 2014 Thomas Ng
 
 
 
@@ -72,21 +84,22 @@ viable= 0;
 
 %% DO NOT ALTER LINES BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
 % Log input results
-[log_path,base,~] = fileparts(dce_path);
+%[log_path,base,~] = fileparts(dce_path);
+log_path = dynampath;
 log_path = fullfile(log_path, ['A_' base 'R1info.log']);
 if exist(log_path, 'file')==2
   delete(log_path);
 end
 diary(log_path);
 fprintf('************** User Input **************\n\n');
-disp('User selected dce file: ');
-fprintf('%s\n\n',dce_path);
-disp('User selected T1 of AIF: ');
-fprintf('%s\n\n',t1_aif_path);
-disp('User selected T1 of region to process: ');
-fprintf('%s\n\n',t1_roi_path);
-disp('User selected noise region in image (not T1 map): ');
-fprintf('%s\n\n',noise_path);
+% disp('User selected dce file: ');
+% fprintf('%s\n\n',dce_path);
+% disp('User selected T1 of AIF: ');
+% fprintf('%s\n\n',t1_aif_path);
+% disp('User selected T1 of region to process: ');
+% fprintf('%s\n\n',t1_roi_path);
+% disp('User selected noise region in image (not T1 map): ');
+% fprintf('%s\n\n',noise_path);
 disp('User selected TR (ms): ');
 disp(tr);
 disp('User selected FA (degrees): ');
@@ -112,45 +125,64 @@ tic
 % Ask for file location
 place = '';
 
-[PathName1,base,ext] = fileparts(dce_path);
-dynam = [base ext];
+PathName1 = log_path;
+% [PathName1,base,ext] = fileparts(dce_path);
+% dynam = [base ext];
+% 
+% [PathName2,base,ext] = fileparts(t1_aif_path);
+% lv = [base ext];
+% 
+% [PathName3,base,ext] = fileparts(t1_roi_path);
+% tumor = [base ext];
+% 
+% [PathName4,base,ext] = fileparts(noise_path);
+% noise = [base ext];
+% 
+% % Output name
+% rootname = strrep(dynam,'.nii','_');
 
-[PathName2,base,ext] = fileparts(t1_aif_path);
-lv = [base ext];
-
-[PathName3,base,ext] = fileparts(t1_roi_path);
-tumor = [base ext];
-
-[PathName4,base,ext] = fileparts(noise_path);
-noise = [base ext];
-
-% Output name
-rootname = strrep(dynam,'.nii','_');
-
-%Load DCE dataset
-dynam = load_nii(fullfile(PathName1, place, dynam));
-
-%image resolution
-res  = dynam.hdr.dime.pixdim;
+% %Load DCE dataset
+% dynam = load_nii(fullfile(PathName1, place, dynam));
+% 
+% %image resolution
+% res  = dynam.hdr.dime.pixdim;
 % save for part D
-dynam_name = dynam.fileprefix;
-dynam = double(dynam.img);
+dynam_name = dynamname; %dynam.fileprefix;
+dynam = DYNAMIC; %double(dynam.img);
 
 
 %Load TUMOR T1 map, find the voxels that encompass tumor ROI
 %convert T1 from ms to sec
-TUMOR = load_nii(fullfile(PathName3, place, tumor));
-TUMOR = 1/1000.*double(TUMOR.img);
+% TUMOR = load_nii(fullfile(PathName3, place, tumor));
+% TUMOR = 1/1000.*double(TUMOR.img);
 tumind= find(TUMOR > 0);
 
+testt1 = mean(TUMOR(tumind));
+if testt1 > 50
+    disp('T1 maps likely in ms, converting to s...');
+    TUMOR = (1/1000).*double(TUMOR);
+else
+    disp('T1 maps not likely in ms...');
+end
+
+
+
 %Load AIF dataset, convert T1 from ms to sec
-LV = load_nii(fullfile(PathName2, place, lv));
-LV = 1/1000.*double(LV.img);
+% LV = load_nii(fullfile(PathName2, place, lv));
+% LV = 1/1000.*double(LV.img);
 lvind = find(LV > 0);
 
+testt1 = mean(LV(lvind));
+if testt1 > 50
+    disp('T1 maps likely in ms, converting to s...');
+    LV = (1/1000).*double(LV);
+else
+    disp('T1 maps not likely in ms...');
+end
+
 %Load noise ROI files
-NOISE = load_nii(fullfile(PathName4, place, noise));
-NOISE = double(NOISE.img);
+% NOISE = load_nii(fullfile(PathName4, place, noise));
+% NOISE = double(NOISE.img);
 noiseind = find(NOISE > 0);
 
 % If viable toggle is on, choose the file that is generated with the
