@@ -69,6 +69,7 @@ handles.t1aiffiles = [];
 handles.t1roifiles = [];
 handles.noisefiles = [];
 handles.t1mapfiles = [];
+handles.saved_results = '';
 
 % Update handles structure
 guidata(hObject, handles);
@@ -85,7 +86,8 @@ function varargout = RUNA_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-varargout{1} ='moo'; % handles.output;
+varargout{1} =handles.saved_results;
+delete(handles.figure1);
 
 
 % --- Executes on selection change in DCEfilesA.
@@ -315,7 +317,7 @@ end
 
 disp('Loading image volumes')
 
-[TUMOR, LV, NOISE, DYNAMIC, dynampath, rootname, hdr, res, errormsg] = loadIMGVOL(handles);
+[TUMOR, LV, NOISE, DYNAMIC, dynampath, dynamname, rootname, hdr, res, errormsg] = loadIMGVOL(handles);
 
 if ~isempty(errormsg)
     
@@ -330,22 +332,24 @@ quant     = get(handles.quant, 'Value');
 aiforRR = get(handles.aiforrr, 'Value');
 tr = str2num(get(handles.tr, 'String')); %#ok<ST2NM>
 fa = str2num(get(handles.fa, 'String')); %#ok<ST2NM>
-time_resolution = str2num(get(handles.time_resolution, 'String')); %#ok<ST2NM>
+% time_resolution = str2num(get(handles.time_resolution, 'String')); %#ok<ST2NM>
 hematocrit = str2num(get(handles.hematocrit, 'String')); %#ok<ST2NM>
 snr_filter = str2num(get(handles.snr_filter, 'String')); %#ok<ST2NM>
 relaxivity = str2num(get(handles.relaxivity, 'String')); %#ok<ST2NM>
 injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
 %water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
+drift = false;
 
 %time_resolution = time_resolution/60; %convert to minutes
-saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, aiforRR, ... 
-    tr,fa,hematocrit,snr_filter,relaxivity,injection_time);
+saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynamname, aiforRR, ... 
+    tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift);
 
 % saved_results = 'aaa';
 %set(handles.results_a_path,'String',saved_results);
 
-varargout{1} = saved_results; %handles.output;
-delete(handles.figure1);
+handles.saved_results = saved_results;
+guidata(hObject, handles);
+uiresume(handles.figure1);
 
 
 

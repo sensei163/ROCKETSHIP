@@ -1,5 +1,5 @@
 function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynamname, aiforRR, ... 
-    tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time, drift);
+    tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time, drift)
 
 % A_make_R1maps_func - Generate concentration versus time curves for the
 % tumor region and the arterial input region. The setup follows Loveless
@@ -86,7 +86,7 @@ viable= 0;
 % Log input results
 %[log_path,base,~] = fileparts(dce_path);
 log_path = dynampath;
-log_path = fullfile(log_path, ['A_' base 'R1info.log']);
+log_path = fullfile(log_path, ['A_' rootname 'R1info.log']);
 if exist(log_path, 'file')==2
   delete(log_path);
 end
@@ -125,7 +125,7 @@ tic
 % Ask for file location
 place = '';
 
-PathName1 = log_path;
+[PathName1,~,~] = fileparts(log_path);
 % [PathName1,base,ext] = fileparts(dce_path);
 % dynam = [base ext];
 % 
@@ -223,7 +223,7 @@ for i = 1:slices:size(dynam,3)
     currentimg       = dynam(:,:,i:i+(slices-1));
     DYNAM(end+1,:)   = currentimg(tumind);
     DYNAMLV(end+1,:) = currentimg(lvind);
-    DYNAMNOISE(end+1)= std(currentimg(noiseind));
+    DYNAMNOISE(end+1)= std(single(currentimg(noiseind)));
     
 
     % This is used for create a graphic showing the ROIs in relation to the
@@ -516,7 +516,7 @@ end
 
 % Save as dynamic file, with the TUMOR ROI only.
 
-CC = make_nii(CTFILE, res(2:4), [1 1 1]);
+CC = make_nii(CTFILE, res, [1 1 1]);
 
 save_nii(CC, fullfile(PathName1, [rootname 'dynamicCt.nii']));
 
@@ -539,13 +539,14 @@ subplot(428), plot(mean(deltaR1LV,2), 'r.'), title('Delta R1 AIF') , ylabel('sec
 saveas(n,fullfile(PathName1, [rootname 'timecurves.fig']));
 %% 12. Save the file for the next Step
 
-save(fullfile(PathName1, ['A_' rootname 'R1info.mat']));
-results = fullfile(PathName1, ['A_' rootname 'R1info.mat']);
+
+saved_results = fullfile(PathName1, ['A_' rootname 'R1info.mat']);
+save(saved_results);
 Opt.Input = 'file';
-mat_md5 = DataHash(results, Opt);
+mat_md5 = DataHash(saved_results, Opt);
 disp(' ')
 disp('MAT results saved to: ')
-disp(results)
+disp(saved_results)
 disp(['File MD5 hash: ' mat_md5])
 
 disp(' ');

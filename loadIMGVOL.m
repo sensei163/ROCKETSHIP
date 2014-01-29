@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 function [TUMOR, LV, NOISE, DYNAMIC, dynampath, dynamname, rootname, hdr, res, errormsg] = loadIMGVOL(handles)
-=======
-function [TUMOR, LV, NOISE, DYNAMIC, dynampath, rootname, hdr, res, errormsg] = loadIMGVOL(handles)
->>>>>>> refs/remotes/origin/tommy_devel2
+
 
 % Takes handles, loads the image files and outputs image volume.
 
@@ -34,6 +31,9 @@ TUMOR = [];
 LV    = [];
 NOISE = [];
 DYNAMIC=[];
+T1MAP=[];
+dynampath = '';
+errormsg = '';
 
 %% Load image files
 
@@ -149,9 +149,9 @@ if noise_pathpick
 end
 
 %% Check to make sure the dimensions of the files are consistent
-
-if ~isequal(size(TUMOR), size(LV)) || ~isequal(size(TUMOR), size(NOISE)) || ~isequal(size(TUMOR), size(T1MAP)) ...
-        || ~isequal(size(LV), size(NOISE)) || ~isequal(size(LV), size(T1MAP)) || ~isequal(size(NOISE, T1MAP))
+if ~isequal(size(TUMOR), size(LV)) ||...
+        (~isempty(NOISE) && ~isequal(size(TUMOR), size(NOISE))) ||...
+        (~isempty(T1MAP) && ~isequal(size(TUMOR), size(T1MAP)))
     errormsg = 'Input medical sizes not the same';
     return;
 end
@@ -299,13 +299,9 @@ if ~strcmp(fileorder, 'xyzt')
         newDYNAMIC(:,:,(zslices*(i-1)+[1:zslices]))=curDYNAMIC;
     end
 end
-        
 
-<<<<<<< HEAD
 [dynampath, dynamname]  = fileparts(filelist{1});
-=======
-dynampath  = fileparts(filelist{1});
->>>>>>> refs/remotes/origin/tommy_devel2
+
 disp(['Write path: ' dynampath]);
 
 
