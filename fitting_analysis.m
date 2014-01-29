@@ -22,7 +22,7 @@ function varargout = fitting_analysis(varargin)
 
 % Edit the above text to modify the response to help fitting_analysis
 
-% Last Modified by GUIDE v2.5 24-Jan-2014 15:07:12
+% Last Modified by GUIDE v2.5 28-Jan-2014 10:34:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -190,6 +190,8 @@ if handles.roi_data_ready
     plot_data.Ct_original	= handles.xdata.roi_series_original(:,selected_roi);
     plot_data.Cp			= handles.xdata.Cp;
     plot_data.timer			= handles.xdata.timer;
+    plot_data.x_units = 'Time (minutes)';
+    plot_data.y_units =  'Concentration (mmol)';
     plot_data.fit_parameters= handles.fit_data.roi_results(selected_roi,:);
     plot_data.model_name		= handles.fit_data.model_name;
     plot_data.show_original = get(handles.show_original,'Value');
@@ -205,6 +207,10 @@ if handles.roi_data_ready
 
     figure(2);
     plot_dce_curve(plot_data);
+else
+    handles = load_check_data(handles,'roi');
+    % Update handles structure
+    guidata(hObject, handles);
 end
 
 
@@ -305,7 +311,7 @@ catch err
         if ~isempty(lower_model_path)
             ftest_message = 'comparison model file not found';
         end
-    elseif ~exist('lower_model.xdata','var') || ~exist('lower_model.fit_data','var')
+    elseif ~isfield(lower_model,'xdata') || ~isfield(lower_model,'fit_data')
         ftest_message = 'comparison model file does not contain fit data';
     else
         rethrow(err);
@@ -596,5 +602,3 @@ if n_lower~=n_higher
 end
 
 n=n_higher;
-
-

@@ -56,7 +56,9 @@ close_pool = 0;		% Close matlabpool when done with processing
 
 % a) Load the data files
 load(results_b_path);
-PathName = PathName1;
+
+% update output path to be same as location of input
+[PathName,~,~] = fileparts(results_a_path);
 
 % Log input results
 log_path = fullfile(PathName, ['D_' rootname dce_model '_fit_voxels.log']);

@@ -22,7 +22,7 @@ function varargout = dce(varargin)
 
 % Edit the above text to modify the response to help dce
 
-% Last Modified by GUIDE v2.5 20-Dec-2013 16:57:57
+% Last Modified by GUIDE v2.5 28-Jan-2014 16:57:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,6 +57,17 @@ handles.output = hObject;
 
 % Create structure to hold roi list
 handles.roi_list = {};
+
+% Properly enables or disables the import_aif options
+update_importaif(handles);
+
+
+uirestore(handles.fxr);
+uirestore(handles.aif);
+uirestore(handles.aif_vp);
+uirestore(handles.none);
+uirestore(handles.moving);
+uirestore(handles.rlowess);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -653,12 +664,18 @@ start_time = str2num(get(handles.start_time, 'String')); %#ok<ST2NM>
 end_time = str2num(get(handles.end_time, 'String')); %#ok<ST2NM>
 start_injection = str2num(get(handles.start_injection, 'String')); %#ok<ST2NM>
 end_injection = str2num(get(handles.end_injection, 'String')); %#ok<ST2NM>
-fit_aif = get(handles.fit_aif, 'Value'); 
-average_aif = get(handles.average_aif, 'Value'); 
+% fit_aif = get(handles.fit_aif, 'Value'); 
+% average_aif = get(handles.average_aif, 'Value'); 
+fit_aif = (1==get(handles.aif_type,'Value'));
 time_resolution = str2num(get(handles.time_resolution, 'String')); %#ok<ST2NM>
 time_resolution = time_resolution/60; %convert to minutes
+if get(handles.aif_type,'Value')==3
+    import_aif_path = get(handles.import_aif_path, 'String');
+else
+    import_aif_path = '';
+end
 
-saved_results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_injection,end_injection,fit_aif,average_aif,time_resolution);
+saved_results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_injection,end_injection,fit_aif,import_aif_path,time_resolution);
 set(handles.results_b_path,'String',saved_results);
 
 
@@ -903,7 +920,7 @@ roi_list = handles.roi_list;
 fit_voxels = get(handles.fit_voxels,'Value');
 
 saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon);
-set(handles.results_d_path,'String',saved_results);
+% set(handles.results_d_path,'String',saved_results);
 fitting_analysis('results_path', saved_results)
 
 % --- Executes on button press in run_e.
@@ -912,12 +929,7 @@ function run_e_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-results_d_path = get(handles.results_d_path,'String');
-background_image_path = get(handles.background_image_path,'String');
-show_original = get(handles.show_original,'Value');
-show_ci = get(handles.show_ci,'Value');
-
-compare_fits(results_d_path,background_image_path,show_original,show_ci);
+fitting_analysis();
 
 % --- Executes on button press in show_original.
 function show_original_Callback(hObject, eventdata, handles)
@@ -939,32 +951,38 @@ uiremember;
 
 
 function aif_CreateFcn(hObject, eventdata, handles)
-uirestore;
+% uirestore;
 
 function aif_DeleteFcn(hObject, eventdata, handles)
 uiremember;
 
 function aif_vp_CreateFcn(hObject, eventdata, handles)
-uirestore;
+% uirestore;
 
 function aif_vp_DeleteFcn(hObject, eventdata, handles)
 uiremember;
 
+function fxr_CreateFcn(hObject, eventdata, handles)
+% uirestore;
+
+function fxr_DeleteFcn(hObject, eventdata, handles)
+uiremember;
+
 
 function none_CreateFcn(hObject, eventdata, handles)
-uirestore;
+% uirestore;
 
 function none_DeleteFcn(hObject, eventdata, handles)
 uiremember;
 
 function moving_CreateFcn(hObject, eventdata, handles)
-uirestore;
+% uirestore;
 
 function moving_DeleteFcn(hObject, eventdata, handles)
 uiremember;
 
 function rlowess_CreateFcn(hObject, eventdata, handles)
-uirestore;
+% uirestore;
 
 function rlowess_DeleteFcn(hObject, eventdata, handles)
 uiremember;
@@ -1086,3 +1104,83 @@ uiremember;
 % --- Executes during object creation, after setting all properties.
 function fit_voxels_CreateFcn(hObject, eventdata, handles)
 uirestore;
+
+
+% --- Executes on selection change in aif_type.
+function aif_type_Callback(hObject, eventdata, handles)
+uiremember;
+update_importaif(handles);
+
+function update_importaif(handles)
+if get(handles.aif_type,'Value')==3
+    set(handles.import_aif_path,'Enable','on');
+    set(handles.browse_import_aif,'Enable','on');
+else
+    set(handles.import_aif_path,'Enable','off');
+    set(handles.browse_import_aif,'Enable','off');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function aif_type_CreateFcn(hObject, eventdata, handles)
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+uirestore;
+
+
+
+function import_aif_path_Callback(hObject, eventdata, handles)
+% hObject    handle to import_aif_path (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of import_aif_path as text
+%        str2double(get(hObject,'String')) returns contents of import_aif_path as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function import_aif_path_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to import_aif_path (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in browse_import_aif.
+function browse_import_aif_Callback(hObject, eventdata, handles)
+guidata(hObject, handles);
+
+[filename, pathname, filterindex] = uigetfile( ...
+    {  '*.mat','Matlab Worksapce Files (*.mat)'; ...
+    '*.*',  'All Files (*.*)'}, ...
+    'Choose Results with an AIF'); %#ok<NASGU>
+if isequal(filename,0)
+    %disp('User selected Cancel')
+else
+    %disp(['User selected ', fullfile(pathname, filename)])
+    
+    % Combine path and filename together
+    fullpath = strcat(pathname,filename);
+
+    set(handles.import_aif_path,'String',fullpath);
+end
+guidata(hObject, handles);
+
+
+% --- Executes on button press in run_average_aif.
+function run_average_aif_Callback(hObject, eventdata, handles)
+results_a_path = get(handles.results_a_path,'String');
+[pathstr,~,~] = fileparts(results_a_path);
+if ~isempty(pathstr)
+    average_aifs('save_path',pathstr);
+else
+    average_aifs();
+end
