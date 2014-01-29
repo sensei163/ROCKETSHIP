@@ -9,19 +9,32 @@ noise_pixsize=str2num(get(handles.noisepixsize, 'String'));
 % image parameters
 tr = str2num(get(handles.tr, 'String')); %#ok<ST2NM>
 fa = str2num(get(handles.fa, 'String')); %#ok<ST2NM>
-time_resolution = str2num(get(handles.time_resolution, 'String')); %#ok<ST2NM>
+%time_resolution = str2num(get(handles.time_resolution, 'String')); %#ok<ST2NM>
 hematocrit = str2num(get(handles.hematocrit, 'String')); %#ok<ST2NM>
 snr_filter = str2num(get(handles.snr_filter, 'String')); %#ok<ST2NM>
 relaxivity = str2num(get(handles.relaxivity, 'String')); %#ok<ST2NM>
 injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
-water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
+%water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
 
-if isempty(tr) || isempty(fa) || isempty(time_resolution) || isempty(hematocrit) || isempty(snr_filter) || ...
-        isempty(relaxivity) || isempty(injection_time) || isempty(water_fraction)
+mask = (get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1);
+
+if isempty(tr) || isempty(fa) || isempty(hematocrit) || isempty(snr_filter) || ...
+        isempty(relaxivity) || isempty(injection_time)
     
     errormsg = 'Problem with image parameters';
     return;
 end
+
+% If the ROI or AIF files are masks, then we need to make sure that the T1 map is defined and vice versa.
+
+if mask
+    
+    if ~exist(get(handles.t1mappath, 'String'), 'file')
+        errormsg = 'T1 map needed';
+        return;
+    end
+end
+    
 
 % Check files
 
@@ -63,6 +76,12 @@ elseif filevolume == 3
     numaif = numel(handles.tiaiffiles);
     numroi = numel(handles.tiroifiles);
     numt1map=numel(handles.t1mapfiles);
+    
+    if mask
+        numt1map = numfiles;
+        % We don't care
+    end
+        
     
     if numaif ~= numfiles || numroi ~= numfiles || numt1map ~=numfiles
          errormsg = 'ROI files have mismatched # of files';

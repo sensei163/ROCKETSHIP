@@ -1,4 +1,4 @@
-function [TUMOR, LV, NOISE, T1MAP, DYNAMIC, dynampath, rootname hdr, res, errormsg] = loadIMGVOL(handles)
+function [TUMOR, LV, NOISE, DYNAMIC, dynampath, rootname, hdr, res, errormsg] = loadIMGVOL(handles)
 
 % Takes handles, loads the image files and outputs image volume.
 
@@ -23,11 +23,12 @@ fileorder = get(get(handles.fileorder,'SelectedObject'),'Tag');
 
 quant     = get(handles.quant, 'Value');
 
+mask = (get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1);
+
 % Initialize Image sets
 TUMOR = [];
 LV    = [];
 NOISE = [];
-T1MAP = [];
 DYNAMIC=[];
 
 %% Load image files
@@ -54,6 +55,8 @@ for i = 1:numel(t1aiffiles)
         return;
     end
 end
+
+lvroi = find(LV > 0);
 
 % Load ROI file - either 3D volume or 2D slice
 % hdr , res are derived from here
@@ -85,8 +88,10 @@ for i = 1:numel(t1roifiles)
     end
 end
 
-if quant
-    % Load T1 map if quantitative parameters desired
+tumorroi = find(TUMOR > 0);
+
+if quant && mask
+    % Load T1 map if quantitative parameters desired and the ROIs are masks
     for i = 1:numel(t1mapfiles)
         if isDICOM(t1mapfiles{i})
             hdr = dicominfo(t1mapfiles{i});
@@ -107,6 +112,11 @@ if quant
             return;
         end
     end
+    
+    % Assign the LV and TUMOR to have T1 values
+    LV(lvroi) = T1MAP(lvroi);
+    TUMOR(tumorroi) = T1MAP(tumorroi);
+    
 end
 
 if noise_pathpick

@@ -22,7 +22,7 @@ function varargout = RUNA(varargin)
 
 % Edit the above text to modify the response to help RUNA
 
-% Last Modified by GUIDE v2.5 26-Jan-2014 00:39:45
+% Last Modified by GUIDE v2.5 28-Jan-2014 16:57:40
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -74,7 +74,7 @@ handles.t1mapfiles = [];
 guidata(hObject, handles);
 
 % UIWAIT makes RUNA wait for user response (see UIRESUME)
-%COMMENTED OUT WHILE TESTING uiwait(handles.figure1);
+uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -315,7 +315,7 @@ end
 
 disp('Loading image volumes')
 
-[TUMOR, LV, NOISE, T1MAP, DYNAMIC, dynampath, rootname, hdr, res, errormsg] = loadIMGVOL(handles);
+[TUMOR, LV, NOISE, DYNAMIC, dynampath, rootname, hdr, res, errormsg] = loadIMGVOL(handles);
 
 if ~isempty(errormsg)
     
@@ -335,16 +335,16 @@ hematocrit = str2num(get(handles.hematocrit, 'String')); %#ok<ST2NM>
 snr_filter = str2num(get(handles.snr_filter, 'String')); %#ok<ST2NM>
 relaxivity = str2num(get(handles.relaxivity, 'String')); %#ok<ST2NM>
 injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
-water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
+%water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
 
-time_resolution = time_resolution/60; %convert to minutes
-saved_results = A_make_R1maps_func(DYNAMIC, T1MAP, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, aiforRR, ... 
-    tr,fa,time_resolution,hematocrit,snr_filter,relaxivity,injection_time,water_fraction);
+%time_resolution = time_resolution/60; %convert to minutes
+saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, aiforRR, ... 
+    tr,fa,hematocrit,snr_filter,relaxivity,injection_time);
 
 % saved_results = 'aaa';
-set(handles.results_a_path,'String',saved_results);
+%set(handles.results_a_path,'String',saved_results);
 
-varargout{1} = 'moo'; %handles.output;
+varargout{1} = saved_results; %handles.output;
 delete(handles.figure1);
 
 
@@ -1141,3 +1141,67 @@ else
     set(handles.t1mappath, 'Enable', 'off');
 end
     
+
+
+% --- Executes on selection change in aifmaskroi.
+function aifmaskroi_Callback(hObject, eventdata, handles)
+% hObject    handle to aifmaskroi (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns aifmaskroi contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from aifmaskroi
+
+if get(handles.roimaskroi, 'Value') == 2 && get(handles.aifmaskroi, 'Value') == 2
+    % The input is a mask, so we don't need a T1 map
+    set(handles.t1mapfile, 'Enable', 'off');
+    set(handles.t1mappath, 'Enable', 'off');
+elseif get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1
+    set(handles.t1mapfile, 'Enable', 'on');
+    set(handles.t1mappath, 'Enable', 'on');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function aifmaskroi_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to aifmaskroi (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in roimaskroi.
+function roimaskroi_Callback(hObject, eventdata, handles)
+% hObject    handle to roimaskroi (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns roimaskroi contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from roimaskroi
+
+if get(handles.roimaskroi, 'Value') == 2 && get(handles.aifmaskroi, 'Value') == 2
+    % The input is a mask, so we don't need a T1 map
+    set(handles.t1mapfile, 'Enable', 'off');
+    set(handles.t1mappath, 'Enable', 'off');
+elseif get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1
+    set(handles.t1mapfile, 'Enable', 'on');
+    set(handles.t1mappath, 'Enable', 'on');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function roimaskroi_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to roimaskroi (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

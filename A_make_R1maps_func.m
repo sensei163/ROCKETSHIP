@@ -41,11 +41,13 @@ Thomas Ng
 Caltech, Dec 2011
 Updated April 2012
 
+Additional updated Jan 2014 with Samuel Barnes as part of ROCKETSHIP
+
 %}
 %function results = A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,time_resolution,hematocrit,snr_filter,relaxivity,injection_time,water_fraction)
 
-function results = A_make_R1maps_func(DYNAMIC, T1MAP, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, aiforRR, ... 
-    tr,fa,time_resolution,hematocrit,snr_filter,relaxivity,injection_time,water_fraction);
+function results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, aiforRR, ... 
+    tr,fa,hematocrit,snr_filter,relaxivity,injection_time);
 
 %% 1. Option Toggles
 
@@ -67,6 +69,9 @@ viable= 0;
 
 % % Ask for file location
 % place = '';
+
+PathName1 = dynampath;
+
 % 
 % [PathName1,base,ext] = fileparts(dce_path);
 % dynam = [base ext];
@@ -89,25 +94,38 @@ viable= 0;
 % %image resolution
 % res  = dynam.hdr.dime.pixdim;
 
-% dynamname = dynam;
-dynam = double(dynam.img);
-dynamname.fileprefix
-
-
-
-%Load TUMOR T1 map, find the voxels that encompass tumor ROI
-TUMOR = load_nii(fullfile(PathName3, place, tumor));
-TUMOR = double(TUMOR.img);
+% % dynamname = dynam;
+% dynam = double(dynam.img);
+% dynamname.fileprefix
+% 
+% 
+% 
+% %Load TUMOR T1 map, find the voxels that encompass tumor ROI
+% TUMOR = load_nii(fullfile(PathName3, place, tumor));
+% TUMOR = double(TUMOR.img);
+TUMOR = double(TUMOR);
 tumind= find(TUMOR > 0);
 
+% Wondering if T1 is in s or ms
+
+if mean(TUMOR(tumind)) > 100
+    disp('Perhaps ROI T1 is in ms?');
+end
+
 %Load AIF dataset
-LV = load_nii(fullfile(PathName2, place, lv));
-LV = double(LV.img);
+% LV = load_nii(fullfile(PathName2, place, lv));
+% LV = double(LV.img);
+LV = double(LV);
 lvind = find(LV > 0);
 
+if mean(LV(lvind)) > 100
+    disp('Perhaps AIF T1 is in ms?');
+end
+
 %Load noise ROI files
-NOISE = load_nii(fullfile(PathName4, place, noise));
-NOISE = double(NOISE.img);
+% NOISE = load_nii(fullfile(PathName4, place, noise));
+% NOISE = double(NOISE.img);
+NOISE = double(NOISE);
 noiseind = find(NOISE > 0);
 
 % If viable toggle is on, choose the file that is generated with the
@@ -167,7 +185,8 @@ for i = 1:slices:size(dynam,3)
     %For each time point, we collect the dynamic information into the curve
     %arrays.
     
-    currentimg       = dynam(:,:,i:i+(slices-1));
+    %currentimg       = dynam(:,:,i:i+(slices-1));
+    currentimg       = DYNAMIC(:,:,i:i+(slices-1));
     DYNAM(end+1,:)   = currentimg(tumind);
     DYNAMLV(end+1,:) = currentimg(lvind);
     DYNAMNOISE(end+1)= std(currentimg(noiseind));
@@ -379,14 +398,14 @@ AB = A./B;
 % AB should not be less than 0. We interpolate the timeseries to clean
 % this. Threshold is 0.5;
 % up.
-[AB T1LV lvind BADspacelv GOODspacelv] = cleanAB(AB, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.5);
+[AB, T1LV, lvind, BADspacelv, GOODspacelv] = cleanAB(AB, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.5);
 
 R1tLV = double((1/tr).*log(AB));
 
 % R1 should be real. We interpolate the timeseries to clean
 % this. Threshold is 0.5;
 % up.
-[R1tLV T1LV lvind BADspacelv GOODspacelv] = cleanR1t(R1tLV, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.5);
+[R1tLV, T1LV, lvind, BADspacelv, GOODspacelv] = cleanR1t(R1tLV, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.5);
 
 for j = 1:numel(T1LV)
     
