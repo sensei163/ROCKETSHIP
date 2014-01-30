@@ -312,6 +312,7 @@ disp('User selected Run A')
 % Run Computation
 saved_results = RUNA;%A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift);
 set(handles.results_a_path,'String',saved_results);
+tilefigs
 
 
 function tr_Callback(hObject, eventdata, handles)

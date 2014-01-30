@@ -38,9 +38,9 @@ else
         for j = 1:subsets(i)
             curname = sortlist_current{counter};
             cursubjectID = subjectID_current{counter};
-            LUT
+            LUT;
             % Find the place to put the file
-            [row, col, NEW, DUP] = findLUTPLACE(LUT, sortlist, curname, cursubjectID, subjectID, rootname)
+            [row, col, NEW, DUP] = findLUTPLACE(LUT, sortlist, curname, cursubjectID, subjectID, rootname);
             
             if ~NEW
                 

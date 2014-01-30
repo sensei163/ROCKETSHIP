@@ -44,10 +44,11 @@ for i = 1:numel(t1aiffiles)
         hdr = dicominfo(t1aiffiles{i});
         img = dicomread(hdr);
         LV  = img;
+        LV = rescaleDICOM(hdr, LV);
         
         
     elseif isNIFTI(t1aiffiles{i})
-        nii = load_untouch_nii(t1aiffiles{i});
+        nii = load_nii(t1aiffiles{i});
         img = nii.img;
         if i == 1
             LV = img;
@@ -73,10 +74,11 @@ for i = 1:numel(t1roifiles)
         res(1:2) = hdr.(dicomlookup('28', '30'));
         res(3)   = hdr.(dicomlookup('18', '50'));
         TUMOR= img;
+        TUMOR = rescaleDICOM(hdr, TUMOR);
         
         
     elseif isNIFTI(t1roifiles{i})
-        nii = load_untouch_nii(t1roifiles{i});
+        nii = load_nii(t1roifiles{i});
         hdr = nii.hdr;
         res = nii.hdr.dime.pixdim;
         res = res(2:4);
@@ -101,10 +103,11 @@ if quant && mask
             hdr = dicominfo(t1mapfiles{i});
             img = dicomread(hdr);
             T1MAP  = img;
+            T1MAP = rescaleDICOM(hdr, T1MAP);
             
             
-        elseif isNIFTI(t1aiffiles{i})
-            nii = load_untouch_nii(t1aiffiles{i});
+        elseif isNIFTI(t1mapfiles{i})
+            nii = load_nii(t1mapfiles{i});
             img = nii.img;
             if i == 1
                 T1MAP = img;
@@ -120,7 +123,7 @@ if quant && mask
     % Assign the LV and TUMOR to have T1 values
     LV(lvroi) = T1MAP(lvroi);
     TUMOR(tumorroi) = T1MAP(tumorroi);
-    
+  disp('Applying Mask to T1 map...');  
 end
 
 if noise_pathpick
@@ -131,10 +134,11 @@ if noise_pathpick
             hdr = dicominfo(noisefiles{i});
             img = dicomread(hdr);
             NOISE  = img;
+            NOISE = rescaleDICOM(hdr, NOISE);
             
             
         elseif isNIFTI(noisefiles{i})
-            nii = load_untouch_nii(noisefiles{i});
+            nii = load_nii(noisefiles{i});
             img = nii.img;
             if i == 1
                 NOISE = img;
@@ -160,7 +164,7 @@ end
 if ~noise_pathpick
     
     NOISE = zeros(size(TUMOR));
-    
+
     for i = 1:size(NOISE,3)
         
         NOISE(1:noise_pixsize, 1:noise_pixsize, i) = 1;
@@ -194,30 +198,30 @@ elseif filevolume == 2
     if size(LUT,1) == 1
         for i = 1:size(LUT,2)
             id = LUT(1,i);
-            if isDICOM(filelist{id})
-                hdr = dicominfo(filelist{id});
-                img = dicomread(hdr);
+            if id ~=0
+                if isDICOM(filelist{id})
+                    hdr = dicominfo(filelist{id});
+                    img = dicomread(hdr);
+                elseif isNIFTI(filelist{id})
+                    nii = load_untouch_nii(filelist{id});
+                    img = nii.img;
+                    
+                else
+                    errormsg = 'Unknown file type - DYNAMIC';
+                    return;
+                end
                 
+                if ~isequal(size(img), size(TUMOR))
+                    errormsg = 'Unknown file type - DYNAMIC';
+                    return;
+                end
                 
-            elseif isNIFTI(filelist{id})
-                nii = load_untouch_nii(filelist{id});
-                img = nii.img;
-                
-            else
-                errormsg = 'Unknown file type - DYNAMIC';
-                return;
-            end
-            
-            if ~isequal(size(img), size(TUMOR))
-                errormsg = 'Unknown file type - DYNAMIC';
-                return;
-            end
-            
-            if i == 1
-                
-                DYNAMIC = img;
-            else
-                DYNAMIC(:,:,end+1:end+size(img,3)) = img;
+                if i == 1
+                    
+                    DYNAMIC = img;
+                else
+                    DYNAMIC(:,:,end+1:end+size(img,3)) = img;
+                end
             end
         end
     else
@@ -251,37 +255,40 @@ elseif filevolume == 2
         end
     end
 elseif filevolume == 3  
+
     % 2D slices
     for i = 1:size(LUT,1)
         for j = 1:size(LUT,2)
             id = LUT(i,j);
-            if isDICOM(filelist{id})
-                hdr = dicominfo(filelist{id});
-                img = dicomread(hdr);
-     
-            elseif isNIFTI(filelist{id})
-                nii = load_untouch_nii(filelist{id});
-                img = nii.img;
+            if id ~= 0
+                if isDICOM(filelist{id})
+                    hdr = dicominfo(filelist{id});
+                    img = dicomread(hdr);
+                    
+                elseif isNIFTI(filelist{id})
+                    nii = load_untouch_nii(filelist{id});
+                    img = nii.img;
+                    
+                else
+                    errormsg = 'Unknown file type - DYNAMIC';
+                    return;
+                end
                 
-            else
-                errormsg = 'Unknown file type - DYNAMIC';
-                return;
-            end
-            
-            if ~isequal(size(img), size(TUMOR))
-                errormsg = 'Unknown file type - DYNAMIC';
-                return;
-            end
-            
-            if i == 1 && j == 1
+                if ~isequal(size(img), size(TUMOR))
+                    errormsg = 'Unknown file type - DYNAMIC';
+                    return;
+                end
                 
-                DYNAMIC = img;
-            else
-                DYNAMIC(:,:,end+1:end+size(img,3)) = img;
+                if i == 1 && j == 1
+                    
+                    DYNAMIC = img;
+                else
+                    DYNAMIC(:,:,end+1:end+size(img,3)) = img;
+                end
             end
         end
     end
- 
+    
 end
 %% Resort DYNAMIC if fileorder is xytz
 
@@ -305,7 +312,19 @@ end
 disp(['Write path: ' dynampath]);
 
 
+% Check for x y size equivalence
 
+sizerLV = size(LV)
+sizerTUM= size(TUMOR)
+sizerNOI= size(NOISE)
+
+if ~isequal(sizerLV(1:2), sizerTUM(1:2), sizerNOI(1:2))
+    errormsg = 'X Y dimensions of images are not equal';
+end
+
+if rem(size(DYNAMIC,3),size(TUMOR,3)) ~= 0
+    errormsg = 'timepoints not divisible by slices';
+end
 
 
 

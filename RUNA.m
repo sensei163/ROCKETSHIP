@@ -22,7 +22,7 @@ function varargout = RUNA(varargin)
 
 % Edit the above text to modify the response to help RUNA
 
-% Last Modified by GUIDE v2.5 28-Jan-2014 16:57:40
+% Last Modified by GUIDE v2.5 29-Jan-2014 16:10:42
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -75,7 +75,7 @@ handles.saved_results = '';
 guidata(hObject, handles);
 
 % UIWAIT makes RUNA wait for user response (see UIRESUME)
-uiwait(handles.figure1);
+ uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -325,6 +325,20 @@ if ~isempty(errormsg)
     return;
 end
 
+% Debug checks
+% size(TUMOR)
+% size(LV)
+% size(NOISE)
+% size(DYNAMIC)
+% dynampath 
+% dynamname
+% rootname
+% hdr
+% res
+% errormsg
+% pause
+
+
 
 
 % image parameters
@@ -338,11 +352,11 @@ snr_filter = str2num(get(handles.snr_filter, 'String')); %#ok<ST2NM>
 relaxivity = str2num(get(handles.relaxivity, 'String')); %#ok<ST2NM>
 injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
 %water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
-drift = false;
+drift = get(handles.drift, 'Value');
 
 %time_resolution = time_resolution/60; %convert to minutes
 saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynamname, aiforRR, ... 
-    tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift);
+    tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift)
 
 % saved_results = 'aaa';
 %set(handles.results_a_path,'String',saved_results);
@@ -1209,3 +1223,12 @@ function roimaskroi_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in drift.
+function drift_Callback(hObject, eventdata, handles)
+% hObject    handle to drift (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of drift

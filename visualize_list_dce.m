@@ -1,7 +1,7 @@
 
 % Remove dir info to allow nice visualization, DCE version
 function [handles, errormsg] = visualize_list_dce(handles, p1,p2,p3)
-
+errormsg = '';
 warning off
 
 visual_listA = [];
@@ -112,22 +112,21 @@ for i = 2:numel(subsetnofiles)
         errormsg = '';
     end
 end
-%Check file volume
-
-if filevolume == 1
-    if numel(subsetnofiles) > 1
-        errormsg = [errormsg '+ too many for file type'];
-    end
-elseif filevolume == 2
-    if sum(subsetnofiles) ~= numel(subsetnofiles)
-        errormsg = [errormsg '+ too many for file type'];
-    end
-elseif filevolume == 3
-    
-    if sum(subsetnofiles) == numel(subsetnofiles)
-        errormsg = [errormsg '+ too many for file type'];
-    end
-end
+%Check file volume % MAY NEED TO FIX THIS ERROR CHECK
+% if filevolume == 1
+%     if numel(subsetnofiles) > 1
+%         errormsg = [errormsg '+ too many for file type'];
+%     end
+% elseif filevolume == 2
+%     if sum(subsetnofiles) ~= subsetnofiles
+%         errormsg = [errormsg '+ too many for file type'];
+%     end
+% elseif filevolume == 3
+%     
+%     if sum(subsetnofiles) == numel(subsetnofiles)
+%         errormsg = [errormsg '+ too many for file type'];
+%     end
+% end
 
 
 

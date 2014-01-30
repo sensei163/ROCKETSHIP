@@ -72,16 +72,16 @@ elseif filevolume == 3
     end
     
     % Multislice volume, check if noise/roi files are ok
-    
-    numaif = numel(handles.tiaiffiles);
-    numroi = numel(handles.tiroifiles);
+
+    numaif = numel(handles.t1aiffiles);
+    numroi = numel(handles.t1roifiles);
     numt1map=numel(handles.t1mapfiles);
     
-    if mask
-        numt1map = numfiles;
+    if ~mask
+        numt1map = numaif;
         % We don't care
     end
-        
+   
     
     if numaif ~= numfiles || numroi ~= numfiles || numt1map ~=numfiles
          errormsg = 'ROI files have mismatched # of files';
@@ -89,7 +89,7 @@ elseif filevolume == 3
     end
         
     
-    if get(noisefile, 'Value', 1)
+    if get(handles.noisefile, 'Value')
         numnoise = numel(handles.noisefiles);
         
         if numnoise ~= numfiles
