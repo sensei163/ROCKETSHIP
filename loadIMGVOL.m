@@ -1,4 +1,4 @@
-function [TUMOR, LV, NOISE, DYNAMIC, dynampath, dynamname, rootname, hdr, res, errormsg] = loadIMGVOL(handles)
+function [TUMOR, LV, NOISE, DYNAMIC, dynampath, dynamname, rootname, hdr, res, sliceloc, errormsg] = loadIMGVOL(handles)
 
 
 % Takes handles, loads the image files and outputs image volume.
@@ -33,18 +33,28 @@ NOISE = [];
 DYNAMIC=[];
 T1MAP=[];
 dynampath = '';
+dynamname = '';
 errormsg = '';
-
+hdr = [];
+res = [];
 %% Load image files
 
 % Load AIF - either 3D volume or 2D slice
+
+sliceloc = [];
 for i = 1:numel(t1aiffiles)
     
     if isDICOM(t1aiffiles{i})
         hdr = dicominfo(t1aiffiles{i});
         img = dicomread(hdr);
-        LV  = img;
-        LV = rescaleDICOM(hdr, LV);
+        if i == 1
+            LV  = img;
+            LV = rescaleDICOM(hdr, LV);
+            sliceloc(end+1) = hdr.(dicomlookup('20', '1041'));
+        else
+            LV(:,:,end+1) = rescaleDICOM(hdr, img);
+            sliceloc(end+1) = hdr.(dicomlookup('20', '1041'));
+        end
         
         
     elseif isNIFTI(t1aiffiles{i})
@@ -61,11 +71,15 @@ for i = 1:numel(t1aiffiles)
     end
 end
 
+% if slicelocations known, resort
+LV = sortIMGVOL(LV, sliceloc);
+
+
 lvroi = find(LV > 0);
 
 % Load ROI file - either 3D volume or 2D slice
 % hdr , res are derived from here
-
+sliceloc = [];
 for i = 1:numel(t1roifiles)
     
     if isDICOM(t1roifiles{i})
@@ -73,9 +87,15 @@ for i = 1:numel(t1roifiles)
         img = dicomread(hdr);
         res(1:2) = hdr.(dicomlookup('28', '30'));
         res(3)   = hdr.(dicomlookup('18', '50'));
-        TUMOR= img;
-        TUMOR = rescaleDICOM(hdr, TUMOR);
         
+        if i == 1
+            TUMOR= img;
+            TUMOR = rescaleDICOM(hdr, TUMOR);
+            sliceloc(end+1) = hdr.(dicomlookup('20', '1041'));
+        else
+            TUMOR(:,:,end+1) = rescaleDICOM(hdr, img);
+            sliceloc(end+1) = hdr.(dicomlookup('20', '1041'));
+        end
         
     elseif isNIFTI(t1roifiles{i})
         nii = load_nii(t1roifiles{i});
@@ -94,16 +114,28 @@ for i = 1:numel(t1roifiles)
     end
 end
 
+% if slicelocations known, resort
+TUMOR = sortIMGVOL(TUMOR, sliceloc);
+
 tumorroi = find(TUMOR > 0);
 
 if quant && mask
     % Load T1 map if quantitative parameters desired and the ROIs are masks
+    sliceloc = [];
+ 
     for i = 1:numel(t1mapfiles)
         if isDICOM(t1mapfiles{i})
             hdr = dicominfo(t1mapfiles{i});
             img = dicomread(hdr);
-            T1MAP  = img;
-            T1MAP = rescaleDICOM(hdr, T1MAP);
+            
+            if i == 1
+                T1MAP  = img;
+                T1MAP = rescaleDICOM(hdr, T1MAP);
+                sliceloc(end+1) = hdr.(dicomlookup('20', '1041'));
+            else
+                T1MAP(:,:,end+1) = rescaleDICOM(hdr, img);
+                sliceloc(end+1) = hdr.(dicomlookup('20', '1041'));
+            end
             
             
         elseif isNIFTI(t1mapfiles{i})
@@ -120,10 +152,13 @@ if quant && mask
         end
     end
     
+    % if slicelocations known, resort
+    T1MAP = sortIMGVOL(T1MAP, sliceloc);
+    
     % Assign the LV and TUMOR to have T1 values
     LV(lvroi) = T1MAP(lvroi);
     TUMOR(tumorroi) = T1MAP(tumorroi);
-  disp('Applying Mask to T1 map...');  
+    disp('Applying Mask to T1 map...');
 end
 
 if noise_pathpick
@@ -133,8 +168,15 @@ if noise_pathpick
         if isDICOM(noisefiles{i})
             hdr = dicominfo(noisefiles{i});
             img = dicomread(hdr);
-            NOISE  = img;
-            NOISE = rescaleDICOM(hdr, NOISE);
+            
+            if i == 1
+                NOISE  = img;
+                NOISE = rescaleDICOM(hdr, NOISE);
+                sliceloc(end+1) = hdr.(dicomlookup('20', '1041'));
+            else
+                NOISE(:,:,end+1) = rescaleDICOM(hdr, img);
+                sliceloc(end+1) = hdr.(dicomlookup('20', '1041'));
+            end
             
             
         elseif isNIFTI(noisefiles{i})
@@ -150,6 +192,8 @@ if noise_pathpick
             return;
         end
     end
+    % if slicelocations known, resort
+    NOISE = sortIMGVOL(NOISE, sliceloc);
 end
 
 %% Check to make sure the dimensions of the files are consistent
@@ -164,14 +208,14 @@ end
 if ~noise_pathpick
     
     NOISE = zeros(size(TUMOR));
-
+    
     for i = 1:size(NOISE,3)
         
         NOISE(1:noise_pixsize, 1:noise_pixsize, i) = 1;
     end
 end
 
-%% Now we load dynamic
+%% Now we load dynamic : NEED do we need to resort DICOM here?
 
 if filevolume == 1
     %4D
@@ -181,6 +225,11 @@ if filevolume == 1
         hdr = dicominfo(filelist{id});
         img = dicomread(hdr);
         DYNAMIC  = img;
+        
+        DYNAMIC = rescaleDICOM(hdr, DYNAMIC);
+        
+        
+        
         
         
     elseif isNIFTI(filelist{id})
@@ -202,6 +251,9 @@ elseif filevolume == 2
                 if isDICOM(filelist{id})
                     hdr = dicominfo(filelist{id});
                     img = dicomread(hdr);
+                    img = rescaleDICOM(hdr, img);
+                    
+                    
                 elseif isNIFTI(filelist{id})
                     nii = load_untouch_nii(filelist{id});
                     img = nii.img;
@@ -230,7 +282,7 @@ elseif filevolume == 2
             if isDICOM(filelist{id})
                 hdr = dicominfo(filelist{id});
                 img = dicomread(hdr);
-                
+                img = rescaleDICOM(hdr, img);
                 
             elseif isNIFTI(filelist{id})
                 nii = load_untouch_nii(filelist{id});
@@ -254,8 +306,8 @@ elseif filevolume == 2
             end
         end
     end
-elseif filevolume == 3  
-
+elseif filevolume == 3
+    
     % 2D slices
     for i = 1:size(LUT,1)
         for j = 1:size(LUT,2)
@@ -264,7 +316,7 @@ elseif filevolume == 3
                 if isDICOM(filelist{id})
                     hdr = dicominfo(filelist{id});
                     img = dicomread(hdr);
-                    
+                    img = rescaleDICOM(hdr, img);
                 elseif isNIFTI(filelist{id})
                     nii = load_untouch_nii(filelist{id});
                     img = nii.img;
@@ -314,9 +366,9 @@ disp(['Write path: ' dynampath]);
 
 % Check for x y size equivalence
 
-sizerLV = size(LV)
-sizerTUM= size(TUMOR)
-sizerNOI= size(NOISE)
+sizerLV = size(LV);
+sizerTUM= size(TUMOR);
+sizerNOI= size(NOISE);
 
 if ~isequal(sizerLV(1:2), sizerTUM(1:2), sizerNOI(1:2))
     errormsg = 'X Y dimensions of images are not equal';

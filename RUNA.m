@@ -317,7 +317,7 @@ end
 
 disp('Loading image volumes')
 
-[TUMOR, LV, NOISE, DYNAMIC, dynampath, dynamname, rootname, hdr, res, errormsg] = loadIMGVOL(handles);
+[TUMOR, LV, NOISE, DYNAMIC, dynampath, dynamname, rootname, hdr, res, sliceloc, errormsg] = loadIMGVOL(handles);
 
 if ~isempty(errormsg)
     
@@ -335,11 +335,9 @@ end
 % rootname
 % hdr
 % res
+% sliceloc
 % errormsg
 % pause
-
-
-
 
 % image parameters
 quant     = get(handles.quant, 'Value');
@@ -356,7 +354,7 @@ drift = get(handles.drift, 'Value');
 
 %time_resolution = time_resolution/60; %convert to minutes
 saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynamname, aiforRR, ... 
-    tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift)
+    tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift, sliceloc);
 
 % saved_results = 'aaa';
 %set(handles.results_a_path,'String',saved_results);
@@ -688,9 +686,10 @@ else
     end
     
     set(handles.noise_path,'String',visualpath);
+    handles.noisefiles = fullpath;
 end
 
-handles.noisefiles = fullpath;
+
 guidata(hObject, handles);
 
 
