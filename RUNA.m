@@ -22,7 +22,7 @@ function varargout = RUNA(varargin)
 
 % Edit the above text to modify the response to help RUNA
 
-% Last Modified by GUIDE v2.5 29-Jan-2014 16:10:42
+% Last Modified by GUIDE v2.5 31-Jan-2014 18:08:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -300,7 +300,6 @@ function done_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% NEED TO EDIT
 disp('User selected Run A')
 
 disp('Consistency checks before running');
@@ -520,6 +519,7 @@ function filevolume_Callback(hObject, eventdata, handles)
 
 disp_error(errormsg, handles);
 guidata(hObject, handles);
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function filevolume_CreateFcn(hObject, eventdata, handles)
@@ -532,7 +532,7 @@ function filevolume_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+UIRESTORE;
 
 % --- Executes on button press in addfiles.
 function addfiles_Callback(hObject, eventdata, handles)
@@ -691,7 +691,7 @@ end
 
 
 guidata(hObject, handles);
-
+uiremember;
 
 
 
@@ -706,7 +706,7 @@ guidata(hObject, handles);
 set(handles.noisefile, 'Value', 0);
 set(handles.noise_path, 'Enable', 'off');
 set(handles.noisepixsize, 'Enable', 'on');
-
+uiremember;
 
 
 
@@ -740,7 +740,7 @@ function noisepixsize_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of noisepixsize as text
 %        str2double(get(hObject,'String')) returns contents of noisepixsize as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function noisepixsize_CreateFcn(hObject, eventdata, handles)
@@ -753,7 +753,7 @@ function noisepixsize_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+UIRESTORE;
 
 
 function tr_Callback(hObject, eventdata, handles)
@@ -763,7 +763,7 @@ function tr_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of tr as text
 %        str2double(get(hObject,'String')) returns contents of tr as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function tr_CreateFcn(hObject, eventdata, handles)
@@ -776,7 +776,7 @@ function tr_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+UIRESTORE;
 
 
 function fa_Callback(hObject, eventdata, handles)
@@ -786,6 +786,7 @@ function fa_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of fa as text
 %        str2double(get(hObject,'String')) returns contents of fa as a double
+uiremember;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -799,7 +800,7 @@ function fa_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+UIRESTORE;
 
 
 function time_resolution_Callback(hObject, eventdata, handles)
@@ -832,7 +833,7 @@ function hematocrit_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of hematocrit as text
 %        str2double(get(hObject,'String')) returns contents of hematocrit as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function hematocrit_CreateFcn(hObject, eventdata, handles)
@@ -845,7 +846,7 @@ function hematocrit_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+UIRESTORE;
 
 
 function snr_filter_Callback(hObject, eventdata, handles)
@@ -855,7 +856,7 @@ function snr_filter_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of snr_filter as text
 %        str2double(get(hObject,'String')) returns contents of snr_filter as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function snr_filter_CreateFcn(hObject, eventdata, handles)
@@ -868,7 +869,7 @@ function snr_filter_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+UIRESTORE;
 
 
 function injection_time_Callback(hObject, eventdata, handles)
@@ -878,7 +879,7 @@ function injection_time_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of injection_time as text
 %        str2double(get(hObject,'String')) returns contents of injection_time as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function injection_time_CreateFcn(hObject, eventdata, handles)
@@ -891,7 +892,7 @@ function injection_time_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+UIRESTORE;
 
 
 function relaxivity_Callback(hObject, eventdata, handles)
@@ -901,7 +902,7 @@ function relaxivity_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of relaxivity as text
 %        str2double(get(hObject,'String')) returns contents of relaxivity as a double
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function relaxivity_CreateFcn(hObject, eventdata, handles)
@@ -914,7 +915,7 @@ function relaxivity_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+UIRESTORE;
 
 
 function water_fraction_Callback(hObject, eventdata, handles)
@@ -1028,7 +1029,7 @@ function aiforrr_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns aiforrr contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from aiforrr
-
+uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function aiforrr_CreateFcn(hObject, eventdata, handles)
@@ -1041,7 +1042,7 @@ function aiforrr_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+UIRESTORE;
 
 % --- Executes when selected object is changed in fileorder.
 function fileorder_SelectionChangeFcn(hObject, eventdata, handles)
@@ -1157,6 +1158,8 @@ else
     set(handles.t1_roi_path, 'Enable', 'on');
     set(handles.t1mappath, 'Enable', 'off');
 end
+
+uiremember;
     
 
 
@@ -1177,6 +1180,7 @@ elseif get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value')
     set(handles.t1mapfile, 'Enable', 'on');
     set(handles.t1mappath, 'Enable', 'on');
 end
+uiremember;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1190,7 +1194,7 @@ function aifmaskroi_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+UIRESTORE;
 
 % --- Executes on selection change in roimaskroi.
 function roimaskroi_Callback(hObject, eventdata, handles)
@@ -1209,6 +1213,7 @@ elseif get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value')
     set(handles.t1mapfile, 'Enable', 'on');
     set(handles.t1mappath, 'Enable', 'on');
 end
+uiremember;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1222,7 +1227,7 @@ function roimaskroi_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+UIRESTORE;
 
 % --- Executes on button press in drift.
 function drift_Callback(hObject, eventdata, handles)
@@ -1231,6 +1236,7 @@ function drift_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of drift
+<<<<<<< 72e8d0acdcdd63274d3a5067ac946432053a4e5b
 
 
 % --- Executes when user attempts to close figure1.
@@ -1242,3 +1248,44 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 % delete(hObject);
 uiresume(hObject);
+=======
+uiremember;
+
+% --- Executes during object creation, after setting all properties.
+function fileorder_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to fileorder (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function drift_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to drift (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+UIRESTORE;
+
+
+% --- Executes during object creation, after setting all properties.
+function quant_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to quant (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+UIRESTORE;
+
+
+% --- Executes during object creation, after setting all properties.
+function noisefile_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to noisefile (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+UIRESTORE;
+
+
+% --- Executes during object creation, after setting all properties.
+function noisepixels_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to noisepixels (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+UIRESTORE;
+>>>>>>> a5acab9adf3a8127ad5e64c013549df17d6885c0
