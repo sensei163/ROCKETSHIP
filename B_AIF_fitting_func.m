@@ -49,13 +49,21 @@ threshold = 0;
 %% DO NOT ALTER BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
 
 %% 1. Load the data array from previous script
+results_a_path = results_a_path{1};
 load(results_a_path);
+
+% unload the variables from previous data array
+
+rootname = Adata.rootname;
+Cp       = Adata.Cp;
+Ct       = Adata.Ct;
+
 
 % update output path to be same as location of input
 [PathName1,~,~] = fileparts(results_a_path);
 
 % Log input results
-log_path = fullfile(PathName1, ['B_' rootname 'fitted_R1info.log']);
+log_path = fullfile(PathName1, ['B_' rootname 'test_R1info.log']);
 if exist(log_path, 'file')==2
   delete(log_path);
 end
@@ -189,8 +197,25 @@ xdata{1}.Ct    = Ct(start_time:end_time,:);
 numvoxels      = size(Ct,2);
 xdata{1}.Cp = Cp_use;
 
+%% 7. Setup  Bresults to output
+Bdata.CpROI         = CpROI;
+Bdata.Cp_use        = Cp_use;
+Bdata.aif_name      = aif_name;
+Bdata.end_injection = end_injection;
+Bdata.end_time      = fit_aif;
+Bdata.log_path      = log_path;
+Bdata.numvoxels     = numvoxels;
+Bdata.results_a_path= results_a_path; % Location of associated A data
+Bdata.start_injection=start_injection;
+Bdata.start_time    = start_time;
+Bdata.threshold     = threshold;
+Bdata.time_resolution=time_resolution;
+Bdata.timer         = timer;
+Bdata.xdata         = xdata;
+
 results = fullfile(PathName1, ['B_' rootname aif_name '_R1info.mat']);
-save(results);
+
+save(results, 'Bdata');
 
 Opt.Input = 'file';
 mat_md5 = DataHash(results, Opt);
@@ -204,3 +229,6 @@ disp('Finished B');
 disp(datestr(now))
 toc
 diary off;
+
+% Keep log consistent naming with data file
+movefile(fullfile(PathName1, ['B_' rootname 'test_R1info.log']) , fullfile(PathName1, ['B_' rootname aif_name '_R1info.log']));

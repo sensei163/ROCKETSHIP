@@ -56,8 +56,8 @@ function RUNB_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 % Setup the name of the A results file
-%% CHECK LATER ARESULTS = varargin{1};
-%% set(handles.results_a_path, 'String', ARESULTS);
+ARESULTS = varargin{1};
+set(handles.results_a_path, 'String', ARESULTS);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -74,7 +74,7 @@ function varargout = RUNB_OutputFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Get default command line output from handles structure
-%varargout{1} =handles.saved_results;
+varargout{1} =handles.saved_results;
 delete(handles.figure1);
 
 
@@ -182,6 +182,15 @@ function aif_type_Callback(hObject, eventdata, handles)
 %        contents{get(hObject,'Value')} returns selected item from aif_type
 uiremember;
 update_importaif(handles);
+
+function update_importaif(handles)
+if get(handles.aif_type,'Value')==3
+    set(handles.import_aif_path,'Enable','on');
+    set(handles.browse_import_aif,'Enable','on');
+else
+    set(handles.import_aif_path,'Enable','off');
+    set(handles.browse_import_aif,'Enable','off');
+end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -331,7 +340,7 @@ function done_Callback(hObject, eventdata, handles)
 % hObject    handle to done (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-disp('User selected Run B')
+%disp('User selected Run B');
 results_a_path = get(handles.results_a_path,'String');
 
 start_time = str2num(get(handles.start_time, 'String')); %#ok<ST2NM>

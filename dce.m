@@ -58,10 +58,6 @@ handles.output = hObject;
 % Create structure to hold roi list
 handles.roi_list = {};
 
-% Properly enables or disables the import_aif options
-update_importaif(handles);
-
-
 uirestore(handles.fxr);
 uirestore(handles.aif);
 uirestore(handles.aif_vp);
@@ -661,23 +657,26 @@ function run_b_Callback(hObject, eventdata, handles)
 disp('User selected Run B')
 results_a_path = get(handles.results_a_path,'String');
 
-start_time = str2num(get(handles.start_time, 'String')); %#ok<ST2NM>
-end_time = str2num(get(handles.end_time, 'String')); %#ok<ST2NM>
-start_injection = str2num(get(handles.start_injection, 'String')); %#ok<ST2NM>
-end_injection = str2num(get(handles.end_injection, 'String')); %#ok<ST2NM>
-% fit_aif = get(handles.fit_aif, 'Value'); 
-% average_aif = get(handles.average_aif, 'Value'); 
-fit_aif = (1==get(handles.aif_type,'Value'));
-time_resolution = str2num(get(handles.time_resolution, 'String')); %#ok<ST2NM>
-time_resolution = time_resolution/60; %convert to minutes
-if get(handles.aif_type,'Value')==3
-    import_aif_path = get(handles.import_aif_path, 'String');
-else
-    import_aif_path = '';
-end
+% Run Computation
+saved_results = RUNB({results_a_path})%A_make_R1maps_func(dce_path,t1_aif_path,t1_roi_path,noise_path,tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift);
 
-saved_results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_injection,end_injection,fit_aif,import_aif_path,time_resolution);
-set(handles.results_b_path,'String',saved_results);
+% start_time = str2num(get(handles.start_time, 'String')); %#ok<ST2NM>
+% end_time = str2num(get(handles.end_time, 'String')); %#ok<ST2NM>
+% start_injection = str2num(get(handles.start_injection, 'String')); %#ok<ST2NM>
+% end_injection = str2num(get(handles.end_injection, 'String')); %#ok<ST2NM>
+% % fit_aif = get(handles.fit_aif, 'Value'); 
+% % average_aif = get(handles.average_aif, 'Value'); 
+% fit_aif = (1==get(handles.aif_type,'Value'));
+% time_resolution = str2num(get(handles.time_resolution, 'String')); %#ok<ST2NM>
+% time_resolution = time_resolution/60; %convert to minutes
+% if get(handles.aif_type,'Value')==3
+%     import_aif_path = get(handles.import_aif_path, 'String');
+% else
+%     import_aif_path = '';
+% end
+% 
+% saved_results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_injection,end_injection,fit_aif,import_aif_path,time_resolution);
+ set(handles.results_b_path,'String',saved_results);
 
 
 % --- Executes on button press in browse_results_b.
