@@ -1150,12 +1150,12 @@ function quant_Callback(hObject, eventdata, handles)
 if get(handles.quant, 'Value')
     set(handles.aifRRtxt, 'Enable', 'on');
     set(handles.aiforrr, 'Enable', 'on');
-    set(handles.roi_path, 'Enable', 'on');
+    set(handles.t1_roi_path, 'Enable', 'on');
     set(handles.t1mappath, 'Enable', 'on');
 else
     set(handles.aifRRtxt, 'Enable', 'on');
     set(handles.aiforrr, 'Enable', 'off');
-    set(handles.roi_path, 'Enable', 'on');
+    set(handles.t1_roi_path, 'Enable', 'on');
     set(handles.t1mappath, 'Enable', 'off');
 end
     
@@ -1232,3 +1232,14 @@ function drift_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of drift
+
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+% delete(hObject);
+uiresume(hObject);
