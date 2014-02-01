@@ -1,5 +1,5 @@
-function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynamname, aiforRR, ... 
-    tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time, drift)
+function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynam_name, aiforRR, ... 
+    tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time, drift, sliceloc)
 
 % A_make_R1maps_func - Generate concentration versus time curves for the
 % tumor region and the arterial input region. The setup follows Loveless
@@ -147,7 +147,7 @@ place = '';
 % %image resolution
 % res  = dynam.hdr.dime.pixdim;
 % save for part D
-dynam_name = dynamname; %dynam.fileprefix;
+%dynam.fileprefix;
 dynam = DYNAMIC; %double(dynam.img);
 
 
@@ -537,11 +537,67 @@ subplot(426), plot(RawLV, 'b'), title('T1-weighted AIF'), ylabel('a.u.')
 subplot(427), plot(mean(deltaR1TOI,2), 'b.'), title('Delta R1 ROI'), ylabel('sec^-1')
 subplot(428), plot(mean(deltaR1LV,2), 'r.'), title('Delta R1 AIF') , ylabel('sec^-1')
 saveas(n,fullfile(PathName1, [rootname 'timecurves.fig']));
-%% 12. Save the file for the next Step
+
+%% 13. Setup output structure
+
+Adata.CTFILE = CTFILE;
+Adata.Cp     = Cp;
+Adata.Ct     = Ct;
+Adata.DYNAM  = DYNAM;
+Adata.DYNAMIC= DYNAMIC;
+Adata.DYNAMLV= DYNAMLV;
+Adata.DYNAMLV_time_average = DYNAMLV_time_average;
+Adata.DYNAMNOISE = DYNAMNOISE;
+Adata.DYNAMNOISE_time_average = DYNAMNOISE_time_average;
+Adata.DYNAMNONVIA = DYNAMNONVIA;
+Adata.GOODspace = GOODspace;
+Adata.GOOODspacelv = GOODspacelv;
+Adata.LV = LV;
+Adata.NOISE = NOISE;
+Adata.PathName1 = PathName1;
+Adata.R1tLV = R1tLV;
+Adata.R1tTOI= R1tTOI;
+Adata.RawLV = RawLV;
+Adata.RawTUM = RawTUM;
+Adata.ScaleFactorlv = ScaleFactorlv;
+Adata.ScaleFactortum= ScaleFactortum;
+Adata.Sss = Sss;
+Adata.Ssstum = Ssstum;
+Adata.Sstar  = Sstar;
+Adata.Stlv   = Stlv;
+Adata.Stotaltum = Stotaltum;
+Adata.Sttum  = Sttum;
+Adata.T1 = T1;
+Adata.T1LV = T1LV;
+Adata.T1TUM=T1TUM;
+Adata.TUMOR= TUMOR;
+Adata.aiforRR = aiforRR;
+Adata.currentCT=currentCT;
+Adata.deltaR1LV = deltaR1LV;
+Adata.deltaR1TOI= deltaR1TOI;
+Adata.dynam_name= dynam_name;
+Adata.dynampath = dynampath;
+Adata.hdr       = hdr;
+Adata.hematocrit=hematocrit;
+Adata.log_path  = log_path;
+Adata.matchimg  = matchimg;
+Adata.noiseind  = noiseind;
+Adata.oldvind   = oldvind;
+Adata.quant     = quant;
+Adata.relaxivity= relaxivity;
+Adata.res       = res;
+Adata.rootname  = rootname;
+Adata.sliceloc  = sliceloc;
+Adata.steady_state_time = steady_state_time;
+Adata.tumind    = tumind;
+Adata.voxelSNR  = voxelSNR;
+Adata.voxelSNR_filtered = voxelSNR_filtered;
+
+%% 14. Save the file for the next Step
 
 
 saved_results = fullfile(PathName1, ['A_' rootname 'R1info.mat']);
-save(saved_results);
+save(saved_results, 'Adata');
 Opt.Input = 'file';
 mat_md5 = DataHash(saved_results, Opt);
 disp(' ')
