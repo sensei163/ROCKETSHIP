@@ -57,7 +57,7 @@ handles.output = hObject;
 
 % Setup the name of the A results file
 ARESULTS = varargin{1};
-set(handles.results_a_path, 'String', ARESULTS);
+set(handles.results_a_path, 'String', ARESULTS{1});
 
 % Update handles structure
 guidata(hObject, handles);

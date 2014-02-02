@@ -49,7 +49,7 @@ threshold = 0;
 %% DO NOT ALTER BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
 
 %% 1. Load the data array from previous script
-results_a_path = results_a_path{1};
+
 load(results_a_path);
 
 % unload the variables from previous data array

@@ -1,8 +1,8 @@
 % Helper for C_fitwithvp
 
 function GG = FXLfit_generic(xdata, number_voxels, model)
-
-if strcmp(model,'aif_vp');
+% number_voxels = 5
+if model.aif_vp
     % Get values from pref file
     prefs_str = parse_preference_file('dce_preferences.txt',0,...
         {'voxel_lower_limit_ktrans' 'voxel_upper_limit_ktrans' 'voxel_initial_value_ktrans' ...
@@ -58,7 +58,7 @@ if strcmp(model,'aif_vp');
     end;
     p.stop;
     if diary_restore, diary on, end;
-elseif strcmp(model,'aif');
+elseif model.aif
     % Get values from pref file
     prefs_str = parse_preference_file('dce_preferences.txt',0,...
         {'voxel_lower_limit_ktrans' 'voxel_upper_limit_ktrans' 'voxel_initial_value_ktrans' ...
@@ -107,7 +107,7 @@ elseif strcmp(model,'aif');
     end;
     p.stop;
     if diary_restore, diary on, end;
-elseif strcmp(model,'fxr');
+elseif model.fxr
     % Get values from pref file
     prefs_str = parse_preference_file('dce_preferences.txt',0,...
         {'voxel_lower_limit_ktrans' 'voxel_upper_limit_ktrans' 'voxel_initial_value_ktrans' ...

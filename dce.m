@@ -22,7 +22,7 @@ function varargout = dce(varargin)
 
 % Edit the above text to modify the response to help dce
 
-% Last Modified by GUIDE v2.5 28-Jan-2014 16:57:27
+% Last Modified by GUIDE v2.5 01-Feb-2014 10:48:54
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,15 +55,18 @@ function dce_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for dce
 handles.output = hObject;
 
-% Create structure to hold roi list
-handles.roi_list = {};
+% Batch for RUN D
+handles.batch_d_listfullpath = {};
 
-uirestore(handles.fxr);
-uirestore(handles.aif);
-uirestore(handles.aif_vp);
-uirestore(handles.none);
-uirestore(handles.moving);
-uirestore(handles.rlowess);
+% Create structure to hold roi list
+% handles.roi_list = {};
+% 
+% uirestore(handles.fxr);
+% uirestore(handles.aif);
+% uirestore(handles.aif_vp);
+% uirestore(handles.none);
+% uirestore(handles.moving);
+% uirestore(handles.rlowess);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -910,18 +913,43 @@ function run_d_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 disp('User selected Run D')
 results_b_path = get(handles.results_b_path,'String');
-dce_model = get(get(handles.dce_model,'SelectedObject'),'Tag');
-time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
-time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
-xy_smooth_size = str2num(get(handles.xy_smooth_size, 'String')); %#ok<ST2NM>
-number_cpus = str2num(get(handles.number_cpus, 'String')); %#ok<ST2NM>
-neuroecon = get(handles.neuroecon, 'Value'); 
-roi_list = handles.roi_list;
-fit_voxels = get(handles.fit_voxels,'Value');
 
-saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon);
-% set(handles.results_d_path,'String',saved_results);
-fitting_analysis('results_path', saved_results)
+% Run Computation
+[saved_results, batch] = RUND({results_b_path});
+if batch
+    disp('Adding prep data to batch queue');
+    
+    [~, filename] = fileparts(saved_results);
+    
+    list = get(handles.batch_d_list, 'String');
+    
+    list = visualize_runD(list, filename);
+    set(handles.batch_d_list, 'String', list);
+    fullpathlist = handles.batch_d_listfullpath;
+    fullpathlist{end+1} = filename;
+    handles.batch_d_listfullpath = fullpathlist;
+
+else
+  
+disp('Run D done');
+end
+set(handles.results_d_path, 'String', saved_results);
+
+guidata(hObject, handles);
+% disp('User selected Run D')
+% results_b_path = get(handles.results_b_path,'String');
+% dce_model = get(get(handles.dce_model,'SelectedObject'),'Tag');
+% time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
+% time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
+% xy_smooth_size = str2num(get(handles.xy_smooth_size, 'String')); %#ok<ST2NM>
+% number_cpus = str2num(get(handles.number_cpus, 'String')); %#ok<ST2NM>
+% neuroecon = get(handles.neuroecon, 'Value'); 
+% roi_list = handles.roi_list;
+% fit_voxels = get(handles.fit_voxels,'Value');
+% 
+% saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon);
+% % set(handles.results_d_path,'String',saved_results);
+% fitting_analysis('results_path', saved_results)
 
 % --- Executes on button press in run_e.
 function run_e_Callback(hObject, eventdata, handles)
@@ -1184,3 +1212,102 @@ if ~isempty(pathstr)
 else
     average_aifs();
 end
+
+
+% --- Executes when selected object is changed in dce_model.
+function dce_model_SelectionChangeFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in dce_model 
+% eventdata  structure with the following fields (see UIBUTTONGROUP)
+%	EventName: string 'SelectionChanged' (read only)
+%	OldValue: handle of the previously selected object or empty if none was selected
+%	NewValue: handle of the currently selected object
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes when selected object is changed in time_smoothing.
+function time_smoothing_SelectionChangeFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in time_smoothing 
+% eventdata  structure with the following fields (see UIBUTTONGROUP)
+%	EventName: string 'SelectionChanged' (read only)
+%	OldValue: handle of the previously selected object or empty if none was selected
+%	NewValue: handle of the currently selected object
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over aif.
+function aif_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to aif (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on selection change in batch_d_list.
+function batch_d_list_Callback(hObject, eventdata, handles)
+% hObject    handle to batch_d_list (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns batch_d_list contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from batch_d_list
+
+
+% --- Executes during object creation, after setting all properties.
+function batch_d_list_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to batch_d_list (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in run_d_batch.
+function run_d_batch_Callback(hObject, eventdata, handles)
+% hObject    handle to run_d_batch (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in add_d_prep.
+function add_d_prep_Callback(hObject, eventdata, handles)
+% hObject    handle to add_d_prep (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in remove_d_prep.
+function remove_d_prep_Callback(hObject, eventdata, handles)
+% hObject    handle to remove_d_prep (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+function email_Callback(hObject, eventdata, handles)
+% hObject    handle to email (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of email as text
+%        str2double(get(hObject,'String')) returns contents of email as a double
+
+uiremember;
+
+
+% --- Executes during object creation, after setting all properties.
+function email_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to email (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+uirestore;
