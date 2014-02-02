@@ -1,7 +1,7 @@
 % Helper for C_fitwithvp
 
 function GG = FXLfit_generic(xdata, number_voxels, model)
-number_voxels = 5
+%number_voxels = 5
 if strcmp(model, 'aif_vp')
     
     % Get values from pref file

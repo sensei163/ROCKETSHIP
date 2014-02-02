@@ -507,10 +507,10 @@ results_b_path = get(handles.results_b_path,'String');
 dce_model.aif    = get(handles.aif, 'Value');
 dce_model.aif_vp = get(handles.aif_vp, 'Value');
 dce_model.fxr    = get(handles.fxr, 'Value');
-dce_model.sauc   = get(handles.sauc, 'Value');
+%dce_model.sauc   = get(handles.sauc, 'Value');
 dce_model.fractal= get(handles.fractal, 'Value');
 dce_model.auc    = get(handles.auc, 'Value');
-dce_model.auc_rr = get(handles.auc_rr, 'Value');
+%dce_model.auc_rr = get(handles.auc_rr, 'Value');
 
 time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
 time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>

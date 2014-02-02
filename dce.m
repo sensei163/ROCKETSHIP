@@ -926,7 +926,7 @@ if batch
     list = visualize_runD(list, filename);
     set(handles.batch_d_list, 'String', list);
     fullpathlist = handles.batch_d_listfullpath;
-    fullpathlist{end+1} = filename;
+    fullpathlist{end+1} = saved_results;
     handles.batch_d_listfullpath = fullpathlist;
 
 else
@@ -1272,12 +1272,46 @@ function run_d_batch_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
+disp('Running batch mode')
+list = handles.batch_d_listfullpath;
+visual_list = get(handles.batch_d_list, 'String');
+
+for i = 1:size(list,1)
+    % Log input results
+    log_path = fullfile(pwd, ['D_BATCH_dce_fit_voxels.log']);
+    if exist(log_path, 'file')==2
+        delete(log_path);
+    end
+    diary(log_path);
+    
+    filename = list{i};
+    disp(['Running job on : ' filename]);
+    load(filename);
+    results = D_fit_voxels_batch_func(Ddatabatch);
+    disp(['Wrote: ' results]);
+    
+    if i == size(list,1)
+        disp(datestr(now))
+        toc
+        diary off;
+    end
+end
+
+for i = 1:size(list,1)
+    % Flush the queue
+    list(i) = [];
+    visual_list(i,:) = [];
+end
+
+handles.batch_d_listfullpath = list;
+set(handles.batch_d_list, 'String', visual_list);
+    
+
 % --- Executes on button press in add_d_prep.
 function add_d_prep_Callback(hObject, eventdata, handles)
 % hObject    handle to add_d_prep (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 
 % --- Executes on button press in remove_d_prep.
 function remove_d_prep_Callback(hObject, eventdata, handles)
