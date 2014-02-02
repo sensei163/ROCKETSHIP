@@ -1312,12 +1312,89 @@ function add_d_prep_Callback(hObject, eventdata, handles)
 % hObject    handle to add_d_prep (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+curfulllist = handles.batch_d_listfullpath;
+
+[filename, pathname, ~] = uigetfile( ...
+    {'*prep*.mat','Batch data file (*prep*.mat)'; ...
+    '*.*',  'All Files (*.*)'}, ...
+    'Pick batch data files', ...
+    'MultiSelect', 'on');
+
+if isequal(filename,0)
+    %disp('User selected Cancel')
+    return;
+end
+
+% Combine path and filename together
+fullpath = strcat(pathname,filename);
+
+% Stupid matlab uses a different datastructure if only one file
+% is selected, handle special case
+% if ischar(filename)
+%     filename = {filename};
+% end
+if ischar(fullpath)
+    fullpath = {fullpath};
+end
+    
+for i = 1:numel(fullpath)
+    curfulllist{end+1} = fullpath{i};
+end
+
+% make visual_list
+lengthspacer = 0;
+
+for i = 1:numel(curfulllist)
+        [~, filename] = fileparts(curfulllist{i});
+    lengthspacer = max(lengthspacer, numel(filename));
+end
+
+list = '';
+for i = 1:numel(curfulllist)
+    [~, filename] = fileparts(curfulllist{i});
+    list(i,:) = [filename blanks(max(0, lengthspacer-numel(filename)))];
+end
+
+set(handles.batch_d_list, 'String', list, 'Value', 1);
+handles.batch_d_listfullpath = curfulllist;
+
+guidata(hObject, handles);
+
 
 % --- Executes on button press in remove_d_prep.
 function remove_d_prep_Callback(hObject, eventdata, handles)
 % hObject    handle to remove_d_prep (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+guidata(hObject, handles);
+
+fileselected = get(handles.batch_d_list, 'Value');
+curfulllist = handles.batch_d_listfullpath;
+
+curfulllist(fileselected) = [];
+
+% make visual_list
+lengthspacer = 0;
+
+for i = 1:numel(curfulllist)
+        [~, filename] = fileparts(curfulllist{i});
+    lengthspacer = max(lengthspacer, numel(filename));
+end
+
+list = '';
+for i = 1:numel(curfulllist)
+    [~, filename] = fileparts(curfulllist{i});
+    list(i,:) = [filename blanks(max(0, lengthspacer-numel(filename)))];
+end
+
+set(handles.batch_d_list, 'String', list, 'Value', fileselected);
+handles.batch_d_listfullpath = curfulllist;
+
+guidata(hObject, handles);
+
+
+
+
 
 
 
