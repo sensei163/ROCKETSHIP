@@ -22,7 +22,7 @@ function varargout = RUND(varargin)
 
 % Edit the above text to modify the response to help RUND
 
-% Last Modified by GUIDE v2.5 01-Feb-2014 10:54:56
+% Last Modified by GUIDE v2.5 02-Feb-2014 01:07:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,7 +67,8 @@ guidata(hObject, handles);
 
 uirestore;
 
-
+uirestore(handles.fractal);
+uirestore(handles.auc);
 uirestore(handles.fxr);
 uirestore(handles.aif);
 uirestore(handles.aif_vp);
@@ -344,10 +345,10 @@ results_b_path = get(handles.results_b_path,'String');
 dce_model.aif    = get(handles.aif, 'Value');
 dce_model.aif_vp = get(handles.aif_vp, 'Value');
 dce_model.fxr    = get(handles.fxr, 'Value');
-dce_model.sauc   = get(handles.sauc, 'Value');
+
 dce_model.fractal= get(handles.fractal, 'Value');
 dce_model.auc    = get(handles.auc, 'Value');
-dce_model.auc_rr = get(handles.auc_rr, 'Value');
+
 
 time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
 time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
@@ -384,7 +385,7 @@ function aif_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of aif
 
-set(handles.aif_vp, 'Value', 0);
+%set(handles.aif_vp, 'Value', 0);
 uiremember;
 
 
@@ -393,7 +394,7 @@ function aif_vp_Callback(hObject, eventdata, handles)
 % hObject    handle to aif_vp (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-set(handles.aif, 'Value', 0);
+%set(handles.aif, 'Value', 0);
 uiremember;
 % Hint: get(hObject,'Value') returns toggle state of aif_vp
 
@@ -526,3 +527,44 @@ handles.saved_results = saved_results;
 handles.batch         = 1;
 guidata(hObject, handles);
 uiresume(handles.figure1);
+
+
+% --- Executes on button press in FXL_rr.
+function FXL_rr_Callback(hObject, eventdata, handles)
+% hObject    handle to FXL_rr (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of FXL_rr
+
+
+% --- Executes on button press in FXR_rr.
+function FXR_rr_Callback(hObject, eventdata, handles)
+% hObject    handle to FXR_rr (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of FXR_rr
+
+
+% --- Executes on selection change in outputfiletype.
+function outputfiletype_Callback(hObject, eventdata, handles)
+% hObject    handle to outputfiletype (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns outputfiletype contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from outputfiletype
+
+
+% --- Executes during object creation, after setting all properties.
+function outputfiletype_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to outputfiletype (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

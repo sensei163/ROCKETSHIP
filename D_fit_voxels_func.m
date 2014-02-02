@@ -69,17 +69,12 @@ end
 if dce_model.fxr
     dce_model_string = [dce_model_string ', FXR'];
 end
-if dce_model.sauc
-    dce_model_string = [dce_model_string ', AUC from raw signal'];
-end
+
 if dce_model.fractal
     dce_model_string = [dce_model_string ', Fractal metric'];
 end
 if dce_model.auc
-    dce_model_string = [dce_model_string ', AUC from conc'];
-end
-if dce_model.auc_rr
-    dce_model_string = [dce_model_string ', AUC ratio'];
+    dce_model_string = [dce_model_string ', Area under curve'];
 end
 
 % a) Load the data files
@@ -97,12 +92,32 @@ tumind      = Adata.tumind;
 dynam_name  = Adata.dynam_name;
 numvoxels   = Bdata.numvoxels;
 currentimg  = Adata.currentCT;
+res         = Adata.res;
+relaxivity  = Adata.relaxivity;
 
 if start_time == 0
     start_time = 1;
 end
 if end_time == 0
     end_time = size(R1tTOI,1);
+end
+
+% Load and prep raw signal files if required
+
+if dce_model.auc
+    Sss                         = Adata.Sss;
+    Ssstum                      = Adata.Ssstum;
+    Stlv                        = Adata.Stlv;
+    Stlv                        = Stlv(start_time:end_time,:);% This was not done in RunB as per others.
+    Sttum                       = Adata.Sttum;
+    Sttum                       = Sttum(start_time:end_time,:);% This was not done in RunB as per others.
+    xdata{1}.start_injection    = Bdata.start_injection;
+    xdata{1}.end_injection      = Bdata.end_injection;
+    xdata{1}.Stlv               = Stlv;
+    xdata{1}.Ssstum             = Ssstum;
+    xdata{1}.Sttum              = Sttum;
+    xdata{1}.Sss                = Sss;
+    
 end
 
 
@@ -154,7 +169,7 @@ tic
 
 % Start processing
 xdata{1}.numvoxels = numvoxels;
-disp(['Fitting data using the ' 'dce' ' model']);
+%disp(['Fitting data using the ' 'dce' ' model']);
 
 % Open pool if not open or improperly sized
 if matlabpool('size')~= number_cpus
@@ -216,16 +231,24 @@ if ~isempty(roi_list) && ~strcmp('No Files',cell2mat(roi_list(1)))
         original_timepoint = zeros(size(currentimg));
         roi_series = zeros(size(xdata{1}.Ct,1),number_rois);
         for t=1:size(xdata{1}.Ct,1)
-            if strcmp(dce_model,'fxr')
+            if dce_model.fxr
                 original_timepoint(tumind) = R1tTOI(t,:);
             else
                 original_timepoint(tumind) = xdata{1}.Ct(t,:);
+                
+                if dce_model.auc
+                    original_timepoint_signal(tumind) = xdata{1}.Sttum(t,:);
+                end
             end
             % 		original_timepoint(roi_index{r}) = 1e-4;
             % 		imshow(original_timepoint.*20000);
             %Average ROI voxels, insert into time series
             for r=number_rois:-1:1
                 roi_series(t,r) = mean(original_timepoint(roi_index{r}));
+                
+                if dce_mode.auc
+                    roi_series_signal(t,r) = mean(original_timepoint_signal(roi_index{r}));
+                end
             end
         end
         % For FXR
@@ -264,6 +287,14 @@ if xy_smooth_size~=0 && fit_voxels
         % 	imshow(smooth_timepoint.*20000)
         smooth_timepoint = filter2(h, original_timepoint);
         xdata{1}.Ct(i,:) = smooth_timepoint(tumind)';
+        
+        if dce_model.auc
+            original_timepoint_signal(tumind) = xdata{1}.Sttum(i,:);
+            smooth_timepoint_signal = filter2(h, original_timepoint_signal);
+            xdata{1}.Sttum(i,:) = smooth_timepoint_signal(tumind);
+        end
+        
+        
     end
 end
 
@@ -287,8 +318,33 @@ if ~strcmp(time_smoothing,'none')
             Ct_all(:,i) = Ct_smooth;
             p.progress;
         end
+ 
         xdata{1}.Ct = Ct_all;
         p.stop;
+        
+        if dce_model.auc
+            disp('Smoothing time domain for raw signals');
+            Sttum_all = xdata{1}.Sttum;
+            p = ProgressBar(size(Ct_all,2));
+            parfor i=1:size(Ct_all,2)
+                Ct_smooth = Sttum_all(:,i);
+                if strcmp(time_smoothing,'moving')
+                    Ct_smooth = smooth(Ct_smooth,time_smoothing_window,'moving');
+                elseif strcmp(time_smoothing,'rlowess')
+                    Ct_smooth = smooth(Ct_smooth,time_smoothing_window/size(Ct_smooth,1),'rlowess');
+                else
+                    % no smoothing
+                end
+                
+                Sttum_all(:,i) = Ct_smooth;
+                p.progress;
+            end
+            
+            xdata{1}.Sttum = Sttum_all;
+            p.stop;
+            
+        end
+        
     end
     
     for r=1:number_rois
@@ -303,11 +359,44 @@ if ~strcmp(time_smoothing,'none')
         end
         
         roi_series(:,r) = roi_smooth;
+        
+        if dce_model.auc
+            roi_smooth = roi_series_signal(:,r);
+            if strcmp(time_smoothing,'moving')
+                roi_smooth = smooth(roi_smooth,time_smoothing_window,'moving');
+            elseif strcmp(time_smoothing,'rlowess')
+                roi_smooth = smooth(roi_smooth,time_smoothing_window/size(roi_smooth,1),'rlowess');
+            else
+                % no smoothing
+            end
+            
+            roi_series_signal(:,r) = roi_smooth;
+            
+        end
     end
+    
+  
 end
 
-% a.b) Prep for batch?
+% a.b) Prep for batch.
 if batch
+    if dce_model.fxr
+        Ddatabatch.roi_r1 = roi_r1;
+        Ddatabatch.T1TUM = T1TUM;
+        Ddatabatch.relaxivity = relaxivity;
+    end
+    
+    
+    
+    if number_rois
+        Ddatabatch.roi_series_original = roi_series_original;
+        Ddatabatch.roi_series  = roi_series;
+        
+        if dce_model.auc
+            Ddatabatch.roi_series_signal = roi_series_signal;
+        end
+    end
+    
     Ddatabatch.number_cpus = number_cpus;
     Ddatabatch.xdata       = xdata;
     Ddatabatch.numvoxels   = numvoxels;
@@ -324,15 +413,7 @@ if batch
     Ddatabatch.results_a_path = results_a_path;
     Ddatabatch.results_b_path = results_b_path;
     
-    if dce_model.fxr
-        Ddatabatch.roi_r1 = roi_r1;
-        Ddatabatch.T1TUM = T1TUM;
-        Ddatabatch.relaxivity = relaxivity;
-    end
-    if number_rois
-        Ddatabatch.roi_series_original = roi_series_original;
-           Ddatabatch.roi_series  = roi_series;
-    end
+    
     
     save(fullfile(PathName, ['D_' rootname 'prep' '_fit_voxels.mat']),  'Ddatabatch')
     results = fullfile(PathName, ['D_' rootname 'prep' '_fit_voxels.mat']);
@@ -348,43 +429,49 @@ if batch
     toc
     diary off;
     return;
-else
+end
     
     % b) voxel by voxel fitting
     %************************
     % tic
     
+    % Setup the list of models to use
+    
+    cur_dce_model_list = {};
+    
+if dce_model.aif
+    cur_dce_model_list{end+1} = 'aif';
+end
+if dce_model.aif_vp
+    cur_dce_model_list{end+1} = 'aif_vp';
+end
+if dce_model.fxr
+    cur_dce_model_list{end+1} = 'fxr';
+end
+
+if dce_model.fractal
+    cur_dce_model_list{end+1} = 'fractal';
+end
+if dce_model.auc
+    cur_dce_model_list{end+1} = 'auc';
+end
+
+    % Run a for loop for every model.
+ for i = 1:numel(cur_dce_model_list)  
+     fit_voxels = 1; %% DEBUG
+     clear fitting_results;
+     cur_dce_model = cur_dce_model_list{i};
+     disp('  ');
+     disp(['Begin making maps for ' cur_dce_model '...']);
+     
     if(neuroecon)
-        warning off
+        if strcmp(cur_dce_model, 'fxr')
+            xdata{1}.R1o = 1./T1TUM;
+            xdata{1}.R1i = 1./T1TUM;
+            xdata{1}.relaxivity = relaxivity;
+        end
         
-        p = pwd
-        %n = '/home/thomasn/scripts/niftitools';
-        n = niftipathfind();
-        % for k = 1:totale
-        sched = findResource('scheduler', 'configuration', 'NeuroEcon.local');
-        set(sched, 'SubmitArguments', '-l walltime=5:00:00 -m abe -M thomasn@caltech.edu')
-        
-        jj = createMatlabPoolJob(sched, 'PathDependencies', {p});
-        
-        set(jj, 'MaximumNumberOfWorkers', number_cpus)
-        set(jj, 'MinimumNumberOfWorkers', number_cpus)
-        %         STARTEND(k,:)
-        %         %We only feed the workers only the voxels that they can handle
-        %
-        %         xdata{1}.Ct = wholeCt(:,STARTEND(k,1):STARTEND(k,2));
-        
-        %Schedule object, neuroecon
-        t = createTask(jj, @FXLfit_generic, 1,{xdata, numvoxels, dce_model});
-        set(t, 'CaptureCommandWindowOutput', true);
-        
-        submit(jj)
-        waitForState(jj,'finished')
-        jj
-        results = getAllOutputArguments(jj)
-        destroy(jj)
-        
-        clear jj
-        fitting_results = cell2mat(results);
+        fitting_results = run_neuroecon_job(number_cpus, xdata, numvoxels, cur_dce_model);
         % x(STARTEND(k,1):STARTEND(k,2),:) = cell2mat(results);
     else
         if number_rois~=0
@@ -394,27 +481,32 @@ else
             roi_data{1}.timer = xdata{1}.timer;
             roi_data{1}.Ct = roi_series;
             
-            if dce_model.fxr
+            if strcmp(cur_dce_model, 'fxr')
                 roi_data{1}.R1o = roi_r1;
                 roi_data{1}.R1i = roi_r1;
                 roi_data{1}.relaxivity = relaxivity;
             end
             
-            roi_results = FXLfit_generic(roi_data, number_rois, dce_model);
+            if strcmp(cur_dce_model, 'auc')
+                roi_data{1}.Sttum = roi_series_signal;
+            end
+            
+            roi_results = FXLfit_generic(roi_data, number_rois, cur_dce_model);
             
             disp('ROI fitting done')
-            disp(' ')
+            disp(' ')    
+            
         end
         if fit_voxels
             disp(['Starting fitting for ' num2str(numvoxels) ' voxels...']);
             
-            if dce_model.fxr
+            if strcmp(cur_dce_model, 'fxr')
                 xdata{1}.R1o = 1./T1TUM;
                 xdata{1}.R1i = 1./T1TUM;
                 xdata{1}.relaxivity = relaxivity;
             end
             
-            fitting_results = FXLfit_generic(xdata, numvoxels, dce_model);
+            fitting_results = FXLfit_generic(xdata, numvoxels, cur_dce_model);
             
             disp('Voxel fitting done')
         end
@@ -442,10 +534,16 @@ else
         xdata{1}.roi_series_original = roi_series_original;
         fit_data.roi_results = roi_results;
         fit_data.roi_name = roi_name;
-        if strcmp(dce_model,'fxr')
+        
+        if strcmp(cur_dce_model, 'fxr')
             xdata{1}.roi_r1 = roi_r1;
             xdata{1}.relaxivity = relaxivity;
         end
+        
+        if strcmp(cur_dce_model, 'auc')
+            xdata{1}.roi_series_signal = roi_series_signal;
+        end
+
     end
     if fit_voxels
         fit_data.fitting_results  = fitting_results;
@@ -456,8 +554,8 @@ else
     Ddata.results_a_path = results_a_path;
     Ddata.results_b_path = results_b_path;
     
-    save(fullfile(PathName, ['D_' rootname 'model' '_fit_voxels.mat']),  'Ddata')
-    results = fullfile(PathName, ['D_' rootname 'model' '_fit_voxels.mat']);
+    save(fullfile(PathName, ['D_' rootname cur_dce_model '_fit_voxels.mat']),  'Ddata')
+    results = fullfile(PathName, ['D_' rootname cur_dce_model '_fit_voxels.mat']);
     Opt.Input = 'file';
     mat_md5 = DataHash(results, Opt);
     disp(' ')
@@ -510,11 +608,10 @@ else
     
     % f) Make maps and Save image files
     %************************
-   % fit_voxels = 0; %% DEBUG
-    [discard, actual] = fileparts(strrep(dynam_name, '\', '/'));
-    res = [1 1 1];
+    fit_voxels = 0; %% DEBUG
+    %[discard, actual] = fileparts(strrep(dynam_name, '\', '/'));
     
-    if dce_model.aif
+    if strcmp(cur_dce_model, 'aif')
         dce_model_name = 'aif';
         % Write ROI results
         if number_rois~=0
@@ -561,7 +658,7 @@ else
             save_nii(make_nii(ci_95_low_ve, res, [1 1 1]), nii_path{6});
             save_nii(make_nii(ci_95_high_ve, res, [1 1 1]), nii_path{7});
         end
-    elseif dce_model.aif_vp
+    elseif strcmp(cur_dce_model, 'aif_vp')
         dce_model_name = 'aif_vp';
         % Write ROI results
         if number_rois~=0
@@ -618,7 +715,7 @@ else
             save_nii(make_nii(ci_95_low_vp, res, [1 1 1]), nii_path{9});
             save_nii(make_nii(ci_95_high_vp, res, [1 1 1]), nii_path{10});
         end
-    elseif dce_model.fxr
+    elseif strcmp(cur_dce_model, 'fxr')
         dce_model_name = 'fxr';
         % Write ROI results
         if number_rois~=0
@@ -675,6 +772,50 @@ else
             save_nii(make_nii(ci_95_low_tau, res, [1 1 1]), nii_path{9});
             save_nii(make_nii(ci_95_high_tau, res, [1 1 1]), nii_path{10});
         end
+    elseif strcmp(cur_dce_model, 'fractal')
+    elseif strcmp(cur_dce_model, 'auc')
+        
+        dce_model_name = 'auc';
+        % Write ROI results
+        if number_rois~=0
+            headings = {'ROI path', 'ROI', 'AUC conc', 'AUC sig','NAUC conc', 'NAUC sig'};
+   
+            xls_results = [roi_list roi_name mat2cell(roi_results,ones(1,size(roi_results,1)),ones(1,size(roi_results,2)))];
+            xls_results = [headings; xls_results];
+            xls_path = fullfile(PathName, [rootname dce_model_name '_rois.xls']);
+            xlswrite(xls_path,xls_results);
+        end
+        
+         % Write voxel results
+        if fit_voxels
+            AUCc     = zeros(size(currentimg));
+            AUCs     = zeros(size(currentimg));
+            NAUCc    = zeros(size(currentimg));
+            NAUCs    = zeros(size(currentimg));
+            
+            
+            AUCc(tumind)     = fitting_results(:,1);
+            AUCs(tumind)     = fitting_results(:,2);
+            NAUCc(tumind)    = fitting_results(:,3);
+            NAUCs(tumind)    = fitting_results(:,4);
+           
+            nii_path{1} = fullfile(PathName, [rootname dce_model_name '_AUCc.nii']);
+            nii_path{2} = fullfile(PathName, [rootname dce_model_name '_AUCs.nii']);
+            nii_path{3} = fullfile(PathName, [rootname dce_model_name '_NAUCs.nii']);
+            nii_path{4} = fullfile(PathName, [rootname dce_model_name '_NAUCs.nii']);
+            
+            
+            save_nii(make_nii(AUCs, res, [1 1 1]), nii_path{1});
+            save_nii(make_nii(AUCs, res, [1 1 1]), nii_path{2});
+            save_nii(make_nii(NAUCc, res, [1 1 1]), nii_path{3});
+            save_nii(make_nii(NAUCs, res, [1 1 1]), nii_path{4});
+           
+        end
+        
+        
+
+    else
+        error('Model not supported');
     end
     
     % Calculate file hashes and log them
@@ -696,12 +837,16 @@ else
         end
     end
     
+    disp(['Finished making maps for ' cur_dce_model '...']);
+    
+ end
+    
     disp(' ');
     disp('Finished D');
     disp(datestr(now))
     toc
     diary off;
     
-end
+
 
 

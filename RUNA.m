@@ -1236,7 +1236,7 @@ function drift_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of drift
-<<<<<<< 72e8d0acdcdd63274d3a5067ac946432053a4e5b
+
 
 
 % --- Executes when user attempts to close figure1.
@@ -1248,7 +1248,6 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 % delete(hObject);
 uiresume(hObject);
-=======
 uiremember;
 
 % --- Executes during object creation, after setting all properties.
@@ -1288,4 +1287,4 @@ function noisepixels_CreateFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 UIRESTORE;
->>>>>>> a5acab9adf3a8127ad5e64c013549df17d6885c0
+

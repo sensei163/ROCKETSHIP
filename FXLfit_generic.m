@@ -1,8 +1,9 @@
 % Helper for C_fitwithvp
 
 function GG = FXLfit_generic(xdata, number_voxels, model)
-% number_voxels = 5
-if model.aif_vp
+number_voxels = 5
+if strcmp(model, 'aif_vp')
+    
     % Get values from pref file
     prefs_str = parse_preference_file('dce_preferences.txt',0,...
         {'voxel_lower_limit_ktrans' 'voxel_upper_limit_ktrans' 'voxel_initial_value_ktrans' ...
@@ -38,7 +39,7 @@ if model.aif_vp
     fprintf('MaxIter = %s\n',num2str(prefs.MaxIter));
     fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
     fprintf('Robust = %s\n',num2str(prefs.Robust));
-
+    
     % Preallocate for speed
     GG = zeros([number_voxels 10],'double');
     % Slice out needed variables for speed
@@ -58,7 +59,8 @@ if model.aif_vp
     end;
     p.stop;
     if diary_restore, diary on, end;
-elseif model.aif
+elseif strcmp(model, 'aif')
+    
     % Get values from pref file
     prefs_str = parse_preference_file('dce_preferences.txt',0,...
         {'voxel_lower_limit_ktrans' 'voxel_upper_limit_ktrans' 'voxel_initial_value_ktrans' ...
@@ -107,7 +109,7 @@ elseif model.aif
     end;
     p.stop;
     if diary_restore, diary on, end;
-elseif model.fxr
+elseif strcmp(model, 'fxr')
     % Get values from pref file
     prefs_str = parse_preference_file('dce_preferences.txt',0,...
         {'voxel_lower_limit_ktrans' 'voxel_upper_limit_ktrans' 'voxel_initial_value_ktrans' ...
@@ -146,7 +148,7 @@ elseif model.fxr
     fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
     fprintf('Robust = %s\n',num2str(prefs.Robust));
     fprintf('fxr_fw = %s\n',num2str(prefs.fxr_fw));
-
+    
     % Preallocate for speed
     GG = zeros([number_voxels 10],'double');
     % Slice out needed variables for speed
@@ -170,6 +172,53 @@ elseif model.fxr
     end;
     p.stop;
     if diary_restore, diary on, end;
+elseif strcmp(model, 'auc')
+    % Area under curve using Raw data signal
+    
+    % Preallocate for speed
+    GG = zeros([number_voxels 4],'double');
+    % Slice out needed variables for speed
+    Sss    = xdata{1}.Sss;
+    Ssstum = xdata{1}.Ssstum;
+    Stlv   = xdata{1}.Stlv;
+    Sttum  = xdata{1}.Sttum;
+    Ct_data = xdata{1}.Ct;
+    Cp_data = xdata{1}.Cp;
+    
+    % Substract steady state signal from time curves
+    Sttum = Sttum - repmat(Ssstum, [size(Sttum,1) 1]);
+    Stlv  = Stlv - repmat(Sss, [size(Stlv,1) 1]);
+    Stlv  = mean(Stlv, 2);
+    
+    timer_data      = xdata{1}.timer;
+    start_injection = xdata{1}.start_injection;
+    end_injection   = xdata{1}.end_injection;
+    
+    % Extract signal only after injection has started
+    ind = find(timer_data >= start_injection);
+    
+    Sttum      = Sttum(ind(1):end,:);
+    Stlv       = Stlv(ind(1):end);
+    Ct_data    = Ct_data(ind(1):end,:);
+    Cp_data    = Cp_data(ind(1):end);
+    timer_data = timer_data(ind(1):end);
+    
+    %Turn off diary if on as it doesn't work with progress bar
+    diary_restore = 0;
+    if strcmp(get(0,'Diary'),'on')
+        diary off;
+        diary_restore = 1;
+    end
+    p = ProgressBar(number_voxels);
+    parfor i = 1:number_voxels
+        GG(i,:) = auc_helper(Sttum(:,i),Stlv, Ct_data(:,i), Cp_data, timer_data);
+        p.progress;
+    end;
+    p.stop;
+    if diary_restore, diary on, end;
+    
+elseif strcmp(model, 'fractal')
+    
 else
     warning(['Error, model ' model ' not yet implemented']);
     return
