@@ -1,4 +1,4 @@
-function [results, batch] = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon, batch)
+function [results, batch] = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon, batch, outputft)
 
 % D_fit_voxels_func - Fit DCE curve to various models on a voxel by voxel
 % or ROI basis
@@ -28,6 +28,7 @@ function [results, batch] = D_fit_voxels_func(results_b_path,dce_model,time_smoo
 %  fit_voxels         - perform DCE fit on individual voxels
 %  neuroecon          - perform processing on neuroecon server
 %  batch              - prep for batch procesing only
+% outputft            - output filetype
 %
 % The script loads the data arrays generated from B_AIF_fitting_func().
 % Then it will fit a DCE curve according to various models
@@ -94,6 +95,8 @@ numvoxels   = Bdata.numvoxels;
 currentimg  = Adata.currentCT;
 res         = Adata.res;
 relaxivity  = Adata.relaxivity;
+hdr         = Adata.hdr;
+sliceloc    = Adata.sliceloc;
 
 if start_time == 0
     start_time = 1;
@@ -406,6 +409,10 @@ end
     Ddatabatch.neuroecon   = neuroecon;
     Ddatabatch.close_pool  = close_pool;
     Ddatabatch.rootname    = rootname;
+    Ddatabatch.hdr         = hdr;
+    Ddatabatch.outputft    = outputft;
+    Ddatabatch.sliceloc    = sliceloc;
+    Ddatabatch.res         = res;
  
     Ddatabatch.fit_voxels  = fit_voxels;
     Ddatabatch.timind      = tumind;

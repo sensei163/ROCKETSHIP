@@ -27,11 +27,11 @@ function varargout = dce(varargin)
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @dce_OpeningFcn, ...
-                   'gui_OutputFcn',  @dce_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @dce_OpeningFcn, ...
+    'gui_OutputFcn',  @dce_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -60,20 +60,21 @@ handles.batch_d_listfullpath = {};
 
 % Create structure to hold roi list
 % handles.roi_list = {};
-% 
+%
 % uirestore(handles.fxr);
 % uirestore(handles.aif);
 % uirestore(handles.aif_vp);
 % uirestore(handles.none);
 % uirestore(handles.moving);
 % uirestore(handles.rlowess);
+uirestore(handles.batch_d_list);
 
 % Update handles structure
 guidata(hObject, handles);
 
 
 
-% check preference file withe verbose for invalid selections, use this to 
+% check preference file withe verbose for invalid selections, use this to
 % guard against typos
 parse_preference_file('dce_preferences.txt',1,...
     {'aif_lower_limits' 'aif_upper_limits' 'aif_initial_values' ...
@@ -90,7 +91,7 @@ parse_preference_file('dce_preferences.txt',1,...
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = dce_OutputFcn(hObject, eventdata, handles) 
+function varargout = dce_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -121,7 +122,7 @@ else
     
     % Combine path and filename together
     fullpath = strcat(pathname,filename);
-
+    
     set(handles.dce_path,'String',fullpath);
 end
 guidata(hObject, handles);
@@ -168,7 +169,7 @@ else
     
     % Combine path and filename together
     fullpath = strcat(pathname,filename);
-
+    
     set(handles.t1_aif_path,'String',fullpath);
 end
 guidata(hObject, handles);
@@ -215,7 +216,7 @@ else
     
     % Combine path and filename together
     fullpath = strcat(pathname,filename);
-
+    
     set(handles.t1_roi_path,'String',fullpath);
 end
 guidata(hObject, handles);
@@ -262,7 +263,7 @@ else
     
     % Combine path and filename together
     fullpath = strcat(pathname,filename);
-
+    
     set(handles.noise_path,'String',fullpath);
 end
 guidata(hObject, handles);
@@ -515,7 +516,7 @@ else
     
     % Combine path and filename together
     fullpath = strcat(pathname,filename);
-
+    
     set(handles.results_a_path,'String',fullpath);
 end
 guidata(hObject, handles);
@@ -667,8 +668,8 @@ saved_results = RUNB({results_a_path})%A_make_R1maps_func(dce_path,t1_aif_path,t
 % end_time = str2num(get(handles.end_time, 'String')); %#ok<ST2NM>
 % start_injection = str2num(get(handles.start_injection, 'String')); %#ok<ST2NM>
 % end_injection = str2num(get(handles.end_injection, 'String')); %#ok<ST2NM>
-% % fit_aif = get(handles.fit_aif, 'Value'); 
-% % average_aif = get(handles.average_aif, 'Value'); 
+% % fit_aif = get(handles.fit_aif, 'Value');
+% % average_aif = get(handles.average_aif, 'Value');
 % fit_aif = (1==get(handles.aif_type,'Value'));
 % time_resolution = str2num(get(handles.time_resolution, 'String')); %#ok<ST2NM>
 % time_resolution = time_resolution/60; %convert to minutes
@@ -677,9 +678,9 @@ saved_results = RUNB({results_a_path})%A_make_R1maps_func(dce_path,t1_aif_path,t
 % else
 %     import_aif_path = '';
 % end
-% 
+%
 % saved_results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_injection,end_injection,fit_aif,import_aif_path,time_resolution);
- set(handles.results_b_path,'String',saved_results);
+set(handles.results_b_path,'String',saved_results);
 
 
 % --- Executes on button press in browse_results_b.
@@ -700,7 +701,7 @@ else
     
     % Combine path and filename together
     fullpath = strcat(pathname,filename);
-
+    
     set(handles.results_b_path,'String',fullpath);
 end
 guidata(hObject, handles);
@@ -829,7 +830,7 @@ else
     
     % Combine path and filename together
     fullpath = strcat(pathname,filename);
-
+    
     set(handles.results_d_path,'String',fullpath);
 end
 guidata(hObject, handles);
@@ -878,7 +879,7 @@ else
     
     % Combine path and filename together
     fullpath = strcat(pathname,filename);
-
+    
     set(handles.background_image_path,'String',fullpath);
 end
 guidata(hObject, handles);
@@ -928,10 +929,10 @@ if batch
     fullpathlist = handles.batch_d_listfullpath;
     fullpathlist{end+1} = saved_results;
     handles.batch_d_listfullpath = fullpathlist;
-
+    
 else
-  
-disp('Run D done');
+    
+    disp('Run D done');
 end
 set(handles.results_d_path, 'String', saved_results);
 
@@ -943,10 +944,10 @@ guidata(hObject, handles);
 % time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
 % xy_smooth_size = str2num(get(handles.xy_smooth_size, 'String')); %#ok<ST2NM>
 % number_cpus = str2num(get(handles.number_cpus, 'String')); %#ok<ST2NM>
-% neuroecon = get(handles.neuroecon, 'Value'); 
+% neuroecon = get(handles.neuroecon, 'Value');
 % roi_list = handles.roi_list;
 % fit_voxels = get(handles.fit_voxels,'Value');
-% 
+%
 % saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon);
 % % set(handles.results_d_path,'String',saved_results);
 % fitting_analysis('results_path', saved_results)
@@ -1090,10 +1091,10 @@ else
     if ischar(fullpath)
         fullpath = {fullpath};
     end
-
+    
     filename = filename';
     fullpath = fullpath';
-        
+    
     % Add selected files to listbox
     if strcmp(list,'No Files')
         list = filename;
@@ -1101,7 +1102,7 @@ else
     else
         list = [list;  filename];
         handles.roi_list = [handles.roi_list; fullpath];
-    end 
+    end
     
     set(handles.roi_box,'String',list, 'Value',1)
 end
@@ -1114,7 +1115,7 @@ function remove_roi_Callback(hObject, eventdata, handles)
 index_selected = get(handles.roi_box,'Value');
 list = get(handles.roi_box,'String');
 for n=size(index_selected,2):-1:1
-    % Remove from end of list first so resizing does not 
+    % Remove from end of list first so resizing does not
     % change subsequent index numbers
     %disp(['User removed ', list{index_selected(n)}]);
     list(index_selected(n)) = [];
@@ -1197,7 +1198,7 @@ else
     
     % Combine path and filename together
     fullpath = strcat(pathname,filename);
-
+    
     set(handles.import_aif_path,'String',fullpath);
 end
 guidata(hObject, handles);
@@ -1216,7 +1217,7 @@ end
 
 % --- Executes when selected object is changed in dce_model.
 function dce_model_SelectionChangeFcn(hObject, eventdata, handles)
-% hObject    handle to the selected object in dce_model 
+% hObject    handle to the selected object in dce_model
 % eventdata  structure with the following fields (see UIBUTTONGROUP)
 %	EventName: string 'SelectionChanged' (read only)
 %	OldValue: handle of the previously selected object or empty if none was selected
@@ -1226,7 +1227,7 @@ function dce_model_SelectionChangeFcn(hObject, eventdata, handles)
 
 % --- Executes when selected object is changed in time_smoothing.
 function time_smoothing_SelectionChangeFcn(hObject, eventdata, handles)
-% hObject    handle to the selected object in time_smoothing 
+% hObject    handle to the selected object in time_smoothing
 % eventdata  structure with the following fields (see UIBUTTONGROUP)
 %	EventName: string 'SelectionChanged' (read only)
 %	OldValue: handle of the previously selected object or empty if none was selected
@@ -1271,41 +1272,55 @@ function run_d_batch_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
+guidata(hObject, handles);
 disp('Running batch mode')
 list = handles.batch_d_listfullpath;
 visual_list = get(handles.batch_d_list, 'String');
 
-for i = 1:size(list,1)
+started = 0;
+if numel(list) > 0
+    tic
     % Log input results
     log_path = fullfile(pwd, ['D_BATCH_dce_fit_voxels.log']);
+    disp(['Logging batch job at: ' log_path]);
     if exist(log_path, 'file')==2
         delete(log_path);
     end
     diary(log_path);
+    started = 1;
+end
+
+while numel(list) > 0
     
-    filename = list{i};
+    filename = list{end};
     disp(['Running job on : ' filename]);
     load(filename);
     results = D_fit_voxels_batch_func(Ddatabatch);
     disp(['Wrote: ' results]);
     
-    if i == size(list,1)
-        disp(datestr(now))
-        toc
-        diary off;
-    end
+    %Flush the queue
+    list(end) = [];
+    visual_list(end,:) = [];
+    
+    handles.batch_d_listfullpath = list;
+    set(handles.batch_d_list, 'String', visual_list);
+    guidata(hObject, handles);
+    uiremember;
+    
+    
 end
 
-for i = 1:size(list,1)
-    % Flush the queue
-    list(i) = [];
-    visual_list(i,:) = [];
+if started
+    disp(datestr(now))
+    toc
+    diary off;
 end
 
 handles.batch_d_listfullpath = list;
 set(handles.batch_d_list, 'String', visual_list);
-    
+guidata(hObject, handles);
+uiremember;
+
 
 % --- Executes on button press in add_d_prep.
 function add_d_prep_Callback(hObject, eventdata, handles)
@@ -1336,7 +1351,7 @@ fullpath = strcat(pathname,filename);
 if ischar(fullpath)
     fullpath = {fullpath};
 end
-    
+
 for i = 1:numel(fullpath)
     curfulllist{end+1} = fullpath{i};
 end
@@ -1345,7 +1360,7 @@ end
 lengthspacer = 0;
 
 for i = 1:numel(curfulllist)
-        [~, filename] = fileparts(curfulllist{i});
+    [~, filename] = fileparts(curfulllist{i});
     lengthspacer = max(lengthspacer, numel(filename));
 end
 
@@ -1377,7 +1392,7 @@ curfulllist(fileselected) = [];
 lengthspacer = 0;
 
 for i = 1:numel(curfulllist)
-        [~, filename] = fileparts(curfulllist{i});
+    [~, filename] = fileparts(curfulllist{i});
     lengthspacer = max(lengthspacer, numel(filename));
 end
 

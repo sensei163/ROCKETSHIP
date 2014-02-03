@@ -22,7 +22,7 @@ function varargout = RUND(varargin)
 
 % Edit the above text to modify the response to help RUND
 
-% Last Modified by GUIDE v2.5 02-Feb-2014 01:07:35
+% Last Modified by GUIDE v2.5 02-Feb-2014 13:30:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -359,12 +359,14 @@ neuroecon = get(handles.neuroecon, 'Value');
 roi_list = handles.roi_list;
 fit_voxels = get(handles.fit_voxels,'Value');
 batch  = handles.batch;
+outputft = get(handles.outputft, 'Value');
 
-saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon, batch);
+saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon, batch, outputft);
 
 handles.saved_results = saved_results;
 handles.batch = 0;
 guidata(hObject, handles);
+uiremember;
 uiresume(handles.figure1);
 
 
@@ -521,10 +523,12 @@ neuroecon = get(handles.neuroecon, 'Value');
 roi_list = handles.roi_list;
 fit_voxels = get(handles.fit_voxels,'Value');
 batch  = 1;
-[saved_results, batch] = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon, batch);
+outputft = get(handles.outputft, 'Value');
+[saved_results, batch] = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon, batch, outputft);
 
 handles.saved_results = saved_results;
 handles.batch         = 1;
+uiremember;
 guidata(hObject, handles);
 uiresume(handles.figure1);
 
@@ -547,19 +551,19 @@ function FXR_rr_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of FXR_rr
 
 
-% --- Executes on selection change in outputfiletype.
-function outputfiletype_Callback(hObject, eventdata, handles)
-% hObject    handle to outputfiletype (see GCBO)
+% --- Executes on selection change in outputft.
+function outputft_Callback(hObject, eventdata, handles)
+% hObject    handle to outputft (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns outputfiletype contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from outputfiletype
+% Hints: contents = cellstr(get(hObject,'String')) returns outputft contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from outputft
 
 
 % --- Executes during object creation, after setting all properties.
-function outputfiletype_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to outputfiletype (see GCBO)
+function outputft_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to outputft (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 

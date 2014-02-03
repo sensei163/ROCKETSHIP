@@ -9,6 +9,10 @@ number_rois = Ddatabatch.number_rois;
 neuroecon = Ddatabatch.neuroecon;
 close_pool = Ddatabatch.close_pool;
 rootname  = Ddatabatch.rootname;
+hdr = Ddatabatch.hdr;
+outputft = Ddatabatch.outputft;
+res = Ddatabatch.res;
+sliceloc = Ddatabatch.sliceloc; % Known issue, may need to handle slice loc in output dcm, but ignore for now
 
 
 fit_voxels = Ddatabatch.fit_voxels  ;
@@ -22,7 +26,7 @@ results_a_path= Ddatabatch.results_a_path ;
 results_b_path =Ddatabatch.results_b_path  ;
 
 if dce_model.fxr
-   
+    
     T1TUM=Ddatabatch.T1TUM ;
     relaxivity=Ddatabatch.relaxivity;
 end
@@ -32,7 +36,7 @@ end
 if number_rois
     roi_series_original= Ddatabatch.roi_series_original ;
     roi_series=Ddatabatch.roi_series;
-     roi_r1=Ddatabatch.roi_r1;
+    roi_r1=Ddatabatch.roi_r1;
     
     if dce_model.auc
         roi_series_signal=Ddatabatch.roi_series_signal;
@@ -63,7 +67,7 @@ end
 
 % Run a for loop for every model.
 for i = 1:numel(cur_dce_model_list)
-    fit_voxels = 1; %% DEBUG
+    %fit_voxels = 0; %% DEBUG
     clear fitting_results;
     cur_dce_model = cur_dce_model_list{i};
     disp('  ');
@@ -230,38 +234,96 @@ for i = 1:numel(cur_dce_model_list)
         end
         % Write voxel results
         if fit_voxels
+            % Parameter name
+            paramname = {'Ktrans'; 've'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'};
             
-            KtransROI = zeros(size(currentimg));
-            veROI     = zeros(size(currentimg));
-            residual  = zeros(size(currentimg));
-            ci_95_low_ktrans	= zeros(size(currentimg));
-            ci_95_high_ktrans	= zeros(size(currentimg));
-            ci_95_low_ve		= zeros(size(currentimg));
-            ci_95_high_ve		= zeros(size(currentimg));
+            % Setup img files
             
-            KtransROI(tumind) = fitting_results(:,1);
-            veROI(tumind)     = fitting_results(:,2);
-            residual(tumind)  = fitting_results(:,4);
-            ci_95_low_ktrans(tumind)	= fitting_results(:,5);
-            ci_95_high_ktrans(tumind)	= fitting_results(:,6);
-            ci_95_low_ve(tumind)		= fitting_results(:,7);
-            ci_95_high_ve(tumind)		= fitting_results(:,8);
+            for k = 1:numel(paramname)
+                curimg = zeros(size(currentimg));
+                curimg(tumind) = fitting_results(:,k);
+                OUTPUT(k).IMG = curimg;
+            end
             
-            nii_path{1} = fullfile(PathName, [rootname dce_model_name '_Ktrans.nii']);
-            nii_path{2} = fullfile(PathName, [rootname dce_model_name '_ve.nii']);
-            nii_path{3} = fullfile(PathName, [rootname dce_model_name '_residual.nii']);
-            nii_path{4} = fullfile(PathName, [rootname dce_model_name '_ktrans_ci_low.nii']);
-            nii_path{5} = fullfile(PathName, [rootname dce_model_name '_ktrans_ci_high.nii']);
-            nii_path{6} = fullfile(PathName, [rootname dce_model_name '_ve_ci_low.nii']);
-            nii_path{7} = fullfile(PathName, [rootname dce_model_name '_ve_ci_high.nii']);
-            
-            save_nii(make_nii(KtransROI, res, [1 1 1]), nii_path{1});
-            save_nii(make_nii(veROI, res, [1 1 1]), nii_path{2});
-            save_nii(make_nii(residual, res, [1 1 1]), nii_path{3});
-            save_nii(make_nii(ci_95_low_ktrans, res, [1 1 1]), nii_path{4});
-            save_nii(make_nii(ci_95_high_ktrans, res, [1 1 1]), nii_path{5});
-            save_nii(make_nii(ci_95_low_ve, res, [1 1 1]), nii_path{6});
-            save_nii(make_nii(ci_95_high_ve, res, [1 1 1]), nii_path{7});
+            if outputft == 1
+                % NIFTI
+                KtransROI = zeros(size(currentimg));
+                veROI     = zeros(size(currentimg));
+                residual  = zeros(size(currentimg));
+                ci_95_low_ktrans	= zeros(size(currentimg));
+                ci_95_high_ktrans	= zeros(size(currentimg));
+                ci_95_low_ve		= zeros(size(currentimg));
+                ci_95_high_ve		= zeros(size(currentimg));
+                
+                KtransROI(tumind) = fitting_results(:,1);
+                veROI(tumind)     = fitting_results(:,2);
+                residual(tumind)  = fitting_results(:,4);
+                ci_95_low_ktrans(tumind)	= fitting_results(:,5);
+                ci_95_high_ktrans(tumind)	= fitting_results(:,6);
+                ci_95_low_ve(tumind)		= fitting_results(:,7);
+                ci_95_high_ve(tumind)		= fitting_results(:,8);
+                
+                nii_path{1} = fullfile(PathName, [rootname dce_model_name '_Ktrans.nii']);
+                nii_path{2} = fullfile(PathName, [rootname dce_model_name '_ve.nii']);
+                nii_path{3} = fullfile(PathName, [rootname dce_model_name '_residual.nii']);
+                nii_path{4} = fullfile(PathName, [rootname dce_model_name '_ktrans_ci_low.nii']);
+                nii_path{5} = fullfile(PathName, [rootname dce_model_name '_ktrans_ci_high.nii']);
+                nii_path{6} = fullfile(PathName, [rootname dce_model_name '_ve_ci_low.nii']);
+                nii_path{7} = fullfile(PathName, [rootname dce_model_name '_ve_ci_high.nii']);
+                
+                save_nii(make_nii(KtransROI, res, [1 1 1]), nii_path{1});
+                save_nii(make_nii(veROI, res, [1 1 1]), nii_path{2});
+                save_nii(make_nii(residual, res, [1 1 1]), nii_path{3});
+                save_nii(make_nii(ci_95_low_ktrans, res, [1 1 1]), nii_path{4});
+                save_nii(make_nii(ci_95_high_ktrans, res, [1 1 1]), nii_path{5});
+                save_nii(make_nii(ci_95_low_ve, res, [1 1 1]), nii_path{6});
+                save_nii(make_nii(ci_95_high_ve, res, [1 1 1]), nii_path{7});
+            elseif outputft == 2
+                % 3D DICOM
+                
+                for k = 1:numel(paramname)
+                    
+                    nii_path{k} = fullfile(PathName, [rootname dce_model_name '_' paramname{k} '.dcm']);
+                    curimg = OUTPUT(k).IMG;
+                    
+                    [newIMG, slope, intercept] = double2uint16Scale(curimg);
+                    
+                    if isDICOMhdr(hdr)
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3), hdr, 'MultiframeSingleFile', 1);
+                    else
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3),  'MultiframeSingleFile', 1);
+                    end
+                    
+                end
+            elseif outputft == 3
+                
+                for k = 1:numel(paramname)
+                    
+                    nii_path{k} = fullfile(PathName, [rootname dce_model_name '_' paramname{k} '.dcm']);
+                    curimg = OUTPUT(k).IMG;
+                    
+                    [newIMG, slope, intercept] = double2uint16Scale(curimg);
+                    
+                    if isDICOMhdr(hdr)
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'ObjectType', 'MR Image Storage', 'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3), hdr, 'MultiframeSingleFile', 0);
+                    else
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'ObjectType', 'MR Image Storage', 'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3),  'MultiframeSingleFile', 0);
+                    end
+                    
+                end
+            end
         end
     elseif strcmp(cur_dce_model, 'aif_vp')
         dce_model_name = 'aif_vp';
@@ -276,49 +338,109 @@ for i = 1:numel(cur_dce_model_list)
         end
         % Write voxel results
         if fit_voxels
-            KtransROI = zeros(size(currentimg));
-            veROI     = zeros(size(currentimg));
-            vpROI     = zeros(size(currentimg));
-            residual  = zeros(size(currentimg));
-            ci_95_low_ktrans	= zeros(size(currentimg));
-            ci_95_high_ktrans	= zeros(size(currentimg));
-            ci_95_low_ve		= zeros(size(currentimg));
-            ci_95_high_ve		= zeros(size(currentimg));
-            ci_95_low_vp		= zeros(size(currentimg));
-            ci_95_high_vp		= zeros(size(currentimg));
             
-            KtransROI(tumind) = fitting_results(:,1);
-            veROI(tumind)     = fitting_results(:,2);
-            vpROI(tumind)     = fitting_results(:,3);
-            residual(tumind)  = fitting_results(:,4);
-            ci_95_low_ktrans(tumind)	= fitting_results(:,5);
-            ci_95_high_ktrans(tumind)	= fitting_results(:,6);
-            ci_95_low_ve(tumind)		= fitting_results(:,7);
-            ci_95_high_ve(tumind)		= fitting_results(:,8);
-            ci_95_low_vp(tumind)		= fitting_results(:,9);
-            ci_95_high_vp(tumind)		= fitting_results(:,10);
+            % Parameter name
+            paramname = {'Ktrans'; 've'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
             
-            nii_path{1} = fullfile(PathName, [rootname dce_model_name '_Ktrans.nii']);
-            nii_path{2} = fullfile(PathName, [rootname dce_model_name '_ve.nii']);
-            nii_path{3} = fullfile(PathName, [rootname dce_model_name '_vp.nii']);
-            nii_path{4} = fullfile(PathName, [rootname dce_model_name '_residual.nii']);
-            nii_path{5} = fullfile(PathName, [rootname dce_model_name '_ktrans_ci_low.nii']);
-            nii_path{6} = fullfile(PathName, [rootname dce_model_name '_ktrans_ci_high.nii']);
-            nii_path{7} = fullfile(PathName, [rootname dce_model_name '_ve_ci_low.nii']);
-            nii_path{8} = fullfile(PathName, [rootname dce_model_name '_ve_ci_high.nii']);
-            nii_path{9} = fullfile(PathName, [rootname dce_model_name '_vp_ci_low.nii']);
-            nii_path{10} = fullfile(PathName, [rootname dce_model_name '_vp_ci_high.nii']);
+            % Setup img files
             
-            save_nii(make_nii(KtransROI, res, [1 1 1]), nii_path{1});
-            save_nii(make_nii(veROI, res, [1 1 1]), nii_path{2});
-            save_nii(make_nii(vpROI, res, [1 1 1]), nii_path{3});
-            save_nii(make_nii(residual, res, [1 1 1]), nii_path{4});
-            save_nii(make_nii(ci_95_low_ktrans, res, [1 1 1]), nii_path{5});
-            save_nii(make_nii(ci_95_high_ktrans, res, [1 1 1]), nii_path{6});
-            save_nii(make_nii(ci_95_low_ve, res, [1 1 1]), nii_path{7});
-            save_nii(make_nii(ci_95_high_ve, res, [1 1 1]), nii_path{8});
-            save_nii(make_nii(ci_95_low_vp, res, [1 1 1]), nii_path{9});
-            save_nii(make_nii(ci_95_high_vp, res, [1 1 1]), nii_path{10});
+            for k = 1:numel(paramname)
+                curimg = zeros(size(currentimg));
+                curimg(tumind) = fitting_results(:,k);
+                OUTPUT(k).IMG = curimg;
+            end
+            
+            if outputft == 1
+                % NIFTI
+                KtransROI = zeros(size(currentimg));
+                veROI     = zeros(size(currentimg));
+                vpROI     = zeros(size(currentimg));
+                residual  = zeros(size(currentimg));
+                ci_95_low_ktrans	= zeros(size(currentimg));
+                ci_95_high_ktrans	= zeros(size(currentimg));
+                ci_95_low_ve		= zeros(size(currentimg));
+                ci_95_high_ve		= zeros(size(currentimg));
+                ci_95_low_vp		= zeros(size(currentimg));
+                ci_95_high_vp		= zeros(size(currentimg));
+                
+                KtransROI(tumind) = fitting_results(:,1);
+                veROI(tumind)     = fitting_results(:,2);
+                vpROI(tumind)     = fitting_results(:,3);
+                residual(tumind)  = fitting_results(:,4);
+                ci_95_low_ktrans(tumind)	= fitting_results(:,5);
+                ci_95_high_ktrans(tumind)	= fitting_results(:,6);
+                ci_95_low_ve(tumind)		= fitting_results(:,7);
+                ci_95_high_ve(tumind)		= fitting_results(:,8);
+                ci_95_low_vp(tumind)		= fitting_results(:,9);
+                ci_95_high_vp(tumind)		= fitting_results(:,10);
+                
+                nii_path{1} = fullfile(PathName, [rootname dce_model_name '_Ktrans.nii']);
+                nii_path{2} = fullfile(PathName, [rootname dce_model_name '_ve.nii']);
+                nii_path{3} = fullfile(PathName, [rootname dce_model_name '_vp.nii']);
+                nii_path{4} = fullfile(PathName, [rootname dce_model_name '_residual.nii']);
+                nii_path{5} = fullfile(PathName, [rootname dce_model_name '_ktrans_ci_low.nii']);
+                nii_path{6} = fullfile(PathName, [rootname dce_model_name '_ktrans_ci_high.nii']);
+                nii_path{7} = fullfile(PathName, [rootname dce_model_name '_ve_ci_low.nii']);
+                nii_path{8} = fullfile(PathName, [rootname dce_model_name '_ve_ci_high.nii']);
+                nii_path{9} = fullfile(PathName, [rootname dce_model_name '_vp_ci_low.nii']);
+                nii_path{10} = fullfile(PathName, [rootname dce_model_name '_vp_ci_high.nii']);
+                
+                save_nii(make_nii(KtransROI, res, [1 1 1]), nii_path{1});
+                save_nii(make_nii(veROI, res, [1 1 1]), nii_path{2});
+                save_nii(make_nii(vpROI, res, [1 1 1]), nii_path{3});
+                save_nii(make_nii(residual, res, [1 1 1]), nii_path{4});
+                save_nii(make_nii(ci_95_low_ktrans, res, [1 1 1]), nii_path{5});
+                save_nii(make_nii(ci_95_high_ktrans, res, [1 1 1]), nii_path{6});
+                save_nii(make_nii(ci_95_low_ve, res, [1 1 1]), nii_path{7});
+                save_nii(make_nii(ci_95_high_ve, res, [1 1 1]), nii_path{8});
+                save_nii(make_nii(ci_95_low_vp, res, [1 1 1]), nii_path{9});
+                save_nii(make_nii(ci_95_high_vp, res, [1 1 1]), nii_path{10});
+            elseif outputft == 2
+                % 3D DICOM
+                
+                
+                for k = 1:numel(paramname)
+                    
+                    nii_path{k} = fullfile(PathName, [rootname dce_model_name '_' paramname{k} '.dcm']);
+                    curimg = OUTPUT(k).IMG;
+                    
+                    [newIMG, slope, intercept] = double2uint16Scale(curimg);
+                    
+                    if isDICOMhdr(hdr)
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3), hdr, 'MultiframeSingleFile', 1);
+                    else
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3),  'MultiframeSingleFile', 1);
+                    end
+                    
+                end
+            elseif outputft == 3
+                for k = 1:numel(paramname)
+                    
+                    nii_path{k} = fullfile(PathName, [rootname dce_model_name '_' paramname{k} '.dcm']);
+                    curimg = OUTPUT(k).IMG;
+                    
+                    [newIMG, slope, intercept] = double2uint16Scale(curimg);
+                    
+                    if isDICOMhdr(hdr)
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'ObjectType', 'MR Image Storage', 'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3), hdr, 'MultiframeSingleFile', 0);
+                    else
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'ObjectType', 'MR Image Storage', 'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3),  'MultiframeSingleFile', 0);
+                    end
+                    
+                end
+            end
         end
     elseif strcmp(cur_dce_model, 'fxr')
         dce_model_name = 'fxr';
@@ -333,49 +455,109 @@ for i = 1:numel(cur_dce_model_list)
         end
         % Write voxel results
         if fit_voxels
-            KtransROI = zeros(size(currentimg));
-            veROI     = zeros(size(currentimg));
-            tauROI     = zeros(size(currentimg));
-            residual  = zeros(size(currentimg));
-            ci_95_low_ktrans	= zeros(size(currentimg));
-            ci_95_high_ktrans	= zeros(size(currentimg));
-            ci_95_low_ve		= zeros(size(currentimg));
-            ci_95_high_ve		= zeros(size(currentimg));
-            ci_95_low_tau		= zeros(size(currentimg));
-            ci_95_high_tau		= zeros(size(currentimg));
             
-            KtransROI(tumind) = fitting_results(:,1);
-            veROI(tumind)     = fitting_results(:,2);
-            tauROI(tumind)     = fitting_results(:,3);
-            residual(tumind)  = fitting_results(:,4);
-            ci_95_low_ktrans(tumind)	= fitting_results(:,5);
-            ci_95_high_ktrans(tumind)	= fitting_results(:,6);
-            ci_95_low_ve(tumind)		= fitting_results(:,7);
-            ci_95_high_ve(tumind)		= fitting_results(:,8);
-            ci_95_low_tau(tumind)		= fitting_results(:,9);
-            ci_95_high_tau(tumind)		= fitting_results(:,10);
+            % Parameter name
+            paramname = {'Ktrans'; 've'; 'tau'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'tau_ci_low'; 'tau_ci_high'};
             
-            nii_path{1} = fullfile(PathName, [rootname dce_model_name '_Ktrans.nii']);
-            nii_path{2} = fullfile(PathName, [rootname dce_model_name '_ve.nii']);
-            nii_path{3} = fullfile(PathName, [rootname dce_model_name '_tau.nii']);
-            nii_path{4} = fullfile(PathName, [rootname dce_model_name '_residual.nii']);
-            nii_path{5} = fullfile(PathName, [rootname dce_model_name '_ktrans_ci_low.nii']);
-            nii_path{6} = fullfile(PathName, [rootname dce_model_name '_ktrans_ci_high.nii']);
-            nii_path{7} = fullfile(PathName, [rootname dce_model_name '_ve_ci_low.nii']);
-            nii_path{8} = fullfile(PathName, [rootname dce_model_name '_ve_ci_high.nii']);
-            nii_path{9} = fullfile(PathName, [rootname dce_model_name '_tau_ci_low.nii']);
-            nii_path{10} = fullfile(PathName, [rootname dce_model_name '_tau_ci_high.nii']);
+            % Setup img files
             
-            save_nii(make_nii(KtransROI, res, [1 1 1]), nii_path{1});
-            save_nii(make_nii(veROI, res, [1 1 1]), nii_path{2});
-            save_nii(make_nii(tauROI, res, [1 1 1]), nii_path{3});
-            save_nii(make_nii(residual, res, [1 1 1]), nii_path{4});
-            save_nii(make_nii(ci_95_low_ktrans, res, [1 1 1]), nii_path{5});
-            save_nii(make_nii(ci_95_high_ktrans, res, [1 1 1]), nii_path{6});
-            save_nii(make_nii(ci_95_low_ve, res, [1 1 1]), nii_path{7});
-            save_nii(make_nii(ci_95_high_ve, res, [1 1 1]), nii_path{8});
-            save_nii(make_nii(ci_95_low_tau, res, [1 1 1]), nii_path{9});
-            save_nii(make_nii(ci_95_high_tau, res, [1 1 1]), nii_path{10});
+            for k = 1:numel(paramname)
+                curimg = zeros(size(currentimg));
+                curimg(tumind) = fitting_results(:,k);
+                OUTPUT(k).IMG = curimg;
+            end
+            
+            if outputft == 1
+                % NIFTI
+                KtransROI = zeros(size(currentimg));
+                veROI     = zeros(size(currentimg));
+                tauROI     = zeros(size(currentimg));
+                residual  = zeros(size(currentimg));
+                ci_95_low_ktrans	= zeros(size(currentimg));
+                ci_95_high_ktrans	= zeros(size(currentimg));
+                ci_95_low_ve		= zeros(size(currentimg));
+                ci_95_high_ve		= zeros(size(currentimg));
+                ci_95_low_tau		= zeros(size(currentimg));
+                ci_95_high_tau		= zeros(size(currentimg));
+                
+                KtransROI(tumind) = fitting_results(:,1);
+                veROI(tumind)     = fitting_results(:,2);
+                tauROI(tumind)     = fitting_results(:,3);
+                residual(tumind)  = fitting_results(:,4);
+                ci_95_low_ktrans(tumind)	= fitting_results(:,5);
+                ci_95_high_ktrans(tumind)	= fitting_results(:,6);
+                ci_95_low_ve(tumind)		= fitting_results(:,7);
+                ci_95_high_ve(tumind)		= fitting_results(:,8);
+                ci_95_low_tau(tumind)		= fitting_results(:,9);
+                ci_95_high_tau(tumind)		= fitting_results(:,10);
+                
+                nii_path{1} = fullfile(PathName, [rootname dce_model_name '_Ktrans.nii']);
+                nii_path{2} = fullfile(PathName, [rootname dce_model_name '_ve.nii']);
+                nii_path{3} = fullfile(PathName, [rootname dce_model_name '_tau.nii']);
+                nii_path{4} = fullfile(PathName, [rootname dce_model_name '_residual.nii']);
+                nii_path{5} = fullfile(PathName, [rootname dce_model_name '_ktrans_ci_low.nii']);
+                nii_path{6} = fullfile(PathName, [rootname dce_model_name '_ktrans_ci_high.nii']);
+                nii_path{7} = fullfile(PathName, [rootname dce_model_name '_ve_ci_low.nii']);
+                nii_path{8} = fullfile(PathName, [rootname dce_model_name '_ve_ci_high.nii']);
+                nii_path{9} = fullfile(PathName, [rootname dce_model_name '_tau_ci_low.nii']);
+                nii_path{10} = fullfile(PathName, [rootname dce_model_name '_tau_ci_high.nii']);
+                
+                save_nii(make_nii(KtransROI, res, [1 1 1]), nii_path{1});
+                save_nii(make_nii(veROI, res, [1 1 1]), nii_path{2});
+                save_nii(make_nii(tauROI, res, [1 1 1]), nii_path{3});
+                save_nii(make_nii(residual, res, [1 1 1]), nii_path{4});
+                save_nii(make_nii(ci_95_low_ktrans, res, [1 1 1]), nii_path{5});
+                save_nii(make_nii(ci_95_high_ktrans, res, [1 1 1]), nii_path{6});
+                save_nii(make_nii(ci_95_low_ve, res, [1 1 1]), nii_path{7});
+                save_nii(make_nii(ci_95_high_ve, res, [1 1 1]), nii_path{8});
+                save_nii(make_nii(ci_95_low_tau, res, [1 1 1]), nii_path{9});
+                save_nii(make_nii(ci_95_high_tau, res, [1 1 1]), nii_path{10});
+            elseif outputft == 2
+                % 3D DICOM
+                
+                
+                for k = 1:numel(paramname)
+                    
+                    nii_path{k} = fullfile(PathName, [rootname dce_model_name '_' paramname{k} '.dcm']);
+                    curimg = OUTPUT(k).IMG;
+                    
+                    [newIMG, slope, intercept] = double2uint16Scale(curimg);
+                    
+                    if isDICOMhdr(hdr)
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3), hdr, 'MultiframeSingleFile', 1);
+                    else
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3),  'MultiframeSingleFile', 1);
+                    end
+                    
+                end
+            elseif outputft == 3
+                for k = 1:numel(paramname)
+                    
+                    nii_path{k} = fullfile(PathName, [rootname dce_model_name '_' paramname{k} '.dcm']);
+                    curimg = OUTPUT(k).IMG;
+                    
+                    [newIMG, slope, intercept] = double2uint16Scale(curimg);
+                    
+                    if isDICOMhdr(hdr)
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'ObjectType', 'MR Image Storage', 'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3), hdr, 'MultiframeSingleFile', 0);
+                    else
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'ObjectType', 'MR Image Storage', 'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3),  'MultiframeSingleFile', 0);
+                    end
+                    
+                end
+            end
         end
     elseif strcmp(cur_dce_model, 'fractal')
     elseif strcmp(cur_dce_model, 'auc')
@@ -393,27 +575,90 @@ for i = 1:numel(cur_dce_model_list)
         
         % Write voxel results
         if fit_voxels
-            AUCc     = zeros(size(currentimg));
-            AUCs     = zeros(size(currentimg));
-            NAUCc    = zeros(size(currentimg));
-            NAUCs    = zeros(size(currentimg));
             
             
-            AUCc(tumind)     = fitting_results(:,1);
-            AUCs(tumind)     = fitting_results(:,2);
-            NAUCc(tumind)    = fitting_results(:,3);
-            NAUCs(tumind)    = fitting_results(:,4);
+            % Parameter name
+            paramname = {'AUCc'; 'AUCs'; 'NAUCc'; 'NAUCs'};
             
-            nii_path{1} = fullfile(PathName, [rootname dce_model_name '_AUCc.nii']);
-            nii_path{2} = fullfile(PathName, [rootname dce_model_name '_AUCs.nii']);
-            nii_path{3} = fullfile(PathName, [rootname dce_model_name '_NAUCs.nii']);
-            nii_path{4} = fullfile(PathName, [rootname dce_model_name '_NAUCs.nii']);
+            % Setup img files
             
+            for k = 1:numel(paramname)
+                curimg = zeros(size(currentimg));
+                curimg(tumind) = fitting_results(:,k);
+                OUTPUT(k).IMG = curimg;
+            end
             
-            save_nii(make_nii(AUCs, res, [1 1 1]), nii_path{1});
-            save_nii(make_nii(AUCs, res, [1 1 1]), nii_path{2});
-            save_nii(make_nii(NAUCc, res, [1 1 1]), nii_path{3});
-            save_nii(make_nii(NAUCs, res, [1 1 1]), nii_path{4});
+            if outputft == 1
+                % NIFTI
+                
+                AUCc     = zeros(size(currentimg));
+                AUCs     = zeros(size(currentimg));
+                NAUCc    = zeros(size(currentimg));
+                NAUCs    = zeros(size(currentimg));
+                
+                
+                AUCc(tumind)     = fitting_results(:,1);
+                AUCs(tumind)     = fitting_results(:,2);
+                NAUCc(tumind)    = fitting_results(:,3);
+                NAUCs(tumind)    = fitting_results(:,4);
+                
+                nii_path{1} = fullfile(PathName, [rootname dce_model_name '_AUCc.nii']);
+                nii_path{2} = fullfile(PathName, [rootname dce_model_name '_AUCs.nii']);
+                nii_path{3} = fullfile(PathName, [rootname dce_model_name '_NAUCc.nii']);
+                nii_path{4} = fullfile(PathName, [rootname dce_model_name '_NAUCs.nii']);
+                
+                
+                save_nii(make_nii(AUCc, res, [1 1 1]), nii_path{1});
+                save_nii(make_nii(AUCs, res, [1 1 1]), nii_path{2});
+                save_nii(make_nii(NAUCc, res, [1 1 1]), nii_path{3});
+                save_nii(make_nii(NAUCs, res, [1 1 1]), nii_path{4});
+                
+            elseif outputft == 2
+                % 3D DICOM
+            
+                for k = 1:numel(paramname)
+                    
+                    nii_path{k} = fullfile(PathName, [rootname dce_model_name '_' paramname{k} '.dcm']);
+                    curimg = OUTPUT(k).IMG;
+                    
+                    [newIMG, slope, intercept] = double2uint16Scale(curimg);
+                    
+                    if isDICOMhdr(hdr)
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3), hdr, 'MultiframeSingleFile', 1);
+                    else
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3),  'MultiframeSingleFile', 1);
+                    end
+                    
+                end
+            elseif outputft == 3
+                for k = 1:numel(paramname)
+                    
+                    nii_path{k} = fullfile(PathName, [rootname dce_model_name '_' paramname{k} '.dcm']);
+                    curimg = OUTPUT(k).IMG;
+                    
+                    [newIMG, slope, intercept] = double2uint16Scale(curimg);
+                    
+                    if isDICOMhdr(hdr)
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'ObjectType', 'MR Image Storage', 'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3), hdr, 'MultiframeSingleFile', 0);
+                    else
+                        % Then we write using the dicom hdr from before
+                        dicomwrite(reshape(uint16(newIMG), [size(curimg,1) size(curimg,2) 1 size(curimg,3)]),nii_path{k}, ...
+                            'ObjectType', 'MR Image Storage', 'RescaleIntercept', intercept, 'RescaleSlope', slope, ...
+                            'PixelSpacing', res(1:2)', 'SliceThickness', res(3),  'MultiframeSingleFile', 0);
+                    end
+                    
+                end
+     
+            end
             
         end
         
