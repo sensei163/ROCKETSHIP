@@ -68,6 +68,7 @@ handles.batch_d_listfullpath = {};
 % uirestore(handles.moving);
 % uirestore(handles.rlowess);
 uirestore(handles.batch_d_list);
+uirestore(handles.email);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -1288,6 +1289,8 @@ if numel(list) > 0
     end
     diary(log_path);
     started = 1;
+else
+    disp('No prepped files for batch job');
 end
 
 while numel(list) > 0
@@ -1314,12 +1317,37 @@ if started
     disp(datestr(now))
     toc
     diary off;
+    
+    
+    % Now we email to user
+    % Email the person on completion
+    % Define these variables appropriately:
+    mail = 'immune.caltech@gmail.com'; %Your GMail email address
+    password = 'antibody'; %Your GMail password
+    % Then this code will set up the preferences properly:
+    setpref('Internet','E_mail',mail);
+    setpref('Internet','SMTP_Server','smtp.gmail.com');
+    setpref('Internet','SMTP_Username',mail);
+    setpref('Internet','SMTP_Password',password);
+    props = java.lang.System.getProperties;
+    props.setProperty('mail.smtp.auth','true');
+    props.setProperty('mail.smtp.socketFactory.class', 'javax.net.ssl.SSLSocketFactory');
+    props.setProperty('mail.smtp.socketFactory.port','465');
+    
+    hostname = char( getHostName( java.net.InetAddress.getLocalHost ) );
+    
+    
+    sendmail(get(handles.email, 'String'),'ROCKETSHIP map derivation completed',['Hello! Your Map Calc job on '...
+        ,hostname,' is done! Logs of data attached if desired'], log_path);
+    
 end
 
 handles.batch_d_listfullpath = list;
 set(handles.batch_d_list, 'String', visual_list);
 guidata(hObject, handles);
 uiremember;
+
+
 
 
 % --- Executes on button press in add_d_prep.
@@ -1406,12 +1434,6 @@ set(handles.batch_d_list, 'String', list, 'Value', fileselected);
 handles.batch_d_listfullpath = curfulllist;
 
 guidata(hObject, handles);
-
-
-
-
-
-
 
 function email_Callback(hObject, eventdata, handles)
 % hObject    handle to email (see GCBO)
