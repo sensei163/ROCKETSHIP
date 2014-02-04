@@ -22,7 +22,7 @@ function varargout = RUND(varargin)
 
 % Edit the above text to modify the response to help RUND
 
-% Last Modified by GUIDE v2.5 02-Feb-2014 13:30:58
+% Last Modified by GUIDE v2.5 03-Feb-2014 17:50:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -89,6 +89,7 @@ parse_preference_file('dce_preferences.txt',1,...
     'voxel_Robust' 'fxr_fw'});
 % Create structure to hold roi list
 handles.roi_list = {};
+handles.saved_results = '';
 
 % Update handles structure
 guidata(hObject, handles);
@@ -366,7 +367,7 @@ saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_s
 handles.saved_results = saved_results;
 handles.batch = 0;
 guidata(hObject, handles);
-uiremember;
+
 uiresume(handles.figure1);
 
 
@@ -376,8 +377,9 @@ function cancel_Callback(hObject, eventdata, handles)
 % hObject    handle to cancel (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-varargout{1} = ''; %handles.output;
-delete(handles.figure1);
+% varargout{1} = ''; %handles.output;
+% delete(handles.figure1);
+uiresume(handles.figure1);
 
 % --- Executes on button press in aif.
 function aif_Callback(hObject, eventdata, handles)
@@ -572,3 +574,14 @@ function outputft_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: delete(hObject) closes the figure
+% delete(hObject);
+uiresume(hObject);

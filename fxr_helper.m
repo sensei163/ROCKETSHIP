@@ -1,5 +1,5 @@
 %% Helper Function for nonlinear curvefit to FXR model
-function x = fxr_helper(Ct,Cp,timer,R1o,R1i,r1,fw,prefs)
+function [x, residuals] = fxr_helper(Ct,Cp,timer,R1o,R1i,r1,fw,prefs)
 
 warning off
 
@@ -30,7 +30,6 @@ x(1) = f.Ktrans;			% ktrans
 x(2) = f.ve;				% ve
 x(3) = f.tau;				% tau
 x(4) = gof.sse;				% residual
-% x(5) = confidence_interval;	% 95 CI
 x(5) = confidence_interval(1,1);% (95 lower CI of ktrans)
 x(6) = confidence_interval(2,1);% (95 upper CI of ktrans)
 x(7) = confidence_interval(1,2);% (95 lower CI of ve)
@@ -38,3 +37,4 @@ x(8) = confidence_interval(2,2);% (95 upper CI of ve)
 x(9) = confidence_interval(1,3);% (95 lower CI of tau)
 x(10) = confidence_interval(2,3);% (95 upper CI of tau)
 
+residuals = output.residuals;

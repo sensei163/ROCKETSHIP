@@ -1,7 +1,6 @@
-% Helper for C_fitwithvp
-
-function GG = FXLfit_generic(xdata, number_voxels, model)
+function [GG, residuals] = FXLfit_generic(xdata, number_voxels, model)
 % DEBUG number_voxels = 5
+residuals = [];
 if strcmp(model, 'aif_vp')
     
     % Get values from pref file
@@ -42,6 +41,7 @@ if strcmp(model, 'aif_vp')
     
     % Preallocate for speed
     GG = zeros([number_voxels 10],'double');
+    residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
     % Slice out needed variables for speed
     Ct_data = xdata{1}.Ct;
     Cp_data = xdata{1}.Cp;
@@ -54,7 +54,7 @@ if strcmp(model, 'aif_vp')
     end
     p = ProgressBar(number_voxels);
     parfor i = 1:number_voxels
-        GG(i,:) = FXLStep1AIFhelper_vp(Ct_data(:,i),Cp_data,timer_data,prefs);
+        [GG(i,:), residuals(i,:)] = FXLStep1AIFhelper_vp(Ct_data(:,i),Cp_data,timer_data,prefs);
         p.progress;
     end;
     p.stop;
@@ -92,6 +92,7 @@ elseif strcmp(model, 'aif')
     
     % Preallocate for speed
     GG = zeros([number_voxels 8],'double');
+    residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
     % Slice out needed variables for speed
     Ct_data = xdata{1}.Ct;
     Cp_data = xdata{1}.Cp;
@@ -104,7 +105,7 @@ elseif strcmp(model, 'aif')
     end
     p = ProgressBar(number_voxels);
     parfor i = 1:number_voxels
-        GG(i,:) = FXLStep1AIFhelper(Ct_data(:,i),Cp_data,timer_data,prefs);
+        [GG(i,:), residuals(i,:)] = FXLStep1AIFhelper(Ct_data(:,i),Cp_data,timer_data,prefs);
         p.progress;
     end;
     p.stop;
@@ -151,6 +152,7 @@ elseif strcmp(model, 'fxr')
     
     % Preallocate for speed
     GG = zeros([number_voxels 10],'double');
+    residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
     % Slice out needed variables for speed
     Ct_data = xdata{1}.Ct;
     Cp_data = xdata{1}.Cp;
@@ -167,7 +169,7 @@ elseif strcmp(model, 'fxr')
     end
     p = ProgressBar(number_voxels);
     parfor i = 1:number_voxels
-        GG(i,:) = fxr_helper(Ct_data(:,i),Cp_data,timer_data,R1o(i),R1i(i),r1,fw,prefs);
+        [GG(i,:), residuals(i,:)] = fxr_helper(Ct_data(:,i),Cp_data,timer_data,R1o(i),R1i(i),r1,fw,prefs);
         p.progress;
     end;
     p.stop;

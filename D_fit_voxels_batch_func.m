@@ -6,6 +6,8 @@ xdata = Ddatabatch.xdata       ;
 numvoxels = Ddatabatch.numvoxels  ;
 dce_model= Ddatabatch.dce_model   ;
 number_rois = Ddatabatch.number_rois;
+roi_name = Ddatabatch.roi_name;
+roi_list = Ddatabatch.roi_list;
 neuroecon = Ddatabatch.neuroecon;
 close_pool = Ddatabatch.close_pool;
 rootname  = Ddatabatch.rootname;
@@ -25,8 +27,7 @@ currentimg = Ddatabatch.currentimg ;
 results_a_path= Ddatabatch.results_a_path ;
 results_b_path =Ddatabatch.results_b_path  ;
 
-if dce_model.fxr
-    
+if dce_model.fxr   
     T1TUM=Ddatabatch.T1TUM ;
     relaxivity=Ddatabatch.relaxivity;
 end
@@ -100,11 +101,10 @@ for i = 1:numel(cur_dce_model_list)
                 roi_data{1}.Sttum = roi_series_signal;
             end
             
-            roi_results = FXLfit_generic(roi_data, number_rois, cur_dce_model);
+            [roi_results, roi_residuals] = FXLfit_generic(roi_data, number_rois, cur_dce_model);
             
             disp('ROI fitting done')
             disp(' ')
-            
         end
         if fit_voxels
             disp(['Starting fitting for ' num2str(numvoxels) ' voxels...']);
@@ -115,7 +115,7 @@ for i = 1:numel(cur_dce_model_list)
                 xdata{1}.relaxivity = relaxivity;
             end
             
-            fitting_results = FXLfit_generic(xdata, numvoxels, cur_dce_model);
+            [fitting_results, voxel_residuals] = FXLfit_generic(xdata, numvoxels, cur_dce_model);
             
             disp('Voxel fitting done')
         end
@@ -134,7 +134,7 @@ for i = 1:numel(cur_dce_model_list)
     fit_data.PathName = PathName;
     fit_data.time_smoothing = time_smoothing;
     fit_data.time_smoothing_window =time_smoothing_window;
-    fit_data.model_name =dce_model;
+    fit_data.model_name =cur_dce_model;
     fit_data.number_rois = number_rois;
     xdata{1}.dimensions = size(currentimg);
     
@@ -142,6 +142,7 @@ for i = 1:numel(cur_dce_model_list)
         xdata{1}.roi_series = roi_series;
         xdata{1}.roi_series_original = roi_series_original;
         fit_data.roi_results = roi_results;
+        fit_data.roi_residuals = roi_residuals;
         fit_data.roi_name = roi_name;
         
         if strcmp(cur_dce_model, 'fxr')
@@ -156,14 +157,15 @@ for i = 1:numel(cur_dce_model_list)
     end
     if fit_voxels
         fit_data.fitting_results  = fitting_results;
+        fit_data.voxel_residuals = voxel_residuals;
     end
     
-    Ddata.xdata = xdata;
-    Ddata.fit_data = fit_data;
-    Ddata.results_a_path = results_a_path;
-    Ddata.results_b_path = results_b_path;
+%     Ddata.xdata = xdata;
+%     Ddata.fit_data = fit_data;
+%     Ddata.results_a_path = results_a_path;
+%     Ddata.results_b_path = results_b_path;
     
-    save(fullfile(PathName, ['D_' rootname cur_dce_model '_fit_voxels.mat']),  'Ddata')
+    save(fullfile(PathName, ['D_' rootname cur_dce_model '_fit_voxels.mat']),  'xdata','fit_data','results_a_path','results_b_path')
     results = fullfile(PathName, ['D_' rootname cur_dce_model '_fit_voxels.mat']);
     Opt.Input = 'file';
     mat_md5 = DataHash(results, Opt);

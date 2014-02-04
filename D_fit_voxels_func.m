@@ -8,7 +8,7 @@ function [results, batch] = D_fit_voxels_func(results_b_path,dce_model,time_smoo
 %  dce_model          - Select fitting model
 %                       'aif_vp' = tofts with vascular compartment
 %                       'aif' = tofts without vascular compartment
-%                       'fxr' = not implemented
+%                       'fxr' = "shutter speed"
 %                       'sauc' = not implemented
 %                       'ss' = not implemented
 %                       'fractal' = not implemented
@@ -28,7 +28,7 @@ function [results, batch] = D_fit_voxels_func(results_b_path,dce_model,time_smoo
 %  fit_voxels         - perform DCE fit on individual voxels
 %  neuroecon          - perform processing on neuroecon server
 %  batch              - prep for batch procesing only
-% outputft            - output filetype
+%  outputft           - output filetype
 %
 % The script loads the data arrays generated from B_AIF_fitting_func().
 % Then it will fit a DCE curve according to various models
@@ -216,6 +216,7 @@ if ~isempty(roi_list) && ~strcmp('No Files',cell2mat(roi_list(1)))
         end
     end
     number_rois = size(roi_list,1);
+    roi_name = [];
     %After sanitizing make sure we have some left
     if number_rois~=0
         [~, roi_name, roi_ext] = arrayfun(@(x) fileparts(x{:}), roi_list, 'UniformOutput', false);
@@ -249,7 +250,7 @@ if ~isempty(roi_list) && ~strcmp('No Files',cell2mat(roi_list(1)))
             for r=number_rois:-1:1
                 roi_series(t,r) = mean(original_timepoint(roi_index{r}));
                 
-                if dce_mode.auc
+                if dce_model.auc
                     roi_series_signal(t,r) = mean(original_timepoint_signal(roi_index{r}));
                 end
             end
@@ -373,24 +374,18 @@ if ~strcmp(time_smoothing,'none')
                 % no smoothing
             end
             
-            roi_series_signal(:,r) = roi_smooth;
-            
+            roi_series_signal(:,r) = roi_smooth;  
         end
     end
-    
-  
 end
 
 % a.b) Prep for batch.
-
     if dce_model.fxr
 
         Ddatabatch.T1TUM = T1TUM;
         Ddatabatch.relaxivity = relaxivity;
     end
-    
-    
-    
+      
     if number_rois
                 Ddatabatch.roi_r1 = roi_r1;
         Ddatabatch.roi_series_original = roi_series_original;
@@ -406,6 +401,8 @@ end
     Ddatabatch.numvoxels   = numvoxels;
     Ddatabatch.dce_model   = dce_model;
     Ddatabatch.number_rois = number_rois;
+    Ddatabatch.roi_name    = roi_name;
+    Ddatabatch.roi_list    = roi_list;
     Ddatabatch.neuroecon   = neuroecon;
     Ddatabatch.close_pool  = close_pool;
     Ddatabatch.rootname    = rootname;
@@ -425,7 +422,6 @@ end
     Ddatabatch.results_b_path = results_b_path;
     
     if batch
-        
         save(fullfile(PathName, ['D_' rootname 'prep' '_fit_voxels.mat']),  'Ddatabatch')
         results = fullfile(PathName, ['D_' rootname 'prep' '_fit_voxels.mat']);
         Opt.Input = 'file';
@@ -439,8 +435,7 @@ end
         disp(datestr(now))
         toc
         diary off;
-        
-        
+
         return;
     end
     

@@ -22,7 +22,7 @@ function varargout = RUNA(varargin)
 
 % Edit the above text to modify the response to help RUNA
 
-% Last Modified by GUIDE v2.5 31-Jan-2014 18:08:27
+% Last Modified by GUIDE v2.5 03-Feb-2014 18:05:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -532,7 +532,7 @@ function filevolume_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-UIRESTORE;
+uirestore;
 
 % --- Executes on button press in addfiles.
 function addfiles_Callback(hObject, eventdata, handles)
@@ -753,7 +753,7 @@ function noisepixsize_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-UIRESTORE;
+uirestore;
 
 
 function tr_Callback(hObject, eventdata, handles)
@@ -776,7 +776,7 @@ function tr_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-UIRESTORE;
+uirestore;
 
 
 function fa_Callback(hObject, eventdata, handles)
@@ -800,7 +800,7 @@ function fa_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-UIRESTORE;
+uirestore;
 
 
 function time_resolution_Callback(hObject, eventdata, handles)
@@ -846,7 +846,7 @@ function hematocrit_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-UIRESTORE;
+uirestore;
 
 
 function snr_filter_Callback(hObject, eventdata, handles)
@@ -869,7 +869,7 @@ function snr_filter_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-UIRESTORE;
+uirestore;
 
 
 function injection_time_Callback(hObject, eventdata, handles)
@@ -892,7 +892,7 @@ function injection_time_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-UIRESTORE;
+uirestore;
 
 
 function relaxivity_Callback(hObject, eventdata, handles)
@@ -915,7 +915,7 @@ function relaxivity_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-UIRESTORE;
+uirestore;
 
 
 function water_fraction_Callback(hObject, eventdata, handles)
@@ -945,8 +945,9 @@ function cancel_Callback(hObject, eventdata, handles)
 % hObject    handle to cancel (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-varargout{1} = ''; %handles.output;
-delete(handles.figure1);
+% varargout{1} = ''; %handles.output;
+% delete(handles.figure1);
+uiresume(handles.figure1);
 
 
 
@@ -1042,7 +1043,7 @@ function aiforrr_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-UIRESTORE;
+uirestore;
 
 % --- Executes when selected object is changed in fileorder.
 function fileorder_SelectionChangeFcn(hObject, eventdata, handles)
@@ -1194,7 +1195,7 @@ function aifmaskroi_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-UIRESTORE;
+uirestore;
 
 % --- Executes on selection change in roimaskroi.
 function roimaskroi_Callback(hObject, eventdata, handles)
@@ -1227,7 +1228,7 @@ function roimaskroi_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-UIRESTORE;
+uirestore;
 
 % --- Executes on button press in drift.
 function drift_Callback(hObject, eventdata, handles)
@@ -1248,7 +1249,6 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % Hint: delete(hObject) closes the figure
 % delete(hObject);
 uiresume(hObject);
-uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function fileorder_CreateFcn(hObject, eventdata, handles)
@@ -1262,7 +1262,7 @@ function drift_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to drift (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-UIRESTORE;
+uirestore;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1270,7 +1270,7 @@ function quant_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to quant (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-UIRESTORE;
+uirestore;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1278,7 +1278,7 @@ function noisefile_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to noisefile (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-UIRESTORE;
+uirestore;
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1286,5 +1286,4 @@ function noisepixels_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to noisepixels (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-UIRESTORE;
-
+uirestore;
