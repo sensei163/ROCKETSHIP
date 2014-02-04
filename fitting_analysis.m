@@ -22,7 +22,7 @@ function varargout = fitting_analysis(varargin)
 
 % Edit the above text to modify the response to help fitting_analysis
 
-% Last Modified by GUIDE v2.5 28-Jan-2014 10:34:21
+% Last Modified by GUIDE v2.5 03-Feb-2014 17:57:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,8 +54,11 @@ function fitting_analysis_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for fitting_analysis
 handles.output = hObject;
+
+% Create structure to hold data
 handles.roi_data_ready = 0;
 handles.voxel_data_ready = 0;
+handles.model_list = {};
 
 % Get function inputs
 if nargin>1 && numel(varargin)>1 && strcmp(varargin{1},'results_path')
@@ -241,13 +244,18 @@ if nargin<2
 end
 results_cfit_path = get(handles.results_cfit_path,'String');
 background_image_path = get(handles.background_image_path,'String');
-lower_model_path = get(handles.lower_model_path,'String');
+% lower_model_path = get(handles.lower_model_path,'String');
+compare_model_list = handles.model_list;
 handles.roi_data_ready = 0;
 handles.voxel_data_ready = 0;
 handles.ftest_ready = 0;
+handles.akaike_ready = 0;
+handles.fmi_ready = 0;
 voxel_message = 'No results file selected';
 roi_message = 'No results file selected';
-ftest_message = 'No primary results file selected';
+ftest_message = 'No comparison results file selected';
+akaike_message = 'No comparison results file selected';
+fmi_message = 'No comparison results file selected';
 
 % Load data and check if ready for voxel and ROI analysis
 try
@@ -275,8 +283,7 @@ try
         
     information_string = {['Fit Model: ' handles.fit_data.model_name],...
         ['Fitted ROIs: ' num2str(handles.fit_data.number_rois)],...
-        ['Fitted Voxels: ' num2str(handles.xdata.numvoxels*handles.fit_data.fit_voxels)]};
-    
+        ['Fitted Voxels: ' num2str(handles.xdata.numvoxels*handles.fit_data.fit_voxels)]};  
 catch err
     information_string = {};
     handles.roi_data_ready = 0;
@@ -295,30 +302,50 @@ catch err
     voxel_message = ready_message;
     roi_message = ready_message;
     ftest_message = ready_message;
+    akaike_message = ready_message;
+    fmi_message = ready_message;
 end
 
-% Now setup for ftest
-try
-    lower_model = load(lower_model_path); 
-    handles.lower_model_xdata = lower_model.xdata{1};
-    handles.lower_model_fit_data = lower_model.fit_data;
-    
-    handles.ftest_ready = 1;
-catch err
-    handles.ftest_ready = 0;
-    if ~exist(lower_model_path,'file')
-        ftest_message = 'comparison model file not selected';
-        if ~isempty(lower_model_path)
-            ftest_message = 'comparison model file not found';
+% Now setup for comparison
+for i=1:numel(compare_model_list)
+    current_model = cell2mat(compare_model_list(i));
+    try
+        lower_model = load(current_model); 
+        handles.lower_model_xdata{i} = lower_model.xdata{1};
+        handles.lower_model_fit_data{i} = lower_model.fit_data;
+
+        handles.ftest_ready = 1;
+        handles.akaike_ready = 1;
+        handles.fmi_ready = 1;
+        ftest_message = [num2str(i) ' comparisons models loaded'];
+        akaike_message = [num2str(i) ' comparisons models loaded'];
+        fmi_message = [num2str(i) ' comparisons models loaded'];
+    catch err
+        handles.ftest_ready = 0;
+        handles.akaike_ready = 0;
+        handles.fmi_ready = 0;
+        if ~exist(current_model,'file')
+            comparison_message = ['comparison model file ' current_model ' not selected'];
+            if ~isempty(current_model)
+                comparison_message = ['comparison model file ' current_model ' not found'];
+            end
+        elseif ~isfield(lower_model,'xdata') || ~isfield(lower_model,'fit_data')
+            comparison_message = ['comparison model file ' current_model ' does not contain fit data'];
+        else
+            rethrow(err);
         end
-    elseif ~isfield(lower_model,'xdata') || ~isfield(lower_model,'fit_data')
-        ftest_message = 'comparison model file does not contain fit data';
-    else
-        rethrow(err);
+        if ~isempty(current_model)
+            ready_message = comparison_message;
+        end
+        ftest_message = comparison_message;
+        akaike_message = comparison_message;
+        fmi_message = comparison_message;
+        break;
     end
-    if ~isempty(lower_model_path)
-        ready_message = ftest_message;
-    end
+end
+if numel(compare_model_list)>1
+    ftest_message = 'Too many models selected, ftest can only compare two models';
+    handles.ftest_ready = 0;
 end
 
 % Display info messages
@@ -347,6 +374,18 @@ elseif strcmp(verbose,'ftest')
         update_status(handles,ftest_message, 'black');
     else
         update_status(handles,ftest_message, 'red');
+    end
+elseif strcmp(verbose,'akaike')
+    if handles.akaike_ready
+        update_status(handles,akaike_message, 'black');
+    else
+        update_status(handles,akaike_message, 'red');
+    end
+elseif strcmp(verbose,'fmi')
+    if handles.fmi_ready
+        update_status(handles,fmi_message, 'black');
+    else
+        update_status(handles,fmi_message, 'red');
     end
 end
 
@@ -404,37 +443,48 @@ guidata(hObject, handles);
 
 % --- Executes on button press in button_akaike.
 function button_akaike_Callback(hObject, eventdata, handles)
-run_comparison(handles,2)
+run_comparison(hObject,handles,'akaike')
 
 % --- Executes on button press in button_ftest.
 function button_ftest_Callback(hObject, eventdata, handles)
-run_comparison(handles,1)
+run_comparison(hObject,handles,'ftest')
 
-function run_comparison(handles,test_index)
-if handles.ftest_ready
-    compare_voxels = (handles.lower_model_fit_data.fit_voxels && handles.fit_data.fit_voxels);
-    compare_rois = (handles.lower_model_fit_data.number_rois>0 && handles.fit_data.number_rois>0);
+% --- Executes on button press in button_fmi.
+function button_fmi_Callback(hObject, eventdata, handles)
+run_comparison(hObject,handles,'fmi')
+
+function run_comparison(hObject,handles,test_name)
+model_index = 1;
+if (handles.ftest_ready && strcmp(test_name,'ftest')) || ...
+        (handles.akaike_ready && strcmp(test_name,'akaike')) || ...
+        (handles.fmi_ready && strcmp(test_name,'fmi'))
+    compare_voxels = (handles.lower_model_fit_data{model_index}.fit_voxels && handles.fit_data.fit_voxels);
+    compare_rois = (handles.lower_model_fit_data{model_index}.number_rois>0 && handles.fit_data.number_rois>0);
     information_string = get(handles.cfit_information,'String');
     information_string = information_string(1:3);
-    information_string(end+1) = {['Compare Model: ' handles.lower_model_fit_data.model_name]};
+    information_string(end+1) = {['Compare Model: ' handles.lower_model_fit_data{model_index}.model_name]};
     % Create custum strings
-    if test_index==1
+    if strcmp(test_name,'ftest')
         stat_name = 'p value';
         path_suffix = '_ftest';
-        test_name = 'f-test';
-    elseif test_index==2
+        test_name_long = 'f-test';
+    elseif strcmp(test_name,'akaike')
         stat_name = 'relative likelihood';
         path_suffix = '_aic';
-        test_name = 'Akaike information criteria';
+        test_name_long = 'Akaike information criteria';
+    elseif strcmp(test_name,'fmi')
+        stat_name = 'fraction modeled information';
+        path_suffix = '_fmi';
+        test_name_long = 'modeled and residual information';
     end
         
     if compare_voxels 
-        disp(['Starting ' test_name ' on voxels']);
+        disp(['Starting ' test_name_long ' on voxels']);
         [sse_lower,fp_lower,sse_higher,fp_higher,n]=...
-            get_sse_and_fp(handles,1);
+            get_sse_and_fp(handles,1,model_index);
         
         % Sanity check
-        if fp_lower>=fp_higher
+        if strcmp(test_name,'ftest') && fp_lower>=fp_higher
             update_status(handles,'lower model must be a lower number of free parameters','red');
             disp('stopping');
             return;
@@ -444,11 +494,11 @@ if handles.ftest_ready
         number_voxels = numel(sse_higher);
         stat_voxels = 2.*ones(number_voxels,1);
         for i=1:number_voxels
-            if test_index==1
+            if strcmp(test_name,'ftest')
                 [ p, Fstat, df1, df2 ] = ftest(n,fp_lower,...
                     fp_higher,sse_lower(i),sse_higher(i));
                 stat_voxels(i) = p;
-            elseif test_index==2
+            elseif strcmp(test_name,'akaike')
                 aic_lower = n*log(sse_lower(i)/n)+2*fp_lower;
                 aic_higher = n*log(sse_higher(i)/n)+2*fp_higher;
                 relative_likelihood = exp((aic_lower-aic_higher)/2);
@@ -462,6 +512,9 @@ if handles.ftest_ready
                 % near +1 lower model better, near -1 higher model better near
                 % zero poor inference
                 stat_voxels(i) = relative_likelihood;
+            elseif strcmp(test_name,'fmi')
+                % Do Calc
+                stat_voxels(i) = 0;
             end
         end
         
@@ -475,20 +528,20 @@ if handles.ftest_ready
         [~, base_name, ~] = fileparts(handles.fit_data.dynam_name);
         save_path = fullfile(base_path,[base_name '_' ...
             handles.fit_data.model_name '_' ...
-            handles.lower_model_fit_data.model_name path_suffix '.nii']);
+            handles.lower_model_fit_data{model_index}.model_name path_suffix '.nii']);
     
         stat_matrix     = zeros([256 256]);
         stat_matrix(handles.fit_data.tumind) = stat_voxels;
         save_nii(make_nii(stat_matrix, [1 1 1], [1 1 1]), save_path);
-        disp(['Completed ' test_name ' on voxels']);
+        disp(['Completed ' test_name_long ' on voxels']);
     end
     if compare_rois
-        disp(['Starting ' test_name ' on ROIs']);
+        disp(['Starting ' test_name_long ' on ROIs']);
         [sse_lower,fp_lower,sse_higher,fp_higher,n]=...
-            get_sse_and_fp(handles,2);
+            get_sse_and_fp(handles,2,model_index);
         
         % Sanity check
-        if fp_lower>=fp_higher
+        if strcmp(test_name,'ftest') && fp_lower>=fp_higher
             update_status(handles,'lower model must be a lower number of free parameters','red');
             disp('stopping');
             return;
@@ -499,12 +552,12 @@ if handles.ftest_ready
         stat_rois = 2.*ones(number_rois,1);
         f_rois = 2.*ones(number_rois,1);
         for i=1:number_rois
-            if test_index==1
+            if strcmp(test_name,'ftest')
                 [ p, Fstat, df1, df2 ] = ftest(n,fp_lower,...
                     fp_higher,sse_lower(i),sse_higher(i));
                 stat_rois(i) = p;
                 f_rois(i) = Fstat;
-            elseif test_index==2
+            elseif strcmp(test_name,'akaike')
                 aic_lower = n*log(sse_lower(i)/n)+2*fp_lower;
                 aic_higher = n*log(sse_higher(i)/n)+2*fp_higher;
                 relative_likelihood = exp((aic_lower-aic_higher)/2);
@@ -518,6 +571,34 @@ if handles.ftest_ready
                 % near +1 lower model better, near -1 higher model better near
                 % zero poor inference
                 stat_rois(i) = relative_likelihood;
+            elseif strcmp(test_name,'fmi')
+                % Outlined in Balvay et al. MRM 54:868-877 (2005)
+                M = n;%number of samples
+                r = handles.fit_data.roi_residuals(i,:);
+                d = handles.xdata.Ct(:,i);
+                for k=1:M/2
+                    sum_r = 0;
+                    sum_d = 0;
+                    for j=1:M-k
+                        sum_r = sum_r+r(j)*r(j+k);
+                        sum_d = sum_d+d(j)*d(j+k);
+                    end
+                    Rrr(k) = 1/(M-abs(k))*sum_r;
+                    Rdd(k) = 1/(M-abs(k))*sum_d;
+                end
+                Prr = fit((1:M/2)',Rrr','poly3'); %Fit Rrr with poly
+                Pdd = fit((1:M/2)',Rdd','poly3'); %Fit Rdd with poly
+                % Get value at zero
+                Prr_0 = Prr(0);
+                Pdd_0 = Pdd(0);
+                
+                e_ss_star = M*Prr_0; %ss indicates sum of squares
+                d_0_ss_star = M*Pdd_0;
+                FMI_star = 1-e_ss_star/d_0_ss_star;
+                FRI_star = e_ss_star/sse_higher(i);
+                figure(i);
+                plot(Prr,(1:M/2)',Rrr');
+                stat_rois(i) = FMI_star;
             end
         end
         mean_stat = mean(stat_rois);  
@@ -530,16 +611,16 @@ if handles.ftest_ready
         [~, base_name, ~] = fileparts(handles.fit_data.dynam_name);
         save_path = fullfile(base_path,[base_name '_' ...
             handles.fit_data.model_name '_' ...
-            handles.lower_model_fit_data.model_name path_suffix '.xls']);
+            handles.lower_model_fit_data{model_index}.model_name path_suffix '.xls']);
     
         headings = {'ROI', stat_name, ['Residual ' handles.fit_data.model_name],...
-            ['Residual ' handles.lower_model_fit_data.model_name]};
+            ['Residual ' handles.lower_model_fit_data{model_index}.model_name]};
         xls_results = [handles.fit_data.roi_name num2cell(stat_rois) num2cell(sse_higher) num2cell(sse_lower)];
         xls_results = [headings; xls_results];
         
         xlswrite(save_path,xls_results);
                
-        disp(['Completed ' test_name ' on ROIs']);
+        disp(['Completed ' test_name_long ' on ROIs']);
     end
     
     if ~compare_rois && ~compare_voxels
@@ -550,7 +631,7 @@ if handles.ftest_ready
         disp(['lower ' stat_name ' indicates higher order model is better fit']);
     end
 else
-    handles = load_check_data(handles,'ftest');
+    handles = load_check_data(handles,test_name);
     % Update handles structure
     guidata(hObject, handles);
 end
@@ -559,22 +640,22 @@ function update_status(handles,status_string,color)
 set(handles.ready_display,'String',status_string);
 set(handles.ready_display, 'ForegroundColor', color);
 
-function [sse1, fp1, sse2, fp2, n]=get_sse_and_fp(handles,region)
+function [sse1, fp1, sse2, fp2, n]=get_sse_and_fp(handles,region,model_index)
 if region==1
     % Voxel results
-    sse1 = handles.lower_model_fit_data.fitting_results(:,4);
+    sse1 = handles.lower_model_fit_data{model_index}.fitting_results(:,4);
     sse2 = handles.fit_data.fitting_results(:,4);
 elseif region==2
     % ROI results
-    sse1 = handles.lower_model_fit_data.roi_results(:,4);
+    sse1 = handles.lower_model_fit_data{model_index}.roi_results(:,4);
     sse2 = handles.fit_data.roi_results(:,4);
 end
 
-if strcmp(handles.lower_model_fit_data.model_name,'aif')
+if strcmp(handles.lower_model_fit_data{model_index}.model_name,'aif')
     fp1 = 2;
-elseif strcmp(handles.lower_model_fit_data.model_name,'aif_vp')
+elseif strcmp(handles.lower_model_fit_data{model_index}.model_name,'aif_vp')
     fp1 = 3;
-elseif strcmp(handles.lower_model_fit_data.model_name,'fxr')
+elseif strcmp(handles.lower_model_fit_data{model_index}.model_name,'fxr')
     fp1 = 3;
 else
     update_status(handles,'selected model not implemented','red');
@@ -592,7 +673,7 @@ else
     return
 end
 
-n_lower = numel(handles.lower_model_xdata.timer);
+n_lower = numel(handles.lower_model_xdata{model_index}.timer);
 n_higher = numel(handles.xdata.timer);
 
 % Sanity check
@@ -602,3 +683,90 @@ if n_lower~=n_higher
 end
 
 n=n_higher;
+
+
+% --- Executes on selection change in model_box.
+function model_box_Callback(hObject, eventdata, handles)
+% hObject    handle to model_box (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns model_box contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from model_box
+
+
+% --- Executes during object creation, after setting all properties.
+function model_box_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to model_box (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in add_models.
+function add_models_Callback(hObject, eventdata, handles)
+guidata(hObject, handles);
+
+[filename, pathname, filterindex] = uigetfile( ...
+    {  '*.mat','Matlab Worksapce Files (*.mat)'; ...
+    '*.*',  'All Files (*.*)'}, ...
+    'Pick a file', ...
+    'MultiSelect', 'on'); %#ok<NASGU>
+if isequal(filename,0)
+    %disp('User selected Cancel')
+else
+    %disp(['User selected ', fullfile(pathname, filename)])
+    list = get(handles.model_box,'String');
+    
+    % Combine path and filename together
+    fullpath = strcat(pathname,filename);
+    
+    % Stupid matlab uses a different datastructure if only one file
+    % is selected, handle special case
+    if ischar(list)
+        list = {list};
+    end
+    if ischar(filename)
+        filename = {filename};
+    end
+    if ischar(fullpath)
+        fullpath = {fullpath};
+    end
+
+    filename = filename';
+    fullpath = fullpath';
+        
+    % Add selected files to listbox
+    if strcmp(list,'No Files')
+        list = filename;
+        handles.model_list = fullpath;
+    else
+        list = [list;  filename];
+        handles.model_list = [handles.model_list; fullpath];
+    end 
+    
+    set(handles.model_box,'String',list, 'Value',1)
+end
+handles = cfit_path_changed(handles);
+guidata(hObject, handles);
+
+
+% --- Executes on button press in remove_models.
+function remove_models_Callback(hObject, eventdata, handles)
+index_selected = get(handles.model_box,'Value');
+list = get(handles.model_box,'String');
+for n=size(index_selected,2):-1:1
+    % Remove from end of list first so resizing does not 
+    % change subsequent index numbers
+    %disp(['User removed ', list{index_selected(n)}]);
+    list(index_selected(n)) = [];
+    handles.model_list(index_selected(n)) = [];
+end
+
+set(handles.model_box,'String',list, 'Value',1)
+guidata(hObject, handles);
