@@ -159,10 +159,10 @@ tumind= find(TUMOR > 0);
 
 testt1 = mean(TUMOR(tumind));
 if testt1 > 50
-    disp('T1 maps likely in ms, converting to s...');
+    disp('T1 maps of data likely in ms, converting to s...');
     TUMOR = (1/1000).*double(TUMOR);
 else
-    disp('T1 maps not likely in ms...');
+    disp('T1 maps of data likely in sec, no conversion');
 end
 
 
@@ -174,10 +174,10 @@ lvind = find(LV > 0);
 
 testt1 = mean(LV(lvind));
 if testt1 > 50
-    disp('T1 maps likely in ms, converting to s...');
+    disp('T1 maps of AIF likely in ms, converting to s...');
     LV = (1/1000).*double(LV);
 else
-    disp('T1 maps not likely in ms...');
+    disp('T1 maps of AIF likely in sec, no conversion');
 end
 
 %Load noise ROI files
@@ -348,18 +348,32 @@ end
 
 %% 5. Manually select injection point, if required
 if(steady_state_time == -1)
-    figure, hold on,plot(mean(DYNAM, 2), 'r'), plot(mean(DYNAMLV,2), 'b'),
+    figure, hold on;
+    plot(mean(DYNAM, 2), 'r');
+    plot(mean(DYNAMLV,2), 'b');
+    ylabel('a.u.');
+    xlabel('image number');
+    hold off;
+    
     
     for i = 1:2
         title(['Select timepoint ' num2str(i) ...
             ' before injection. (i.e. Select an interval (2 points) before contrast injection to define stead state)'])
         [steady_state_time(i), ~] = ginput(1);
     end
+    steady_state_time(2) = round(steady_state_time(2));
+    steady_state_time(1) = round(steady_state_time(1));
+    if steady_state_time(1)<1
+        %No zero index in matlab
+        steady_state_time(1) = 1;
+    end
 else
     %No zero index in matlab
     steady_state_time(2) = steady_state_time;
     steady_state_time(1) = 1;
 end
+disp(['Steady state time selected from image ' num2str(steady_state_time(1)) ...
+    ' to image ' num2str(steady_state_time(2)) ' ']);
 
 % Averaged timecurves for AIF and Tumor
 RawTUM = mean(DYNAM,2);
