@@ -28,11 +28,11 @@ elseif(strcmp(plot_data.model_name,'t1_fa_fit'))
 elseif(strcmp(plot_data.model_name,'t1_fa_linear_fit'))
 %     y_lin = si./sin(pi/180*parameter);
 %     x_lin = si./tan(pi/180*parameter);
-    lin_curve = fit_parameters(1).*plot_data.values./tand(plot_data.x_values)+fit_parameters(2);
+    lin_curve = exp(-plot_data.tr/fit_parameters(1)).*plot_data.y_values./tand(plot_data.x_values)+fit_parameters(2);
     fit_curve = lin_curve.*sind(plot_data.x_values);
-    lin_curve_low = fit_parameters(4).*plot_data.values./tand(plot_data.x_values)+fit_parameters(2);
+    lin_curve_low = exp(-plot_data.tr/fit_parameters(4)).*plot_data.y_values./tand(plot_data.x_values)+fit_parameters(2);
     fit_curve_low = lin_curve_low.*sind(plot_data.x_values);
-    lin_curve_high = fit_parameters(5).*plot_data.values./tand(plot_data.x_values)+fit_parameters(2);
+    lin_curve_high = exp(-plot_data.tr/fit_parameters(5)).*plot_data.y_values./tand(plot_data.x_values)+fit_parameters(2);
     fit_curve_high = lin_curve_high.*sind(plot_data.x_values);
 elseif(strcmp(plot_data.model_name,'t1_ti_exponential_fit'))
     fit_curve = abs( fit_parameters(2).*(1-2.*exp(-plot_data.x_values./fit_parameters(1))-exp(-plot_data.x_values./fit_parameters(1)) ) );

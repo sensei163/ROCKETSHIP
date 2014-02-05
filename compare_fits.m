@@ -99,6 +99,10 @@ set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
                 plot_data.show_ci = show_ci;
                 plot_data.title = ['Voxel Location (' num2str(image_x) ',' num2str(image_y) ',' num2str(image_z) ')'];
 
+                if strfind(fit_data.model_name,'t1_fa')
+                    plot_data.tr = xdata{1}.tr;
+                end
+                
                 figure(2);
                 plot_curve(plot_data);
             end
