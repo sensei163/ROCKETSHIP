@@ -22,7 +22,7 @@ function varargout = RUNA(varargin)
 
 % Edit the above text to modify the response to help RUNA
 
-% Last Modified by GUIDE v2.5 03-Feb-2014 18:05:16
+% Last Modified by GUIDE v2.5 04-Feb-2014 15:12:30
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -70,6 +70,11 @@ handles.t1roifiles = [];
 handles.noisefiles = [];
 handles.t1mapfiles = [];
 handles.saved_results = '';
+
+% Properly enables or disables options
+update_disable_options(handles);
+uirestore(handles.xyzt);
+uirestore(handles.xytz);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -592,10 +597,6 @@ guidata(hObject, handles);
 
 % --- Executes on button press in removefiles.
 function removefiles_Callback(hObject, eventdata, handles)
-% hObject    handle to removefiles (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 % Update handles structure
 guidata(hObject, handles);
 
@@ -620,49 +621,22 @@ end
 guidata(hObject, handles);
 
 
-
-
-
-
-% --- Executes on button press in xytz.
-function xytz_Callback(hObject, eventdata, handles)
-% hObject    handle to xytz (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of xytz
-
-
-% --- Executes on button press in xyzt.
-function xyzt_Callback(hObject, eventdata, handles)
-% hObject    handle to xyzt (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of xyzt
-
-
 % --- Executes on button press in noisefile.
 function noisefile_Callback(hObject, eventdata, handles)
-% hObject    handle to noisefile (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of noisefile
 guidata(hObject, handles);
-
 set(handles.noisepixels, 'Value', 0);
-set(handles.noisepixsize, 'Enable', 'off');
-
+set(handles.noisefile, 'Value', 1);
 [filename, pathname, filterindex] = uigetfile( ...
     {  '*.nii','Nifti Files (*.nii)'; ...
     '*2dseq','Bruker Files (2dseq)'; ...
     '*dcm', 'DICOM Files (dcm)'; ...
     '*.hdr;*.img','Analyze Files (*.hdr, *.img)';...
     '*.*',  'All Files (*.*)'}, ...
-    'Choose T1 map of AIF or Ref Region', 'MultiSelect', 'on'); %#ok<NASGU>
+    'Choose Noise Region from dynamic scan', 'MultiSelect', 'off'); %#ok<NASGU>
 if isequal(filename,0)
     %disp('User selected Cancel')
+    set(handles.noisefile, 'Value', 0);
+    set(handles.noisepixels, 'Value', 1);
 else
     %disp(['User selected ', fullfile(pathname, filename)])
     
@@ -672,11 +646,7 @@ else
     if ischar(fullpath)
         fullpath = {fullpath};
     end
-    % if isempty(list)
-    %     list = {''};
-    % end
     
-    %filename = filename';
     fullpath = fullpath';
     
     if numel(fullpath) > 1
@@ -688,45 +658,26 @@ else
     set(handles.noise_path,'String',visualpath);
     handles.noisefiles = fullpath;
 end
-
-
 guidata(hObject, handles);
-uiremember;
+update_disable_options(handles);
 
 
 
 % --- Executes on button press in noisepixels.
 function noisepixels_Callback(hObject, eventdata, handles)
-% hObject    handle to noisepixels (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of noisepixels
 guidata(hObject, handles);
 set(handles.noisefile, 'Value', 0);
-set(handles.noise_path, 'Enable', 'off');
-set(handles.noisepixsize, 'Enable', 'on');
-uiremember;
+set(handles.noisepixels, 'Value', 1);
+update_disable_options(handles);
+
 
 
 
 function noise_path_Callback(hObject, eventdata, handles)
-% hObject    handle to noise_path (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of noise_path as text
-%        str2double(get(hObject,'String')) returns contents of noise_path as a double
 
 
 % --- Executes during object creation, after setting all properties.
 function noise_path_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to noise_path (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -734,22 +685,10 @@ end
 
 
 function noisepixsize_Callback(hObject, eventdata, handles)
-% hObject    handle to noisepixsize (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of noisepixsize as text
-%        str2double(get(hObject,'String')) returns contents of noisepixsize as a double
 uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function noisepixsize_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to noisepixsize (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -757,22 +696,10 @@ uirestore;
 
 
 function tr_Callback(hObject, eventdata, handles)
-% hObject    handle to tr (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of tr as text
-%        str2double(get(hObject,'String')) returns contents of tr as a double
 uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function tr_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to tr (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -780,69 +707,22 @@ uirestore;
 
 
 function fa_Callback(hObject, eventdata, handles)
-% hObject    handle to fa (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of fa as text
-%        str2double(get(hObject,'String')) returns contents of fa as a double
 uiremember;
 
 
 % --- Executes during object creation, after setting all properties.
 function fa_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to fa (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 uirestore;
 
 
-function time_resolution_Callback(hObject, eventdata, handles)
-% hObject    handle to time_resolution (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of time_resolution as text
-%        str2double(get(hObject,'String')) returns contents of time_resolution as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function time_resolution_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to time_resolution (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-
 function hematocrit_Callback(hObject, eventdata, handles)
-% hObject    handle to hematocrit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of hematocrit as text
-%        str2double(get(hObject,'String')) returns contents of hematocrit as a double
 uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function hematocrit_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to hematocrit (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -850,22 +730,10 @@ uirestore;
 
 
 function snr_filter_Callback(hObject, eventdata, handles)
-% hObject    handle to snr_filter (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of snr_filter as text
-%        str2double(get(hObject,'String')) returns contents of snr_filter as a double
 uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function snr_filter_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to snr_filter (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -873,22 +741,10 @@ uirestore;
 
 
 function injection_time_Callback(hObject, eventdata, handles)
-% hObject    handle to injection_time (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of injection_time as text
-%        str2double(get(hObject,'String')) returns contents of injection_time as a double
 uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function injection_time_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to injection_time (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -896,78 +752,28 @@ uirestore;
 
 
 function relaxivity_Callback(hObject, eventdata, handles)
-% hObject    handle to relaxivity (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of relaxivity as text
-%        str2double(get(hObject,'String')) returns contents of relaxivity as a double
 uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function relaxivity_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to relaxivity (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 uirestore;
 
 
-function water_fraction_Callback(hObject, eventdata, handles)
-% hObject    handle to water_fraction (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of water_fraction as text
-%        str2double(get(hObject,'String')) returns contents of water_fraction as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function water_fraction_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to water_fraction (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 % --- Executes on button press in cancel.
 function cancel_Callback(hObject, eventdata, handles)
-% hObject    handle to cancel (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargout{1} = ''; %handles.output;
-% delete(handles.figure1);
 uiresume(handles.figure1);
 
 
 
 function rootnameB_Callback(hObject, eventdata, handles)
-% hObject    handle to rootnameB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of rootnameB as text
-%        str2double(get(hObject,'String')) returns contents of rootnameB as a double
 
 
 % --- Executes during object creation, after setting all properties.
 function rootnameB_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to rootnameB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -975,25 +781,12 @@ end
 
 
 function rootnameA_Callback(hObject, eventdata, handles)
-% hObject    handle to rootnameA (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of rootnameA as text
-%        str2double(get(hObject,'String')) returns contents of rootnameA as a double
-
 [handles, errormsg] = update_segmentlist(handles, '', 3);
 disp_error(errormsg, handles);
 guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function rootnameA_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to rootnameA (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -1001,22 +794,10 @@ end
 
 
 function edit16_Callback(hObject, eventdata, handles)
-% hObject    handle to rootnameB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of rootnameB as text
-%        str2double(get(hObject,'String')) returns contents of rootnameB as a double
 
 
 % --- Executes during object creation, after setting all properties.
 function edit16_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to rootnameB (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -1024,22 +805,10 @@ end
 
 % --- Executes on selection change in aiforrr.
 function aiforrr_Callback(hObject, eventdata, handles)
-% hObject    handle to aiforrr (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns aiforrr contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from aiforrr
 uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function aiforrr_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to aiforrr (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -1047,36 +816,19 @@ uirestore;
 
 % --- Executes when selected object is changed in fileorder.
 function fileorder_SelectionChangeFcn(hObject, eventdata, handles)
-% hObject    handle to the selected object in fileorder
-% eventdata  structure with the following fields (see UIBUTTONGROUP)
-%	EventName: string 'SelectionChanged' (read only)
-%	OldValue: handle of the previously selected object or empty if none was selected
-%	NewValue: handle of the currently selected object
-% handles    structure with handles and user data (see GUIDATA)
-
+uiremember(handles.xyzt);
+uiremember(handles.xytz);
 
 % --- Executes on key press with focus on DCEfilesB and none of its controls.
 function DCEfilesB_KeyPressFcn(hObject, eventdata, handles)
-% hObject    handle to DCEfilesB (see GCBO)
-% eventdata  structure with the following fields (see UICONTROL)
-%	Key: name of the key that was pressed, in lower case
-%	Character: character interpretation of the key(s) that was pressed
-%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
-% handles    structure with handles and user data (see GUIDATA)
 
 
 % --- Executes when figure1 is resized.
 function figure1_ResizeFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 
 % --- Executes on button press in t1mapfile.
 function t1mapfile_Callback(hObject, eventdata, handles)
-% hObject    handle to t1mapfile (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 guidata(hObject, handles);
 
 [filename, pathname, filterindex] = uigetfile( ...
@@ -1119,22 +871,10 @@ guidata(hObject, handles);
 
 
 function t1mappath_Callback(hObject, eventdata, handles)
-% hObject    handle to t1mappath (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of t1mappath as text
-%        str2double(get(hObject,'String')) returns contents of t1mappath as a double
 
 
 % --- Executes during object creation, after setting all properties.
 function t1mappath_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to t1mappath (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -1142,56 +882,19 @@ end
 
 % --- Executes on button press in quant.
 function quant_Callback(hObject, eventdata, handles)
-% hObject    handle to quant (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of quant
-
-if get(handles.quant, 'Value')
-    set(handles.aifRRtxt, 'Enable', 'on');
-    set(handles.aiforrr, 'Enable', 'on');
-    set(handles.t1_roi_path, 'Enable', 'on');
-    set(handles.t1mappath, 'Enable', 'on');
-else
-    set(handles.aifRRtxt, 'Enable', 'on');
-    set(handles.aiforrr, 'Enable', 'off');
-    set(handles.t1_roi_path, 'Enable', 'on');
-    set(handles.t1mappath, 'Enable', 'off');
-end
-
+update_disable_options(handles);
 uiremember;
     
 
 
 % --- Executes on selection change in aifmaskroi.
 function aifmaskroi_Callback(hObject, eventdata, handles)
-% hObject    handle to aifmaskroi (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns aifmaskroi contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from aifmaskroi
-
-if get(handles.roimaskroi, 'Value') == 2 && get(handles.aifmaskroi, 'Value') == 2
-    % The input is a mask, so we don't need a T1 map
-    set(handles.t1mapfile, 'Enable', 'off');
-    set(handles.t1mappath, 'Enable', 'off');
-elseif get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1
-    set(handles.t1mapfile, 'Enable', 'on');
-    set(handles.t1mappath, 'Enable', 'on');
-end
+update_disable_options(handles);
 uiremember;
 
 
 % --- Executes during object creation, after setting all properties.
 function aifmaskroi_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to aifmaskroi (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -1199,23 +902,36 @@ uirestore;
 
 % --- Executes on selection change in roimaskroi.
 function roimaskroi_Callback(hObject, eventdata, handles)
-% hObject    handle to roimaskroi (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+update_disable_options(handles);
+uiremember;
 
-% Hints: contents = cellstr(get(hObject,'String')) returns roimaskroi contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from roimaskroi
-
-if get(handles.roimaskroi, 'Value') == 2 && get(handles.aifmaskroi, 'Value') == 2
+function update_disable_options(handles)
+if (get(handles.roimaskroi, 'Value') == 2 && get(handles.aifmaskroi, 'Value') == 2) || ~get(handles.quant, 'Value')
     % The input is a mask, so we don't need a T1 map
     set(handles.t1mapfile, 'Enable', 'off');
     set(handles.t1mappath, 'Enable', 'off');
-elseif get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1
+elseif (get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1) && get(handles.quant, 'Value')
     set(handles.t1mapfile, 'Enable', 'on');
     set(handles.t1mappath, 'Enable', 'on');
 end
-uiremember;
-
+if get(handles.quant, 'Value')
+%     set(handles.aifRRtxt, 'Enable', 'on');
+    set(handles.aiforrr, 'Enable', 'on');
+%     set(handles.t1_roi_path, 'Enable', 'on');
+%     set(handles.t1mappath, 'Enable', 'on');
+else
+%     set(handles.aifRRtxt, 'Enable', 'on');
+    set(handles.aiforrr, 'Enable', 'off');
+%     set(handles.t1_roi_path, 'Enable', 'on');
+%     set(handles.t1mappath, 'Enable', 'off');
+end
+if get(handles.noisepixels,'Value')
+    set(handles.noise_path, 'Enable', 'off');
+    set(handles.noisepixsize, 'Enable', 'on');
+else
+    set(handles.noise_path, 'Enable', 'on');
+    set(handles.noisepixsize, 'Enable', 'off');
+end
 
 % --- Executes during object creation, after setting all properties.
 function roimaskroi_CreateFcn(hObject, eventdata, handles)
@@ -1232,58 +948,32 @@ uirestore;
 
 % --- Executes on button press in drift.
 function drift_Callback(hObject, eventdata, handles)
-% hObject    handle to drift (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of drift
-
+uiremember();
 
 
 % --- Executes when user attempts to close figure1.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: delete(hObject) closes the figure
-% delete(hObject);
 uiresume(hObject);
 
 % --- Executes during object creation, after setting all properties.
 function fileorder_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to fileorder (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
 
 % --- Executes during object creation, after setting all properties.
 function drift_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to drift (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 uirestore;
 
 
 % --- Executes during object creation, after setting all properties.
 function quant_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to quant (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 uirestore;
 
 
 % --- Executes during object creation, after setting all properties.
 function noisefile_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to noisefile (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-uirestore;
+% uirestore;
 
 
 % --- Executes during object creation, after setting all properties.
 function noisepixels_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to noisepixels (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-uirestore;
+% uirestore;
