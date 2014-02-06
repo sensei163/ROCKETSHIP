@@ -70,7 +70,6 @@ end
 if dce_model.fxr
     dce_model_string = [dce_model_string ', FXR'];
 end
-
 if dce_model.fractal
     dce_model_string = [dce_model_string ', Fractal metric'];
 end
@@ -106,7 +105,6 @@ if end_time == 0
 end
 
 % Load and prep raw signal files if required
-
 if dce_model.auc
     Sss                         = Adata.Sss;
     Ssstum                      = Adata.Ssstum;
@@ -119,11 +117,8 @@ if dce_model.auc
     xdata{1}.Stlv               = Stlv;
     xdata{1}.Ssstum             = Ssstum;
     xdata{1}.Sttum              = Sttum;
-    xdata{1}.Sss                = Sss;
-    
+    xdata{1}.Sss                = Sss; 
 end
-
-
 
 % Load the variables as needed.
 
@@ -401,8 +396,13 @@ end
     Ddatabatch.numvoxels   = numvoxels;
     Ddatabatch.dce_model   = dce_model;
     Ddatabatch.number_rois = number_rois;
-    Ddatabatch.roi_name    = roi_name;
-    Ddatabatch.roi_list    = roi_list;
+    if number_rois~=0
+        Ddatabatch.roi_name    = roi_name;
+        Ddatabatch.roi_list    = roi_list;
+    else
+        Ddatabatch.roi_name    = [];
+        Ddatabatch.roi_list    = {};
+    end
     Ddatabatch.neuroecon   = neuroecon;
     Ddatabatch.close_pool  = close_pool;
     Ddatabatch.rootname    = rootname;

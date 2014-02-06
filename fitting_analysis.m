@@ -454,187 +454,213 @@ function button_fmi_Callback(hObject, eventdata, handles)
 run_comparison(hObject,handles,'fmi')
 
 function run_comparison(hObject,handles,test_name)
-model_index = 1;
 if (handles.ftest_ready && strcmp(test_name,'ftest')) || ...
         (handles.akaike_ready && strcmp(test_name,'akaike')) || ...
         (handles.fmi_ready && strcmp(test_name,'fmi'))
-    compare_voxels = (handles.lower_model_fit_data{model_index}.fit_voxels && handles.fit_data.fit_voxels);
-    compare_rois = (handles.lower_model_fit_data{model_index}.number_rois>0 && handles.fit_data.number_rois>0);
-    information_string = get(handles.cfit_information,'String');
-    information_string = information_string(1:3);
-    information_string(end+1) = {['Compare Model: ' handles.lower_model_fit_data{model_index}.model_name]};
-    % Create custum strings
-    if strcmp(test_name,'ftest')
-        stat_name = 'p value';
-        path_suffix = '_ftest';
-        test_name_long = 'f-test';
-    elseif strcmp(test_name,'akaike')
-        stat_name = 'relative likelihood';
-        path_suffix = '_aic';
-        test_name_long = 'Akaike information criteria';
-    elseif strcmp(test_name,'fmi')
-        stat_name = 'fraction modeled information';
-        path_suffix = '_fmi';
-        test_name_long = 'modeled and residual information';
-    end
-        
-    if compare_voxels 
-        disp(['Starting ' test_name_long ' on voxels']);
-        [sse_lower,fp_lower,sse_higher,fp_higher,n]=...
-            get_sse_and_fp(handles,1,model_index);
-        
-        % Sanity check
-        if strcmp(test_name,'ftest') && fp_lower>=fp_higher
-            update_status(handles,'lower model must be a lower number of free parameters','red');
-            disp('stopping');
-            return;
+    % model_index = 1;
+    for model_index=1:numel(handles.lower_model_fit_data)
+        compare_voxels = (handles.lower_model_fit_data{model_index}.fit_voxels && handles.fit_data.fit_voxels);
+        compare_rois = (handles.lower_model_fit_data{model_index}.number_rois>0 && handles.fit_data.number_rois>0);
+        information_string = get(handles.cfit_information,'String');
+        information_string = information_string(1:3);
+        information_string(end+1) = {['Compare Model: ' handles.lower_model_fit_data{model_index}.model_name]};
+        % Create custum strings
+        if strcmp(test_name,'ftest')
+            stat_name = 'p value';
+            path_suffix = '_ftest';
+            test_name_long = 'f-test';
+        elseif strcmp(test_name,'akaike')
+            stat_name = 'relative likelihood';
+            path_suffix = '_aic';
+            test_name_long = 'Akaike information criteria';
+        elseif strcmp(test_name,'fmi')
+            stat_name = 'fraction modeled information';
+            path_suffix = '_fmi';
+            test_name_long = 'modeled and residual information';
         end
-        
-        % Run Test
-        number_voxels = numel(sse_higher);
-        stat_voxels = 2.*ones(number_voxels,1);
-        for i=1:number_voxels
-            if strcmp(test_name,'ftest')
-                [ p, Fstat, df1, df2 ] = ftest(n,fp_lower,...
-                    fp_higher,sse_lower(i),sse_higher(i));
-                stat_voxels(i) = p;
-            elseif strcmp(test_name,'akaike')
-                aic_lower = n*log(sse_lower(i)/n)+2*fp_lower;
-                aic_higher = n*log(sse_higher(i)/n)+2*fp_higher;
-                relative_likelihood = exp((aic_lower-aic_higher)/2);
-                if relative_likelihood>1
-                    relative_likelihood = -1+1/relative_likelihood;
-                else
-                    relative_likelihood = 1-relative_likelihood;
-                end
-                % positive, relative likelihood lower model minimizes information loss
-                % negative, relative likelihood higher model minimizes information loss
-                % near +1 lower model better, near -1 higher model better near
-                % zero poor inference
-                stat_voxels(i) = relative_likelihood;
-            elseif strcmp(test_name,'fmi')
-                % Do Calc
-                stat_voxels(i) = 0;
+
+        if compare_voxels 
+            disp(['Starting ' test_name_long ' on voxels']);
+            [sse_lower,fp_lower,sse_higher,fp_higher,n]=...
+                get_sse_and_fp(handles,1,model_index);
+
+            % Sanity check
+            if strcmp(test_name,'ftest') && fp_lower>=fp_higher
+                update_status(handles,'lower model must be a lower number of free parameters','red');
+                disp('stopping');
+                return;
             end
-        end
-        
-        mean_stat = mean(stat_voxels);  
-        disp(['Average voxel ' stat_name ' = ' num2str(mean_stat)]);
-        information_string(end+1) = {['Average voxel ' stat_name ' = ' num2str(mean_stat)]};
-        
-        % Save results
-        results_cfit_path = get(handles.results_cfit_path,'String');
-        [base_path, ~, ~] = fileparts(results_cfit_path);
-        [~, base_name, ~] = fileparts(handles.fit_data.dynam_name);
-        save_path = fullfile(base_path,[base_name '_' ...
-            handles.fit_data.model_name '_' ...
-            handles.lower_model_fit_data{model_index}.model_name path_suffix '.nii']);
-    
-        stat_matrix     = zeros([256 256]);
-        stat_matrix(handles.fit_data.tumind) = stat_voxels;
-        save_nii(make_nii(stat_matrix, [1 1 1], [1 1 1]), save_path);
-        disp(['Completed ' test_name_long ' on voxels']);
-    end
-    if compare_rois
-        disp(['Starting ' test_name_long ' on ROIs']);
-        [sse_lower,fp_lower,sse_higher,fp_higher,n]=...
-            get_sse_and_fp(handles,2,model_index);
-        
-        % Sanity check
-        if strcmp(test_name,'ftest') && fp_lower>=fp_higher
-            update_status(handles,'lower model must be a lower number of free parameters','red');
-            disp('stopping');
-            return;
-        end
-        
-        % Run Test
-        number_rois = numel(sse_higher);
-        stat_rois = 2.*ones(number_rois,1);
-        f_rois = 2.*ones(number_rois,1);
-        for i=1:number_rois
-            if strcmp(test_name,'ftest')
-                [ p, Fstat, df1, df2 ] = ftest(n,fp_lower,...
-                    fp_higher,sse_lower(i),sse_higher(i));
-                stat_rois(i) = p;
-                f_rois(i) = Fstat;
-            elseif strcmp(test_name,'akaike')
-                aic_lower = n*log(sse_lower(i)/n)+2*fp_lower;
-                aic_higher = n*log(sse_higher(i)/n)+2*fp_higher;
-                relative_likelihood = exp((aic_lower-aic_higher)/2);
-                if relative_likelihood>1
-                    relative_likelihood = -1+1/relative_likelihood;
-                else
-                    relative_likelihood = 1-relative_likelihood;
-                end
-                % positive, relative likelihood lower model minimizes information loss
-                % negative, relative likelihood higher model minimizes information loss
-                % near +1 lower model better, near -1 higher model better near
-                % zero poor inference
-                stat_rois(i) = relative_likelihood;
-            elseif strcmp(test_name,'fmi')
-                % Outlined in Balvay et al. MRM 54:868-877 (2005)
-                M = n;%number of samples
-                r = handles.fit_data.roi_residuals(i,:);
-                d = handles.xdata.Ct(:,i);
-                for k=1:M/2
-                    sum_r = 0;
-                    sum_d = 0;
-                    for j=1:M-k
-                        sum_r = sum_r+r(j)*r(j+k);
-                        sum_d = sum_d+d(j)*d(j+k);
+
+            % Run Test
+            number_voxels = numel(sse_higher);
+            stat_voxels = 2.*ones(number_voxels,1);
+            for i=1:number_voxels
+                if strcmp(test_name,'ftest')
+                    [ p, Fstat, df1, df2 ] = ftest(n,fp_lower,...
+                        fp_higher,sse_lower(i),sse_higher(i));
+                    stat_voxels(i) = p;
+                elseif strcmp(test_name,'akaike')
+                    aic_lower = n*log(sse_lower(i)/n)+2*fp_lower;
+                    aic_higher = n*log(sse_higher(i)/n)+2*fp_higher;
+                    relative_likelihood = exp((aic_lower-aic_higher)/2);
+                    if relative_likelihood>1
+                        relative_likelihood = -1+1/relative_likelihood;
+                    else
+                        relative_likelihood = 1-relative_likelihood;
                     end
-                    Rrr(k) = 1/(M-abs(k))*sum_r;
-                    Rdd(k) = 1/(M-abs(k))*sum_d;
+                    % positive, relative likelihood lower model minimizes information loss
+                    % negative, relative likelihood higher model minimizes information loss
+                    % near +1 lower model better, near -1 higher model better near
+                    % zero poor inference
+                    stat_voxels(i) = relative_likelihood;
+                elseif strcmp(test_name,'fmi')
+                    % Outlined in Balvay et al. MRM 54:868-877 (2005)
+                    M = n;%number of samples
+                    r = handles.fit_data.voxel_residuals(i,:);
+                    d = handles.xdata.Ct(:,i);
+                    for k=1:M/2
+                        sum_r = 0;
+                        sum_d = 0;
+                        for j=1:M-k
+                            sum_r = sum_r+r(j)*r(j+k);
+                            sum_d = sum_d+d(j)*d(j+k);
+                        end
+                        Rrr(k) = 1/(M-abs(k))*sum_r;
+                        Rdd(k) = 1/(M-abs(k))*sum_d;
+                    end
+                    Prr = fit((1:M/2)',Rrr','poly3'); %Fit Rrr with poly
+                    Pdd = fit((1:M/2)',Rdd','poly3'); %Fit Rdd with poly
+                    % Get value at zero
+                    Prr_0 = Prr(0);
+                    Pdd_0 = Pdd(0);
+
+                    e_ss_star = M*Prr_0; %ss indicates sum of squares
+                    d_0_ss_star = M*Pdd_0;
+                    FMI_star = 1-e_ss_star/d_0_ss_star;
+                    FRI_star = e_ss_star/sse_higher(i);
+                    stat_voxels(i) = FMI_star;
                 end
-                Prr = fit((1:M/2)',Rrr','poly3'); %Fit Rrr with poly
-                Pdd = fit((1:M/2)',Rdd','poly3'); %Fit Rdd with poly
-                % Get value at zero
-                Prr_0 = Prr(0);
-                Pdd_0 = Pdd(0);
-                
-                e_ss_star = M*Prr_0; %ss indicates sum of squares
-                d_0_ss_star = M*Pdd_0;
-                FMI_star = 1-e_ss_star/d_0_ss_star;
-                FRI_star = e_ss_star/sse_higher(i);
-                figure(i);
-                plot(Prr,(1:M/2)',Rrr');
-                stat_rois(i) = FMI_star;
             end
+
+            mean_stat = mean(stat_voxels);  
+            disp(['Average voxel ' stat_name ' = ' num2str(mean_stat)]);
+            information_string(end+1) = {['Average voxel ' stat_name ' = ' num2str(mean_stat)]};
+
+            % Save results
+            results_cfit_path = get(handles.results_cfit_path,'String');
+            [base_path, ~, ~] = fileparts(results_cfit_path);
+            [~, base_name, ~] = fileparts(handles.fit_data.dynam_name);
+            save_path = fullfile(base_path,[base_name '_' ...
+                handles.fit_data.model_name '_' ...
+                handles.lower_model_fit_data{model_index}.model_name path_suffix '.nii']);
+
+            stat_matrix     = zeros([256 256]);
+            stat_matrix(handles.fit_data.tumind) = stat_voxels;
+            save_nii(make_nii(stat_matrix, [1 1 1], [1 1 1]), save_path);
+            disp(['Completed ' test_name_long ' on voxels']);
         end
-        mean_stat = mean(stat_rois);  
-        disp(['Average ROI ' stat_name ' = ' num2str(mean_stat)]);
-        information_string(end+1) = {['Average ROI ' stat_name ' = ' num2str(mean_stat)]};
-        
-        % Save results
-        results_cfit_path = get(handles.results_cfit_path,'String');
-        [base_path, ~, ~] = fileparts(results_cfit_path);
-        [~, base_name, ~] = fileparts(handles.fit_data.dynam_name);
-        save_path = fullfile(base_path,[base_name '_' ...
-            handles.fit_data.model_name '_' ...
-            handles.lower_model_fit_data{model_index}.model_name path_suffix '.xls']);
-    
-        headings = {'ROI', stat_name, ['Residual ' handles.fit_data.model_name],...
-            ['Residual ' handles.lower_model_fit_data{model_index}.model_name]};
-        xls_results = [handles.fit_data.roi_name num2cell(stat_rois) num2cell(sse_higher) num2cell(sse_lower)];
-        xls_results = [headings; xls_results];
-        
-        xlswrite(save_path,xls_results);
-               
-        disp(['Completed ' test_name_long ' on ROIs']);
-    end
-    
-    if ~compare_rois && ~compare_voxels
-        update_status(handles,'cannot compare, same regions not fitted','red');
-    else
-        information_string(end+1) = {['lower ' stat_name ' indicates higher order model is better fit']};
-        set(handles.cfit_information,'String',information_string);
-        disp(['lower ' stat_name ' indicates higher order model is better fit']);
+        if compare_rois
+            disp(['Starting ' test_name_long ' on ROIs']);
+            [sse_lower,fp_lower,sse_higher,fp_higher,n]=...
+                get_sse_and_fp(handles,2,model_index);
+
+            % Sanity check
+            if strcmp(test_name,'ftest') && fp_lower>=fp_higher
+                update_status(handles,'lower model must be a lower number of free parameters','red');
+                disp('stopping');
+                return;
+            end
+
+            % Run Test
+            number_rois = numel(sse_higher);
+            stat_rois = 2.*ones(number_rois,1);
+            f_rois = 2.*ones(number_rois,1);
+            for i=1:number_rois
+                if strcmp(test_name,'ftest')
+                    [ p, Fstat, df1, df2 ] = ftest(n,fp_lower,...
+                        fp_higher,sse_lower(i),sse_higher(i));
+                    stat_rois(i) = p;
+                    f_rois(i) = Fstat;
+                elseif strcmp(test_name,'akaike')
+                    aic_lower = n*log(sse_lower(i)/n)+2*fp_lower;
+                    aic_higher = n*log(sse_higher(i)/n)+2*fp_higher;
+                    relative_likelihood = exp((aic_lower-aic_higher)/2);
+                    if relative_likelihood>1
+                        relative_likelihood = -1+1/relative_likelihood;
+                    else
+                        relative_likelihood = 1-relative_likelihood;
+                    end
+                    % positive, relative likelihood lower model minimizes information loss
+                    % negative, relative likelihood higher model minimizes information loss
+                    % near +1 lower model better, near -1 higher model better near
+                    % zero poor inference
+                    stat_rois(i) = relative_likelihood;
+                elseif strcmp(test_name,'fmi')
+                    % Outlined in Balvay et al. MRM 54:868-877 (2005)
+                    M = n;%number of samples
+                    r = handles.fit_data.roi_residuals(i,:);
+                    d = handles.xdata.Ct(:,i);
+                    for k=1:M/2
+                        sum_r = 0;
+                        sum_d = 0;
+                        for j=1:M-k
+                            sum_r = sum_r+r(j)*r(j+k);
+                            sum_d = sum_d+d(j)*d(j+k);
+                        end
+                        Rrr(k) = 1/(M-abs(k))*sum_r;
+                        Rdd(k) = 1/(M-abs(k))*sum_d;
+                    end
+                    Prr = fit((1:M/2)',Rrr','poly3'); %Fit Rrr with poly
+                    Pdd = fit((1:M/2)',Rdd','poly3'); %Fit Rdd with poly
+                    % Get value at zero
+                    Prr_0 = Prr(0);
+                    Pdd_0 = Pdd(0);
+
+                    e_ss_star = M*Prr_0; %ss indicates sum of squares
+                    d_0_ss_star = M*Pdd_0;
+                    FMI_star = 1-e_ss_star/d_0_ss_star;
+                    FRI_star = e_ss_star/sse_higher(i);
+                    figure(i);
+                    plot(Prr,(1:M/2)',Rrr');
+                    stat_rois(i) = FMI_star;
+                end
+            end
+            mean_stat = mean(stat_rois);  
+            disp(['Average ROI ' stat_name ' = ' num2str(mean_stat)]);
+            information_string(end+1) = {['Average ROI ' stat_name ' = ' num2str(mean_stat)]};
+
+            % Save results
+            results_cfit_path = get(handles.results_cfit_path,'String');
+            [base_path, ~, ~] = fileparts(results_cfit_path);
+            [~, base_name, ~] = fileparts(handles.fit_data.dynam_name);
+            save_path = fullfile(base_path,[base_name '_' ...
+                handles.fit_data.model_name '_' ...
+                handles.lower_model_fit_data{model_index}.model_name path_suffix '.xls']);
+
+            headings = {'ROI', stat_name, ['Residual ' handles.fit_data.model_name],...
+                ['Residual ' handles.lower_model_fit_data{model_index}.model_name]};
+            xls_results = [handles.fit_data.roi_name num2cell(stat_rois) num2cell(sse_higher) num2cell(sse_lower)];
+            xls_results = [headings; xls_results];
+
+            xlswrite(save_path,xls_results);
+
+            disp(['Completed ' test_name_long ' on ROIs']);
+        end
+
+        if ~compare_rois && ~compare_voxels
+            update_status(handles,'cannot compare, same regions not fitted','red');
+        else
+            information_string(end+1) = {['lower ' stat_name ' indicates higher order model is better fit']};
+            set(handles.cfit_information,'String',information_string);
+            disp(['lower ' stat_name ' indicates higher order model is better fit']);
+        end
     end
 else
-    handles = load_check_data(handles,test_name);
-    % Update handles structure
-    guidata(hObject, handles);
+handles = load_check_data(handles,test_name);
+% Update handles structure
+guidata(hObject, handles);
 end
+
     
 function update_status(handles,status_string,color)
 set(handles.ready_display,'String',status_string);

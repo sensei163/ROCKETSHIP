@@ -22,7 +22,7 @@ function varargout = RUND(varargin)
 
 % Edit the above text to modify the response to help RUND
 
-% Last Modified by GUIDE v2.5 03-Feb-2014 17:50:03
+% Last Modified by GUIDE v2.5 06-Feb-2014 11:52:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -65,13 +65,7 @@ handles.batch = 0; % Batch central
 % Update handles structure
 guidata(hObject, handles);
 
-uirestore;
-
-uirestore(handles.fractal);
-uirestore(handles.auc);
-uirestore(handles.fxr);
-uirestore(handles.aif);
-uirestore(handles.aif_vp);
+% uirestore;
 uirestore(handles.none);
 uirestore(handles.moving);
 uirestore(handles.rlowess);
@@ -160,58 +154,30 @@ guidata(hObject, handles);
 
 
 function time_smoothing_window_Callback(hObject, eventdata, handles)
-% hObject    handle to time_smoothing_window (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of time_smoothing_window as text
-%        str2double(get(hObject,'String')) returns contents of time_smoothing_window as a double
 uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function time_smoothing_window_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to time_smoothing_window (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 
 function xy_smooth_size_Callback(hObject, eventdata, handles)
-% hObject    handle to xy_smooth_size (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of xy_smooth_size as text
-%        str2double(get(hObject,'String')) returns contents of xy_smooth_size as a double
 uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function xy_smooth_size_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to xy_smooth_size (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+uirestore;
 
 
 % --- Executes on selection change in roi_box.
 function roi_box_Callback(hObject, eventdata, handles)
-% hObject    handle to roi_box (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns roi_box contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from roi_box
 
 
 % --- Executes during object creation, after setting all properties.
@@ -297,59 +263,35 @@ guidata(hObject, handles);
 
 % --- Executes on button press in fit_voxels.
 function fit_voxels_Callback(hObject, eventdata, handles)
-% hObject    handle to fit_voxels (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of fit_voxels
 uiremember;
 
 
 function number_cpus_Callback(hObject, eventdata, handles)
-% hObject    handle to number_cpus (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of number_cpus as text
-%        str2double(get(hObject,'String')) returns contents of number_cpus as a double
+uiremember;
 
 
 % --- Executes during object creation, after setting all properties.
 function number_cpus_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to number_cpus (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+uirestore;
 
 
 % --- Executes on button press in neuroecon.
 function neuroecon_Callback(hObject, eventdata, handles)
-% hObject    handle to neuroecon (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of neuroecon
+uiremember;
 
 
 % --- Executes on button press in done.
 function done_Callback(hObject, eventdata, handles)
-% hObject    handle to done (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 results_b_path = get(handles.results_b_path,'String');
 
 dce_model.aif    = get(handles.aif, 'Value');
 dce_model.aif_vp = get(handles.aif_vp, 'Value');
 dce_model.fxr    = get(handles.fxr, 'Value');
-
 dce_model.fractal= get(handles.fractal, 'Value');
 dce_model.auc    = get(handles.auc, 'Value');
-
 
 time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
 time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
@@ -383,129 +325,65 @@ uiresume(handles.figure1);
 
 % --- Executes on button press in aif.
 function aif_Callback(hObject, eventdata, handles)
-% hObject    handle to aif (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of aif
-
-%set(handles.aif_vp, 'Value', 0);
 uiremember;
 
 
 % --- Executes on button press in aif_vp.
 function aif_vp_Callback(hObject, eventdata, handles)
-% hObject    handle to aif_vp (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-%set(handles.aif, 'Value', 0);
 uiremember;
-% Hint: get(hObject,'Value') returns toggle state of aif_vp
 
 
 % --- Executes on button press in fxr.
 function fxr_Callback(hObject, eventdata, handles)
-% hObject    handle to fxr (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 uiremember;
-% Hint: get(hObject,'Value') returns toggle state of fxr
 
 
 % --- Executes on button press in sauc.
 function sauc_Callback(hObject, eventdata, handles)
-% hObject    handle to sauc (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 uiremember;
-% Hint: get(hObject,'Value') returns toggle state of sauc
 
 
 % --- Executes on button press in fractal.
 function fractal_Callback(hObject, eventdata, handles)
-% hObject    handle to fractal (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 uiremember;
-% Hint: get(hObject,'Value') returns toggle state of fractal
 
 
 % --- Executes on button press in auc.
 function auc_Callback(hObject, eventdata, handles)
-% hObject    handle to auc (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 uiremember;
-% Hint: get(hObject,'Value') returns toggle state of auc
 
 
 % --- Executes on button press in auc_rr.
 function auc_rr_Callback(hObject, eventdata, handles)
-% hObject    handle to auc_rr (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 uiremember;
-% Hint: get(hObject,'Value') returns toggle state of auc_rr
 
 
 % --- Executes during object deletion, before destroying properties.
 function aif_DeleteFcn(hObject, eventdata, handles)
-% hObject    handle to aif (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 
 % --- If Enable == 'on', executes on mouse press in 5 pixel border.
 % --- Otherwise, executes on mouse press in 5 pixel border or over aif.
 function aif_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to aif (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 
 % --- Executes on key press with focus on aif and none of its controls.
 function aif_KeyPressFcn(hObject, eventdata, handles)
-% hObject    handle to aif (see GCBO)
-% eventdata  structure with the following fields (see UICONTROL)
-%	Key: name of the key that was pressed, in lower case
-%	Character: character interpretation of the key(s) that was pressed
-%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in none.
-function none_Callback(hObject, eventdata, handles)
-% hObject    handle to none (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of none
 
 
 % --- Executes when selected object is changed in time_smoothing.
 function time_smoothing_SelectionChangeFcn(hObject, eventdata, handles)
-% hObject    handle to the selected object in time_smoothing 
-% eventdata  structure with the following fields (see UIBUTTONGROUP)
-%	EventName: string 'SelectionChanged' (read only)
-%	OldValue: handle of the previously selected object or empty if none was selected
-%	NewValue: handle of the currently selected object
-% handles    structure with handles and user data (see GUIDATA)
-uiremember;
+uiremember(handles.none);
+uiremember(handles.moving);
+uiremember(handles.rlowess);
 
 
 % --- Executes during object creation, after setting all properties.
 function aif_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to aif (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
+uirestore;
 
 % --- Executes on button press in prep_batch.
 function prep_batch_Callback(hObject, eventdata, handles)
-% hObject    handle to prep_batch (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 results_b_path = get(handles.results_b_path,'String');
 
 dce_model.aif    = get(handles.aif, 'Value');
@@ -537,51 +415,44 @@ uiresume(handles.figure1);
 
 % --- Executes on button press in FXL_rr.
 function FXL_rr_Callback(hObject, eventdata, handles)
-% hObject    handle to FXL_rr (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of FXL_rr
+uiremember;
 
 
 % --- Executes on button press in FXR_rr.
 function FXR_rr_Callback(hObject, eventdata, handles)
-% hObject    handle to FXR_rr (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of FXR_rr
+uiremember;
 
 
 % --- Executes on selection change in outputft.
 function outputft_Callback(hObject, eventdata, handles)
-% hObject    handle to outputft (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns outputft contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from outputft
+uiremember;
 
 
 % --- Executes during object creation, after setting all properties.
 function outputft_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to outputft (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 % --- Executes when user attempts to close figure1.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: delete(hObject) closes the figure
-% delete(hObject);
 uiresume(hObject);
+
+
+% --- Executes during object creation, after setting all properties.
+function fit_voxels_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+
+% --- Executes during object creation, after setting all properties.
+function aif_vp_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+% --- Executes during object creation, after setting all properties.
+function fxr_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+% --- Executes during object creation, after setting all properties.
+function auc_CreateFcn(hObject, eventdata, handles)
+uirestore;
