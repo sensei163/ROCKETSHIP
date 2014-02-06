@@ -4,7 +4,13 @@ LUT = handles.LUT;
 subjectID = handles.subjectID;
 filelist  = handles.filelist;
 sortlist  = handles.sortlist;
-%rootname  = handles.rootname;
+% manual_define = get(handles.rootname_define, 'Value');
+% 
+% if manual_define
+%     rootname  = get(handles.rootname, 'String');
+% else
+%     rootname = '';
+% end
 
 % Generate sortedfullpath, sortlist_current, subjectID
 natdigits = 6;

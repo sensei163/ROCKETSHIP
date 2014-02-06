@@ -5,10 +5,12 @@ for i = 1:numel(fullpath)
     
     [~, curpath, ~] = fileparts(curpath);
     
-    cursubjectID = findsubjectID(curpath);
-    
-    oldsubjectID_current{i} = cursubjectID;
-    curpath = strrep(curpath, cursubjectID, '');
+    %     cursubjectID = findsubjectID(curpath);
+    %
+    %     oldsubjectID_current{i} = cursubjectID;
+    %     curpath = strrep(curpath, cursubjectID, '');
+    oldsubjectID_current{i} = curpath;
+
     
     %Find all the numbers in the curpath
     
