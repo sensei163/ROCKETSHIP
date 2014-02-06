@@ -2,16 +2,17 @@ function cursubjectID = findsubjectID(filename);
 
 % cursubjectID = findsubjectID(filename)
 % findsubjectID attempts to separate the filename between the image counter
-% and the "root" of the file. Outputs the root.
+% and the "root" of the file. Outputs the root. 
+% For example, dynam_01_02, the cursubjectID will be dynam_01
 
 % We remove any lettering at the end of the filename first, assume that the
-% files are ordered by numbers.
+% files are ordered by numbers. % NO NEED
 
-while(isempty(str2num(filename(end))))
-    
-    ind = strfind(filename, filename(end));
-    filename(ind(end)) = '';
-end
+% while(isempty(str2num(filename(end))))
+%     
+%     ind = strfind(filename, filename(end));
+%     filename(ind(end)) = '';
+% end
 % No we sort through the rest of the file name
 
 for i = 1:numel(filename)
