@@ -61,12 +61,6 @@ handles.batch_d_listfullpath = {};
 % Create structure to hold roi list
 % handles.roi_list = {};
 %
-% uirestore(handles.fxr);
-% uirestore(handles.aif);
-% uirestore(handles.aif_vp);
-% uirestore(handles.none);
-% uirestore(handles.moving);
-% uirestore(handles.rlowess);
 uirestore(handles.batch_d_list);
 uirestore(handles.email);
 
@@ -1281,24 +1275,29 @@ visual_list = get(handles.batch_d_list, 'String');
 started = 0;
 if numel(list) > 0
     tic
-    % Log input results
-    log_path = fullfile(pwd, ['D_BATCH_dce_fit_voxels.log']);
-    disp(['Logging batch job at: ' log_path]);
-    if exist(log_path, 'file')==2
-        delete(log_path);
-    end
-    diary(log_path);
+%     % Log input results
+%     log_path = fullfile(pwd, ['D_BATCH_dce_fit_voxels.log']);
+%     disp(['Logging batch job at: ' log_path]);
+%     if exist(log_path, 'file')==2
+%         delete(log_path);
+%     end
+%     diary(log_path);
     started = 1;
+    disp(['Starting batch with ' num2str(numel(list)) ' jobs']);
 else
     disp('No prepped files for batch job');
 end
 
 while numel(list) > 0
-    
     filename = list{end};
     disp(['Running job on : ' filename]);
-    load(filename);
-    results = D_fit_voxels_batch_func(Ddatabatch);
+    batch_data = load(filename);
+%     results = D_fit_voxels_batch_func(Ddatabatch);
+    results = D_fit_voxels_func(batch_data.results_b_path,...
+        batch_data.dce_model,batch_data.time_smoothing,batch_data.time_smoothing_window,...
+        batch_data.xy_smooth_size,batch_data.number_cpus,batch_data.roi_list,...
+        batch_data.fit_voxels,batch_data.neuroecon, batch_data.outputft);
+
     disp(['Wrote: ' results]);
     
     %Flush the queue
@@ -1308,15 +1307,13 @@ while numel(list) > 0
     handles.batch_d_listfullpath = list;
     set(handles.batch_d_list, 'String', visual_list);
     guidata(hObject, handles);
-    uiremember;
-    
-    
+    uiremember;   
 end
 
 if started
     disp(datestr(now))
     toc
-    diary off;
+%     diary off;
     
     
     % Now we email to user
@@ -1338,14 +1335,13 @@ if started
     
     
     sendmail(get(handles.email, 'String'),'ROCKETSHIP map derivation completed',['Hello! Your Map Calc job on '...
-        ,hostname,' is done! Logs of data attached if desired'], log_path);
+        ,hostname,' is done!']);
     
 end
 
 handles.batch_d_listfullpath = list;
 set(handles.batch_d_list, 'String', visual_list);
 guidata(hObject, handles);
-uiremember;
 
 
 

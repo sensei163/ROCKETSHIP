@@ -301,12 +301,12 @@ neuroecon = get(handles.neuroecon, 'Value');
 
 roi_list = handles.roi_list;
 fit_voxels = get(handles.fit_voxels,'Value');
-batch  = handles.batch;
+% batch  = handles.batch;
 outputft = get(handles.outputft, 'Value');
 
-saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon, batch, outputft);
+saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon, outputft);
 
-handles.saved_results = saved_results;
+handles.saved_results = saved_results{1};
 handles.batch = 0;
 guidata(hObject, handles);
 
@@ -389,10 +389,8 @@ results_b_path = get(handles.results_b_path,'String');
 dce_model.aif    = get(handles.aif, 'Value');
 dce_model.aif_vp = get(handles.aif_vp, 'Value');
 dce_model.fxr    = get(handles.fxr, 'Value');
-%dce_model.sauc   = get(handles.sauc, 'Value');
 dce_model.fractal= get(handles.fractal, 'Value');
 dce_model.auc    = get(handles.auc, 'Value');
-%dce_model.auc_rr = get(handles.auc_rr, 'Value');
 
 time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
 time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
@@ -402,14 +400,16 @@ neuroecon = get(handles.neuroecon, 'Value');
 
 roi_list = handles.roi_list;
 fit_voxels = get(handles.fit_voxels,'Value');
-batch  = 1;
 outputft = get(handles.outputft, 'Value');
-[saved_results, batch] = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon, batch, outputft);
+
+[PathName,b_name,~] = fileparts(results_b_path);
+saved_results = fullfile(PathName, [b_name '_prep.mat']);
+save(saved_results,'results_b_path','dce_model','time_smoothing','time_smoothing_window','xy_smooth_size','number_cpus','roi_list','fit_voxels','neuroecon', 'outputft');
 
 handles.saved_results = saved_results;
-handles.batch         = 1;
-uiremember;
+handles.batch = 1;
 guidata(hObject, handles);
+
 uiresume(handles.figure1);
 
 
