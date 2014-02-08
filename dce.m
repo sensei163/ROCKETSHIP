@@ -904,14 +904,12 @@ uirestore;
 
 % --- Executes on button press in run_d.
 function run_d_Callback(hObject, eventdata, handles)
-% hObject    handle to run_d (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 disp('User selected Run D')
 results_b_path = get(handles.results_b_path,'String');
 
 % Run Computation
 [saved_results, batch] = RUND({results_b_path});
+
 if batch
     disp('Adding prep data to batch queue');
     
@@ -924,36 +922,18 @@ if batch
     fullpathlist = handles.batch_d_listfullpath;
     fullpathlist{end+1} = saved_results;
     handles.batch_d_listfullpath = fullpathlist;
-    
 else
-    
     disp('Run D done');
 end
-set(handles.results_d_path, 'String', saved_results);
 
+set(handles.results_d_path, 'String', saved_results);
 guidata(hObject, handles);
-% disp('User selected Run D')
-% results_b_path = get(handles.results_b_path,'String');
-% dce_model = get(get(handles.dce_model,'SelectedObject'),'Tag');
-% time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
-% time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
-% xy_smooth_size = str2num(get(handles.xy_smooth_size, 'String')); %#ok<ST2NM>
-% number_cpus = str2num(get(handles.number_cpus, 'String')); %#ok<ST2NM>
-% neuroecon = get(handles.neuroecon, 'Value');
-% roi_list = handles.roi_list;
-% fit_voxels = get(handles.fit_voxels,'Value');
-%
-% saved_results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon);
-% % set(handles.results_d_path,'String',saved_results);
-% fitting_analysis('results_path', saved_results)
+
 
 % --- Executes on button press in run_e.
 function run_e_Callback(hObject, eventdata, handles)
-% hObject    handle to run_e (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-fitting_analysis();
+saved_results = get(handles.results_d_path, 'String');
+fitting_analysis('results_path', saved_results);
 
 % --- Executes on button press in show_original.
 function show_original_Callback(hObject, eventdata, handles)
