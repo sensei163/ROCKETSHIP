@@ -11,13 +11,15 @@ for i = 1:numel(fullpath)
     %     curpath = strrep(curpath, cursubjectID, '');
     oldsubjectID_current{i} = curpath;
 
-    
+    curpath = strrep(curpath, '-', '_');    
     %Find all the numbers in the curpath
     
     numbers = regexp(curpath,['\d+'], 'match');
-    
-    placeholder = num2str(round(rand(1)*10^natdigits));
-    
+     
+    placeholder = rand(1)*10^natdigits;
+    placeholder = num2str(placeholder);
+    placeholder = placeholder(1:natdigits);
+     
     tempstr = regexprep(curpath,['\d+'], placeholder);
     
     ind     = strfind(tempstr, placeholder);
@@ -30,9 +32,10 @@ for i = 1:numel(fullpath)
         
         tempstr(ind(j):(ind(j)+natdigits-1)) = newnum;
     end
-    
-    editlist{i} = [cursubjectID tempstr];
+
+    editlist{i} = tempstr;
 end
+
 
 % Now sort the list
 

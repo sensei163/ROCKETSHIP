@@ -16,6 +16,8 @@ sortlist  = handles.sortlist;
 natdigits = 6;
 [sortedfullpath_current, sortlist_current, subjectID_current] = sort_parse_INPUTS(fullpath, natdigits);
 
+%save('Moo.mat', 'sortedfullpath_current', 'sortlist_current', 'fullpath')
+
 rootname = findrootname(subjectID, subjectID_current);
 
 [subsets, errormsg] = sort_parse_2Dvol(subjectID_current, rootname);
