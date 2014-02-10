@@ -43,10 +43,6 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-% TODO:
-% Replace results_cfit_path
-% make sure 1 item always selected
-
 
 % --- Executes just before fitting_analysis is made visible.
 function fitting_analysis_OpeningFcn(hObject, eventdata, handles, varargin)
@@ -67,9 +63,13 @@ handles.selected_model = 0;
 
 % Get function inputs
 if nargin>1 && numel(varargin)>1 && strcmp(varargin{1},'results_path')
-    set(handles.results_cfit_path,'String',varargin{2});
+%     set(handles.results_cfit_path,'String',varargin{2});
+    handles.model_list{1} = varargin{2};
+    handles.selected_model = 1;
+    [~, name_temp, ext_temp] = fileparts(varargin{2});
+    set(handles.model_box,'String',[name_temp ext_temp], 'Value',1)
     % Update cfit structures
-    handles = cfit_path_changed(handles);
+    handles = model_list_changed(handles);
 end
 
 % Update handles structure
@@ -82,44 +82,6 @@ guidata(hObject, handles);
 % --- Outputs from this function are returned to the command line.
 function varargout = fitting_analysis_OutputFcn(hObject, eventdata, handles) 
 varargout{1} = handles.output;
-
-
-function results_cfit_path_Callback(hObject, eventdata, handles)
-handles = cfit_path_changed(handles);
-% Update handles structure
-guidata(hObject, handles);
-
-% --- Executes during object creation, after setting all properties.
-function results_cfit_path_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in browse_cfit_results.
-function browse_cfit_results_Callback(hObject, eventdata, handles)
-guidata(hObject, handles);
-
-[filename, pathname, filterindex] = uigetfile( ...
-    {  '*.mat','Matlab Worksapce Files (*.mat)'; ...
-    '*.*',  'All Files (*.*)'}, ...
-    'Choose Curve Fitting Results'); %#ok<NASGU>
-if isequal(filename,0)
-    %disp('User selected Cancel')
-else
-    %disp(['User selected ', fullfile(pathname, filename)])
-    
-    % Combine path and filename together
-    fullpath = strcat(pathname,filename);
-
-    set(handles.results_cfit_path,'String',fullpath);
-end
-
-% Update cfit structures
-handles = cfit_path_changed(handles);
-
-% Update handles structure
-guidata(hObject, handles);
 
 
 function background_image_path_Callback(hObject, eventdata, handles)
@@ -164,12 +126,12 @@ guidata(hObject, handles);
 % --- Executes on button press in button_run.
 function button_run_Callback(hObject, eventdata, handles)
 if handles.voxel_data_ready
-    results_cfit_path = get(handles.results_cfit_path,'String');
+    model_path = handles.model_list{handles.selected_model};
     background_image_path = get(handles.background_image_path,'String');
     show_original = get(handles.show_original,'Value');
     show_ci = get(handles.show_ci,'Value');
 
-    compare_fits(results_cfit_path,background_image_path,show_original,show_ci);
+    compare_fits(model_path,background_image_path,show_original,show_ci);
 else
     handles = load_check_data(handles,'voxel');
     % Update handles structure
@@ -232,7 +194,7 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 % --- Should be run when path is changed to read in new file and update variables.
-function return_handles = cfit_path_changed(handles)
+function return_handles = model_list_changed(handles)
 handles = load_check_data(handles);
 
 if handles.roi_data_ready
@@ -250,9 +212,7 @@ function return_handles = load_check_data(handles,verbose)
 if nargin<2
     verbose = 'default';
 end
-% results_cfit_path = get(handles.results_cfit_path,'String');
 background_image_path = get(handles.background_image_path,'String');
-% lower_model_path = get(handles.lower_model_path,'String');
 compare_model_list = handles.model_list;
 handles.roi_data_ready = 0;
 handles.voxel_data_ready = 0;
@@ -294,6 +254,8 @@ for i=1:numel(compare_model_list)
         if numel(compare_model_list)~=2    
             handles.ftest_ready = 0;
             ftest_message = 'must select exactly two results to compare';
+        else
+            handles.ftest_ready = 1;
         end
         
         % Set messages for parametric analysis  
@@ -463,18 +425,19 @@ if ~handles.ftest_ready
     guidata(hObject, handles);
     return;
 end
-compare_voxels = (handles.model_fit_data{model_index}.fit_voxels && handles.model_fit_data{handles.selected_model}.fit_voxels);
-compare_rois = (handles.model_fit_data{model_index}.number_rois>0 && handles.model_fit_data{handles.selected_model}.number_rois>0);
+higher_model = handles.selected_model;
+lower_model = 2-mod(higher_model+1,2);
+
+compare_voxels = (handles.model_fit_data{lower_model}.fit_voxels && handles.model_fit_data{higher_model}.fit_voxels);
+compare_rois = (handles.model_fit_data{lower_model}.number_rois>0 && handles.model_fit_data{higher_model}.number_rois>0);
 information_string = get(handles.cfit_information,'String');
 information_string = information_string(1:3);
-information_string(end+1) = {['Compare Model: ' handles.model_fit_data{model_index}.model_name]};
+information_string(end+1) = {['F-Test Lower Model: ' handles.model_fit_data{lower_model}.model_name]};
+information_string(end+1) = {['F-Test Higher Model: ' handles.model_fit_data{higher_model}.model_name]};
 % Create custum strings
 stat_name = 'p value';
 path_suffix = '_ftest';
 test_name_long = 'f-test';
-
-higher_model = handles.selected_model
-lower_model = 2-mod(higher_model+1,2);
 
 if compare_voxels
     disp(['Starting ' test_name_long ' on voxels']);
@@ -533,7 +496,7 @@ if compare_rois
         disp('stopping');
         return;
     end
-    if strcmp(test_name,'ftest') && fp_lower>=fp_higher
+    if fp_lower>=fp_higher
         update_status(handles,'lower model must be a lower number of free parameters','red');
         disp('stopping');
         return;
@@ -666,7 +629,7 @@ for model_index=1:numel(handles.model_fit_data)
                 e_ss_star = M*Prr_0; %ss indicates sum of squares
                 d_0_ss_star = M*Pdd_0;
                 FMI_star = 1-e_ss_star/d_0_ss_star;
-                FRI_star = e_ss_star/sse_higher(i);
+                FRI_star = e_ss_star/sse_current(i);
                 stat_voxels(i,model_index) = FMI_star;
             end
         end
@@ -711,7 +674,7 @@ for model_index=1:numel(handles.model_fit_data)
                 e_ss_star = M*Prr_0; %ss indicates sum of squares
                 d_0_ss_star = M*Pdd_0;
                 FMI_star = 1-e_ss_star/d_0_ss_star;
-                FRI_star = e_ss_star/sse_higher(i);
+                FRI_star = e_ss_star/sse_current(i);
 %                 figure(i);
 %                 plot(Prr,(1:M/2)',Rrr');
                 stat_rois(i,model_index) = FMI_star;
@@ -782,7 +745,6 @@ if strcmp(test_name,'akaike')
             end
         end
         
-        
         disp(['Completed ' test_name_long ' on voxels']);
     end
     if compare_rois
@@ -835,34 +797,43 @@ if strcmp(test_name,'akaike')
 end
 if strcmp(test_name,'fmi')
     if compare_voxels
+        for model_index=1:number_models
+            % Save voxel results
+            [base_path, ~, ~] = fileparts(handles.model_list{model_index});
+            [~, base_name, ~] = fileparts(handles.model_fit_data{model_index}.dynam_name);
         
-%         % Save voxel results
-%         [base_path, ~, ~] = fileparts(handles.model_list{1});
-%         [~, base_name, ~] = fileparts(handles.model_fit_data{model_index}.dynam_name);
-%         save_path = fullfile(base_path,[base_name '_' ...
-%         handles.model_fit_data{model_index}.model_name '_' ...
-%         handles.model_fit_data{model_index}.model_name path_suffix '.nii']);
-%         
-%         image_matrix     = zeros([256 256]); %XXXX FIXME
-%         image_matrix(handles.model_fit_data{model_index}.tumind) = stat_voxels(:,model_index);
-%         save_nii(make_nii(image_matrix, [1 1 1], [1 1 1]), save_path);
-%         disp(['Completed ' test_name_long ' on voxels']);
+            %FMI
+%             save_path = fullfile(base_path,[base_name '_fmi.nii']);
+            save_path = fullfile(base_path,[base_name '_' ...
+                handles.model_fit_data{model_index}.model_name path_suffix '.nii']);
+            image_matrix = zeros(handles.model_xdata{1}.dimensions)-1;
+            image_matrix(handles.model_fit_data{model_index}.tumind) = stat_voxels(:,model_index);
+            save_nii(make_nii(image_matrix, [1 1 1], [1 1 1]), save_path);
+
+            %FRI
+%             save_path = fullfile(base_path,[base_name '_' ...
+%                 handles.model_fit_data{model_index}.model_name '_fri.nii']);
+%             image_matrix     = zeros(handles.model_xdata{1}.dimensions)-1;
+%             image_matrix(handles.model_fit_data{model_index}.tumind) = stat_voxels(:,model_index);
+%             save_nii(make_nii(image_matrix, [1 1 1], [1 1 1]), save_path);
+        end
+        disp(['Completed ' test_name_long ' on voxels']);
     end
     if compare_rois
-        
-%          % Save ROI results
-%         [base_path, ~, ~] = fileparts(handles.model_list{1});
-%         [~, base_name, ~] = fileparts(handles.model_fit_data{model_index}.dynam_name);
-%         save_path = fullfile(base_path,[base_name '_' ...
-%             handles.model_fit_data{model_index}.model_name '_' ...
-%             handles.model_fit_data{model_index}.model_name path_suffix '.xls']);
-%         
-%         headings = {'ROI', stat_name, ['Residual ' handles.model_fit_data{model_index}.model_name]};
-%         xls_results = [handles.model_fit_data{model_index}.roi_name num2cell(stat_rois(:,model_index)) num2cell(sse_current)];
-%         xls_results = [headings; xls_results];
-%         
-%         xlswrite(save_path,xls_results);
-%         disp(['Completed ' test_name_long ' on ROIs']);
+         % Save ROI results
+        [base_path, ~, ~] = fileparts(handles.model_list{1});
+        [~, base_name, ~] = fileparts(handles.model_fit_data{1}.dynam_name);
+
+        save_path = fullfile(base_path,[base_name '_fmi.xls']);
+
+        headings = {'ROI', stat_name, ['Residual ' handles.model_fit_data{1}.model_name]};
+        xls_results = [handles.model_fit_data{1}.roi_name ...
+            num2cell(stat_rois(:,1)) ...
+            num2cell(sse_current)];
+        xls_results = [headings; xls_results]; 
+        xlswrite(save_path,xls_results);
+
+        disp(['Completed ' test_name_long ' on ROIs']);
     end
 end
 
@@ -908,7 +879,8 @@ function model_box_Callback(hObject, eventdata, handles)
 
 handles.selected_model = get(hObject,'Value');
 guidata(hObject, handles);
-cfit_path_changed(handles)
+handles = model_list_changed(handles);
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -961,14 +933,17 @@ else
     if strcmp(list,'No Files')
         list = filename;
         handles.model_list = fullpath;
+        handles.selected_model = 1;
     else
         list = [list;  filename];
         handles.model_list = [handles.model_list; fullpath];
+        handles.selected_model = numel(handles.model_list);
     end 
     
-    set(handles.model_box,'String',list, 'Value',1)
+    set(handles.model_box,'String',list, 'Value',handles.selected_model);
+    
 end
-handles = cfit_path_changed(handles);
+handles = model_list_changed(handles);
 guidata(hObject, handles);
 
 
@@ -980,9 +955,18 @@ for n=size(index_selected,2):-1:1
     % Remove from end of list first so resizing does not 
     % change subsequent index numbers
     %disp(['User removed ', list{index_selected(n)}]);
-    list(index_selected(n)) = [];
-    handles.model_list(index_selected(n)) = [];
+    if ~isempty(list) && ~strcmp(list,'No Files')
+        list(index_selected(n)) = [];
+    end
+    if ~isempty(handles.model_list)
+        handles.model_list(index_selected(n)) = [];
+    end
 end
-
-set(handles.model_box,'String',list, 'Value',1)
+if isempty(list)
+    handles.selected_model = 0;
+else
+    handles.selected_model = 1;
+end
+set(handles.model_box,'String',list, 'Value',handles.selected_model);
+handles = model_list_changed(handles);
 guidata(hObject, handles);
