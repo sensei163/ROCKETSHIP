@@ -49,36 +49,36 @@ plot_limits = axis;
 if strcmp(plot_data.model_name,'aif')
     ktrans_error = mean([abs(fit_parameters(1)-fit_parameters(5)) abs(fit_parameters(1)-fit_parameters(6))]);
     ve_error = mean([abs(fit_parameters(2)-fit_parameters(7)) abs(fit_parameters(2)-fit_parameters(8))]);
-    plot_str(1) = {[' Ktrans = ' num2str(fit_parameters(1),2) '±' num2str(ktrans_error,2)]};
-    plot_str(2) = {[' Ve = ' num2str(fit_parameters(2),2) '±' num2str(ve_error,2)]};
+    plot_str(1) = {[' K_{trans} = ' num2str(fit_parameters(1),2) '±' num2str(ktrans_error,2)]};
+    plot_str(2) = {[' V_e = ' num2str(fit_parameters(2),2) '±' num2str(ve_error,2)]};
     plot_str(3) = {[' residual = ' num2str(fit_parameters(4))]};
 elseif strcmp(plot_data.model_name,'aif_vp')
     ktrans_error = mean([abs(fit_parameters(1)-fit_parameters(5)) abs(fit_parameters(1)-fit_parameters(6))]);
     ve_error = mean([abs(fit_parameters(2)-fit_parameters(7)) abs(fit_parameters(2)-fit_parameters(8))]);
     vp_error = mean([abs(fit_parameters(3)-fit_parameters(9)) abs(fit_parameters(3)-fit_parameters(10))]);
-    plot_str(1) = {[' Ktrans = ' num2str(fit_parameters(1),2) '±' num2str(ktrans_error,2)]};
-    plot_str(2) = {[' Ve = ' num2str(fit_parameters(2),2) '±' num2str(ve_error,2)]};
-    plot_str(3) = {[' Vp = ' num2str(fit_parameters(3),2) '±' num2str(vp_error,2)]};
+    plot_str(1) = {[' K_{trans} = ' num2str(fit_parameters(1),2) '±' num2str(ktrans_error,2)]};
+    plot_str(2) = {[' V_e = ' num2str(fit_parameters(2),2) '±' num2str(ve_error,2)]};
+    plot_str(3) = {[' V_p = ' num2str(fit_parameters(3),2) '±' num2str(vp_error,2)]};
     plot_str(4) = {[' residual = ' num2str(fit_parameters(4))]};
 elseif strcmp(plot_data.model_name,'fxr')
     ktrans_error = mean([abs(fit_parameters(1)-fit_parameters(5)) abs(fit_parameters(1)-fit_parameters(6))]);
     ve_error = mean([abs(fit_parameters(2)-fit_parameters(7)) abs(fit_parameters(2)-fit_parameters(8))]);
     vp_error = mean([abs(fit_parameters(3)-fit_parameters(9)) abs(fit_parameters(3)-fit_parameters(10))]);
-    plot_str(1) = {[' Ktrans = ' num2str(fit_parameters(1),2) '±' num2str(ktrans_error,2)]};
-    plot_str(2) = {[' Ve = ' num2str(fit_parameters(2),2) '±' num2str(ve_error,2)]};
-    plot_str(3) = {[' tau = ' num2str(fit_parameters(3),2) '±' num2str(vp_error,2)]};
+    plot_str(1) = {[' K_{trans} = ' num2str(fit_parameters(1),2) '±' num2str(ktrans_error,2)]};
+    plot_str(2) = {[' V_e = ' num2str(fit_parameters(2),2) '±' num2str(ve_error,2)]};
+    plot_str(3) = {[' \tau = ' num2str(fit_parameters(3),2) '±' num2str(vp_error,2)]};
     plot_str(4) = {[' residual = ' num2str(fit_parameters(4))]};
 else
     ktrans_error = mean([abs(fit_parameters(1)-fit_parameters(5)) abs(fit_parameters(1)-fit_parameters(6))]);
     ve_error = mean([abs(fit_parameters(2)-fit_parameters(7)) abs(fit_parameters(2)-fit_parameters(8))]);
-    plot_str(1) = {[' Ktrans = ' num2str(fit_parameters(1),2) '±' num2str(ktrans_error,2)]};
-    plot_str(2) = {[' Ve = ' num2str(fit_parameters(2),2) '±' num2str(ve_error,2)]};
+    plot_str(1) = {[' K_{trans} = ' num2str(fit_parameters(1),2) '±' num2str(ktrans_error,2)]};
+    plot_str(2) = {[' V_e = ' num2str(fit_parameters(2),2) '±' num2str(ve_error,2)]};
     plot_str(3) = {[' residual = ' num2str(fit_parameters(4))]};
 end
 text(plot_limits(1),plot_limits(3),plot_str,...
     'Color', 'black',...
     'VerticalAlignment','bottom',...
     'HorizontalAlignment','left');
-title(plot_data.title);
+title(plot_data.title,'Interpreter','none');
 xlabel(plot_data.x_units);
 ylabel(plot_data.y_units);

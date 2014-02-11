@@ -74,7 +74,7 @@ set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
                 plot_data.model_name = fit_data.model_name;
                 plot_data.show_original = show_original;
                 plot_data.show_ci = show_ci;
-                plot_data.title = ['Voxel Location (' num2str(image_x) ',' num2str(image_y) ',' num2str(image_z) ')'];
+                plot_data.title = [fit_data.model_name ' at Voxel Location (' num2str(image_x) ',' num2str(image_y) ',' num2str(image_z) ')'];
 
                 if strcmp(fit_data.model_name,'fxr')
                     plot_data.R1o = xdata{1}.R1o(voi);
@@ -97,7 +97,7 @@ set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
                 plot_data.model_name = fit_data.model_name;
                 plot_data.show_original = show_original;
                 plot_data.show_ci = show_ci;
-                plot_data.title = ['Voxel Location (' num2str(image_x) ',' num2str(image_y) ',' num2str(image_z) ')'];
+                plot_data.title = [fit_data.model_name ' at Voxel Location (' num2str(image_x) ',' num2str(image_y) ',' num2str(image_z) ')'];
 
                 if strfind(fit_data.model_name,'t1_fa')
                     plot_data.tr = xdata{1}.tr;

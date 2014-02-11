@@ -22,7 +22,7 @@ function varargout = fitting_analysis(varargin)
 
 % Edit the above text to modify the response to help fitting_analysis
 
-% Last Modified by GUIDE v2.5 03-Feb-2014 17:57:50
+% Last Modified by GUIDE v2.5 11-Feb-2014 12:10:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -139,15 +139,6 @@ else
 end
 
 
-
-% --- Executes on button press in show_original.
-function show_original_Callback(hObject, eventdata, handles)
-
-
-% --- Executes on button press in show_ci.
-function show_ci_Callback(hObject, eventdata, handles)
-
-
 % --- Executes on selection change in roi_listbox.
 function roi_listbox_Callback(hObject, eventdata, handles)
 if handles.roi_data_ready
@@ -155,9 +146,6 @@ if handles.roi_data_ready
     selected_name = contents{get(hObject,'Value')};
     selected_roi_temp = strfind(handles.model_fit_data{handles.selected_model}.roi_name,selected_name);
     selected_roi = find(not(cellfun('isempty', selected_roi_temp)));
-    handles.selected_model;
-    handles.model_xdata{handles.selected_model}
-    handles.model_fit_data{handles.selected_model}
 
     plot_data.Ct			= handles.model_xdata{handles.selected_model}.roi_series(:,selected_roi);
     plot_data.Ct_original	= handles.model_xdata{handles.selected_model}.roi_series_original(:,selected_roi);
@@ -169,7 +157,7 @@ if handles.roi_data_ready
     plot_data.model_name		= handles.model_fit_data{handles.selected_model}.model_name;
     plot_data.show_original = get(handles.show_original,'Value');
     plot_data.show_ci		= get(handles.show_ci,'Value');
-    plot_data.title = ['ROI "' selected_name '"'];
+    plot_data.title = [plot_data.model_name ' for ROI "' selected_name '"'];
 
     if strcmp(handles.model_fit_data{handles.selected_model}.model_name,'fxr')
         plot_data.R1o = handles.model_xdata{handles.selected_model}.roi_r1(selected_roi);
@@ -369,54 +357,6 @@ end
 return_handles = handles;
 
 
-
-function lower_model_path_Callback(hObject, eventdata, handles)
-% hObject    handle to lower_model_path (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of lower_model_path as text
-%        str2double(get(hObject,'String')) returns contents of lower_model_path as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function lower_model_path_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to lower_model_path (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --- Executes on button press in browse_lower_model.
-function browse_lower_model_Callback(hObject, eventdata, handles)
-guidata(hObject, handles);
-
-[filename, pathname, filterindex] = uigetfile( ...
-    {  '*.mat','Matlab Worksapce Files (*.mat)'; ...
-    '*.*',  'All Files (*.*)'}, ...
-    'Choose Fitting Results'); %#ok<NASGU>
-if isequal(filename,0)
-    %disp('User selected Cancel')
-else
-    %disp(['User selected ', fullfile(pathname, filename)])
-    
-    % Combine path and filename together
-    fullpath = strcat(pathname,filename);
-
-    set(handles.lower_model_path,'String',fullpath);
-end
-
-% Update structures
-handles = load_check_data(handles);
-
-% Update handles structure
-guidata(hObject, handles);
-
 % --- Executes on button press in button_ftest.
 function button_ftest_Callback(hObject, eventdata, handles)
 if ~handles.ftest_ready
@@ -428,8 +368,12 @@ end
 higher_model = handles.selected_model;
 lower_model = 2-mod(higher_model+1,2);
 
-compare_voxels = (handles.model_fit_data{lower_model}.fit_voxels && handles.model_fit_data{higher_model}.fit_voxels);
-compare_rois = (handles.model_fit_data{lower_model}.number_rois>0 && handles.model_fit_data{higher_model}.number_rois>0);
+compare_voxels = (handles.model_fit_data{lower_model}.fit_voxels && ...
+    handles.model_fit_data{higher_model}.fit_voxels && ...
+    get(handles.voxel_comparison,'Value'));
+compare_rois = (handles.model_fit_data{lower_model}.number_rois>0 && ...
+    handles.model_fit_data{higher_model}.number_rois>0 && ...
+    get(handles.roi_comparison,'Value'));
 information_string = get(handles.cfit_information,'String');
 information_string = information_string(1:3);
 information_string(end+1) = {['F-Test Lower Model: ' handles.model_fit_data{lower_model}.model_name]};
@@ -557,8 +501,8 @@ if ~(handles.akaike_ready && strcmp(test_name,'akaike')) && ...
     guidata(hObject, handles);
     return;
 end
-compare_voxels = 1;
-compare_rois = 1;
+compare_voxels = get(handles.voxel_comparison,'Value');
+compare_rois = get(handles.roi_comparison,'Value');
 number_models = numel(handles.model_fit_data);
 for model_index=1:number_models
     % All models must have data to do comparison
@@ -572,16 +516,24 @@ end
 if compare_voxels
     number_voxels = numel( handles.model_fit_data{model_index}.fitting_results(:,4));
     stat_voxels = 2.*ones(number_voxels,number_models);
+    stat2_voxels = 2.*ones(number_voxels,number_models);
+    
+    if strcmp(test_name,'fmi')
+        % Find the maximum cluster
+%         myCluster = parcluster('local');
+        if matlabpool('size')<=0
+%             matlabpool('local', myCluster.NumWorkers);
+            matlabpool OPEN;
+        end
+    end     
 end
 if compare_rois
     number_rois = numel(handles.model_fit_data{model_index}.roi_results(:,4));
     stat_rois = 2.*ones(number_rois,number_models);
+    stat2_rois = 2.*ones(number_rois,number_models);
     sse_rois = -1.*ones(number_rois,number_models);
 end
 for model_index=1:numel(handles.model_fit_data)
-    information_string = get(handles.cfit_information,'String');
-    information_string = information_string(1:3);
-    information_string(end+1) = {['Compare Model: ' handles.model_fit_data{model_index}.model_name]};
     % Create custum strings
     if strcmp(test_name,'akaike')
         stat_name = 'relative likelihood';
@@ -594,22 +546,31 @@ for model_index=1:numel(handles.model_fit_data)
     end
     
     if compare_voxels
-        disp(['Starting ' test_name_long ' on voxels']);
+        disp(['Starting ' test_name_long ' on voxels for model ' handles.model_fit_data{model_index}.model_name]);
         [sse_current,fp_current,n]=...
             get_sse_and_fp(handles,1,model_index);
         
         % Run Test
         number_voxels = numel(sse_current);
-%         stat_voxels = 2.*ones(number_voxels,1);
-        for i=1:number_voxels
-            if strcmp(test_name,'akaike')
+        
+        if strcmp(test_name,'akaike')
+            for i=1:number_voxels
                 aic_current = n*log(sse_current(i)/n)+2*fp_current;
                 stat_voxels(i,model_index) = aic_current;
-            elseif strcmp(test_name,'fmi')
-                % Outlined in Balvay et al. MRM 54:868-877 (2005)
-                M = n;%number of samples
-                r = handles.model_fit_data{model_index}.voxel_residuals(i,:);
-                d = handles.model_xdata{model_index}.Ct(:,i);
+            end
+        end
+        if strcmp(test_name,'fmi')
+            % Outlined in Balvay et al. MRM 54:868-877 (2005)
+            M = n; %number of samples
+            r_large = handles.model_fit_data{model_index}.voxel_residuals;
+            d_large = handles.model_xdata{model_index}.Ct;
+            
+            p = ProgressBar(number_voxels);
+            parfor i=1:number_voxels
+                Rrr = zeros(M/2,1); %#ok<PFTUS>
+                Rdd = zeros(M/2,1); %#ok<PFTUS>
+                r = r_large(i,:); % Array sliced for parfor speed
+                d = d_large(:,i);
                 for k=1:M/2
                     sum_r = 0;
                     sum_d = 0;
@@ -620,8 +581,8 @@ for model_index=1:numel(handles.model_fit_data)
                     Rrr(k) = 1/(M-abs(k))*sum_r;
                     Rdd(k) = 1/(M-abs(k))*sum_d;
                 end
-                Prr = fit((1:M/2)',Rrr','poly3'); %Fit Rrr with poly
-                Pdd = fit((1:M/2)',Rdd','poly3'); %Fit Rdd with poly
+                Prr = fit((1:M/2)',Rrr,'poly3'); %Fit Rrr with poly
+                Pdd = fit((1:M/2)',Rdd,'poly3'); %Fit Rdd with poly
                 % Get value at zero
                 Prr_0 = Prr(0);
                 Pdd_0 = Pdd(0);
@@ -631,15 +592,15 @@ for model_index=1:numel(handles.model_fit_data)
                 FMI_star = 1-e_ss_star/d_0_ss_star;
                 FRI_star = e_ss_star/sse_current(i);
                 stat_voxels(i,model_index) = FMI_star;
+                stat2_voxels(i,model_index) = FRI_star;
+                p.progress; %#ok<PFBNS>
             end
+            p.stop;
         end
-        
-%         mean_stat = mean(stat_voxels(:,model_index));
-%         disp(['Average voxel ' stat_name ' = ' num2str(mean_stat)]);
-%         information_string(end+1) = {['Average voxel ' stat_name ' = ' num2str(mean_stat)]};
     end
+    
     if compare_rois
-        disp(['Starting ' test_name_long ' on ROIs']);
+        disp(['Starting ' test_name_long ' on ROIs for model ' handles.model_fit_data{model_index}.model_name]);
         [sse_current,fp_current,n]=...
             get_sse_and_fp(handles,2,model_index);
         sse_rois(:,model_index) = sse_current;
@@ -678,11 +639,9 @@ for model_index=1:numel(handles.model_fit_data)
 %                 figure(i);
 %                 plot(Prr,(1:M/2)',Rrr');
                 stat_rois(i,model_index) = FMI_star;
+                stat2_rois(i,model_index) = FRI_star;
             end
         end
-%         mean_stat = mean(stat_rois(:,model_index);
-%         disp(['Average ROI ' stat_name ' = ' num2str(mean_stat)]);
-%         information_string(end+1) = {['Average ROI ' stat_name ' = ' num2str(mean_stat)]};
     end 
 end
 
@@ -763,13 +722,11 @@ if strcmp(test_name,'akaike')
             min_aic_name{i} = min_name;
             second_aic_name{i} = second_name;
             
-            
             for model_index=1:number_models
                 % difference from min value to model_index
                 relative_likelihood_n = exp((aic_sorted(1)-stat_rois(i,model_index))/2);
                 relative_likelihood_extra(i,model_index) = relative_likelihood_n;
             end
-            
         end
         
         % Save ROI results
@@ -790,8 +747,8 @@ if strcmp(test_name,'akaike')
             num2cell(relative_likelihood_extra) ...
             num2cell(sse_rois)];
         xls_results = [headings; xls_results];
-        
         xlswrite(save_path,xls_results);
+        
         disp(['Completed ' test_name_long ' on ROIs']);
     end
 end
@@ -803,7 +760,6 @@ if strcmp(test_name,'fmi')
             [~, base_name, ~] = fileparts(handles.model_fit_data{model_index}.dynam_name);
         
             %FMI
-%             save_path = fullfile(base_path,[base_name '_fmi.nii']);
             save_path = fullfile(base_path,[base_name '_' ...
                 handles.model_fit_data{model_index}.model_name path_suffix '.nii']);
             image_matrix = zeros(handles.model_xdata{1}.dimensions)-1;
@@ -811,11 +767,11 @@ if strcmp(test_name,'fmi')
             save_nii(make_nii(image_matrix, [1 1 1], [1 1 1]), save_path);
 
             %FRI
-%             save_path = fullfile(base_path,[base_name '_' ...
-%                 handles.model_fit_data{model_index}.model_name '_fri.nii']);
-%             image_matrix     = zeros(handles.model_xdata{1}.dimensions)-1;
-%             image_matrix(handles.model_fit_data{model_index}.tumind) = stat_voxels(:,model_index);
-%             save_nii(make_nii(image_matrix, [1 1 1], [1 1 1]), save_path);
+            save_path = fullfile(base_path,[base_name '_' ...
+                handles.model_fit_data{model_index}.model_name '_fri.nii']);
+            image_matrix     = zeros(handles.model_xdata{1}.dimensions)-1;
+            image_matrix(handles.model_fit_data{model_index}.tumind) = stat2_voxels(:,model_index);
+            save_nii(make_nii(image_matrix, [1 1 1], [1 1 1]), save_path);
         end
         disp(['Completed ' test_name_long ' on voxels']);
     end
@@ -826,22 +782,24 @@ if strcmp(test_name,'fmi')
 
         save_path = fullfile(base_path,[base_name '_fmi.xls']);
 
-        headings = {'ROI', stat_name, ['Residual ' handles.model_fit_data{1}.model_name]};
+        name_list = [handles.model_fit_data{:}];
+        temp_name = 'FMI of ';
+        heading_fmi = strcat(temp_name,{name_list.model_name});
+        temp_name = 'FRI of ';
+        heading_fri = strcat(temp_name,{name_list.model_name});
+        temp_name = 'Residual of ';
+        heading_sse = strcat(temp_name,{name_list.model_name});
+        headings = {'ROI', heading_fmi{:}, heading_fri{:}, heading_sse{:}};
         xls_results = [handles.model_fit_data{1}.roi_name ...
-            num2cell(stat_rois(:,1)) ...
-            num2cell(sse_current)];
+            num2cell(stat_rois) ...
+            num2cell(stat2_rois) ...
+            num2cell(sse_rois)];
         xls_results = [headings; xls_results]; 
         xlswrite(save_path,xls_results);
 
         disp(['Completed ' test_name_long ' on ROIs']);
     end
 end
-
-
-% information_string(end+1) = {['lower ' stat_name ' indicates higher order model is better fit']};
-% set(handles.cfit_information,'String',information_string);
-% disp(['lower ' stat_name ' indicates higher order model is better fit']);
-
 
     
 function update_status(handles,status_string,color)
@@ -885,12 +843,7 @@ guidata(hObject, handles);
 
 % --- Executes during object creation, after setting all properties.
 function model_box_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to model_box (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
-% Hint: listbox controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -970,3 +923,36 @@ end
 set(handles.model_box,'String',list, 'Value',handles.selected_model);
 handles = model_list_changed(handles);
 guidata(hObject, handles);
+
+
+% --- Executes on button press in roi_comparison.
+function roi_comparison_Callback(hObject, eventdata, handles)
+uiremember;
+
+% --- Executes on button press in voxel_comparison.
+function voxel_comparison_Callback(hObject, eventdata, handles)
+uiremember;
+
+% --- Executes during object creation, after setting all properties.
+function roi_comparison_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+% --- Executes during object creation, after setting all properties.
+function voxel_comparison_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+% --- Executes on button press in show_original.
+function show_original_Callback(hObject, eventdata, handles)
+uiremember;
+
+% --- Executes on button press in show_ci.
+function show_ci_Callback(hObject, eventdata, handles)
+uiremember;
+
+% --- Executes during object creation, after setting all properties.
+function show_ci_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+% --- Executes during object creation, after setting all properties.
+function show_original_CreateFcn(hObject, eventdata, handles)
+uirestore;

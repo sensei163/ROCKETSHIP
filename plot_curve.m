@@ -45,17 +45,19 @@ elseif(strcmp(plot_data.model_name, 'user_input'))
 elseif(strcmp(plot_data.model_name,'none'))
 end
 
+% Sort fitted line incase they are out of order
+[xsorted, i_sort] = sort(plot_data.x_values);
 
-p = plot(plot_data.x_values,plot_data.y_values,...
-    plot_data.x_values,fit_curve);
+p = plot(xsorted,plot_data.y_values(i_sort),...
+    xsorted,fit_curve(i_sort));
 set(p(1),'Marker','.','MarkerSize',14,'LineStyle','none');
 set(p(1),'Color','k');
 set(p(2),'Color','b');
 
 if plot_data.show_ci
     hold on
-    p_ci = plot(plot_data.x_values,fit_curve_low,...
-        plot_data.x_values,fit_curve_high);
+    p_ci = plot(xsorted,fit_curve_low(i_sort),...
+        xsorted,fit_curve_high(i_sort));
     set(p_ci(1),'Color',[0.5 0.5 0.6]);
     set(p_ci(2),'Color',[0.5 0.5 0.6]);
 end
@@ -69,7 +71,7 @@ if(strcmp(plot_data.model_name,'t2_exponential') || ...
         strcmp(plot_data.model_name,'t2_linear_fast') || ...
         strcmp(plot_data.model_name,'t2_linear_simple') || ...
         strcmp(plot_data.model_name,'t2_linear_weighted'))
-    plot_str(1) = {[' T2 = ' num2str(fit_parameters(1),3) '±' num2str(parameter1_error,2)]};
+    plot_str(1) = {[' T_2 = ' num2str(fit_parameters(1),3) '±' num2str(parameter1_error,2)]};
     plot_str(2) = {[' r^2 = ' num2str(fit_parameters(3),4)]};
     plot_str(3) = {[' residual = ' num2str(fit_parameters(6),3)]};
 elseif(strcmp(plot_data.model_name,'ADC_linear_weighted') || ...
@@ -83,7 +85,7 @@ elseif(strcmp(plot_data.model_name,'t1_tr_fit') ||...
         strcmp(plot_data.model_name,'t1_ti_exponential_fit') || ...
         strcmp(plot_data.model_name,'t1_fa_fit') ||...
         strcmp(plot_data.model_name,'t1_fa_linear_fit'))
-    plot_str(1) = {[' T1 = ' num2str(fit_parameters(1),2) '±' num2str(parameter1_error,2)]};
+    plot_str(1) = {[' T_1 = ' num2str(fit_parameters(1),4) '±' num2str(parameter1_error,2)]};
     plot_str(2) = {[' r^2 = ' num2str(fit_parameters(3),2)]};
     plot_str(3) = {[' residual = ' num2str(fit_parameters(6))]};
 elseif(strcmp(plot_data.model_name, 'user_input'))
@@ -93,6 +95,6 @@ text(plot_limits(1),plot_limits(3),plot_str,...
     'Color', 'black',...
     'VerticalAlignment','bottom',...
     'HorizontalAlignment','left');
-title(plot_data.title);
+title(plot_data.title,'Interpreter','none');
 xlabel(plot_data.x_units);
 ylabel(plot_data.y_units);
