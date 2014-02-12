@@ -15,6 +15,13 @@ for i = 1:numel(fullpath)
     %Find all the numbers in the curpath
     
     numbers = regexp(curpath,['\d+'], 'match');
+    
+    % The maximum placeholder length is the larger of natdigits or the
+    % longest continuous number string in the file name
+    
+    for k = 1:numel(numbers)
+        natdigits = max(natdigits, numbers{k});
+    end
      
     placeholder = rand(1)*10^natdigits;
     placeholder = num2str(placeholder);

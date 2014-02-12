@@ -13,7 +13,7 @@ sortlist  = handles.sortlist;
 % end
 
 % Generate sortedfullpath, sortlist_current, subjectID
-natdigits = 6;
+natdigits = 8;
 [sortedfullpath_current, sortlist_current, subjectID_current] = sort_parse_INPUTS(fullpath, natdigits);
 
 %save('Moo.mat', 'sortedfullpath_current', 'sortlist_current', 'fullpath')
