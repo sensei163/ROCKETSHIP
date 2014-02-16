@@ -26,7 +26,7 @@ end
 
 ind = find(LUT > id);
 
-LUT(ind) = LUT(ind) -1;
+LUT(ind) = LUT(ind)-1;
 
 % If the whole row is empty, we remove it.
 emptyrow = [];

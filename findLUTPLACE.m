@@ -11,7 +11,7 @@ cursubjectID = strrep(cursubjectID, rootname, '');
 for j = 1:size(LUT,1)
     compID = subjectID{LUT(j,1)};
     compID = strrep(compID, rootname, '');
-
+ 
     [~, nomatch] = finduniqueIDhelperB(cursubjectID, compID);
 
     if ~nomatch
@@ -48,8 +48,12 @@ end
 
 if nomatch
     % If subject is not part of the current set of IDs, we sort to find the
-    % righ tplace to put the new row.
+    % right place to put the new row.
     subIDNAMES{end+1} = cursubjectID;
+    
+    % Add digits to take care of natural order issues
+    subIDNAMES = natORDER(subIDNAMES);
+    
     
     [~, ind] = sort(subIDNAMES);
     

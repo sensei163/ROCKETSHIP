@@ -6,7 +6,7 @@ nomatch = 0;
 if isempty(pre)
     %initialize
     subjectID = current;
-      IDlength = 1;
+    IDlength = 1;
 else
     
     %Search through the whole string of pre from the front to find the longest contiguous
@@ -15,8 +15,12 @@ else
     IDlength = 0;
     
     for i = 1:numel(pre)
-         
-            compstr = pre(1:i);
+        
+        compstr = pre(1:i);
+        
+        if ~isempty(str2num(compstr))
+            % string is just numbers, not counted as a filename match
+        else
             
             ans = strfind(current, compstr);
             
@@ -31,6 +35,7 @@ else
             end
         end
     end
+end
 
 
 if IDlength == 0

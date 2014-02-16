@@ -569,7 +569,6 @@ list = get(handles.DCEfilesA,'String');
 % is selected, handle special case
 if ischar(list)
     list = {list};
-else
 end
 % if ischar(filename)
 %     filename = {filename};
@@ -611,10 +610,12 @@ else
     toberemoved   = list(fileselectedA,:);
     
     % Remove files from hashtable
-
-[handles, errormsg] = REMOVELUT(handles,  toberemoved);
- disp_error(errormsg, handles);
-[handles, errormsg] = visualize_list_dce(handles, fileselectedA,1,1);
+    
+    [handles, errormsg] = REMOVELUT(handles,  toberemoved);
+    disp_error(errormsg, handles);
+    
+    fileselectedA = max((fileselectedA-1), 1);
+    [handles, errormsg] = visualize_list_dce(handles, fileselectedA,1,1);
     
     disp_error(errormsg, handles);
 end

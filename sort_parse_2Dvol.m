@@ -1,8 +1,8 @@
-function [subsets, errormsgA] = sort_parse_2Dvol(subjectID_current, rootname);
+function [subsets, errormsgA] = sort_parse_2Dvol(sortlist_origfilename, rootname);
 
 errormsgA = '';
 
-subsets = split2subsets(subjectID_current,  rootname);
+subsets = split2subsets(sortlist_origfilename,  rootname);
 
 % Check if there are uneven subsets
 

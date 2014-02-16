@@ -1,26 +1,24 @@
 function [handles, errormsg] = ADDLUT(handles, fullpath);
 errormsgA = '';
+
+% Load the files that have already been added. 
 LUT = handles.LUT;
 subjectID = handles.subjectID;
 filelist  = handles.filelist;
 sortlist  = handles.sortlist;
-% manual_define = get(handles.rootname_define, 'Value');
-% 
-% if manual_define
-%     rootname  = get(handles.rootname, 'String');
-% else
-%     rootname = '';
-% end
 
 % Generate sortedfullpath, sortlist_current, subjectID
-natdigits = 8;
-[sortedfullpath_current, sortlist_current, subjectID_current] = sort_parse_INPUTS(fullpath, natdigits);
+%[sortlist_fullpath, sortlist_current, sortlist_origfilename] = sort_parse_INPUTS(fullpath);
 
-%save('Moo.mat', 'sortedfullpath_current', 'sortlist_current', 'fullpath')
+%sortlist_fullpath is the full path of the input list in order
+%sortlist is the file name with natural ordering for numbers
+%sortlist_filename is the filename without the natural ordering
+[sortlist_fullpath, sortlist_current, sortlist_origfilename] = sort_parse_INPUTS(fullpath);
+%save('Moo.mat', 'sortlist_fullpath', 'sortlist_current', 'fullpath')
 
-rootname = findrootname(subjectID, subjectID_current);
+rootname = findrootname(subjectID, sortlist_origfilename);
 
-[subsets, errormsg] = sort_parse_2Dvol(subjectID_current, rootname);
+[subsets, errormsg] = sort_parse_2Dvol(sortlist_origfilename, rootname);
 
 % Now we update LUT
 if isempty(LUT) || (numel(find(LUT == 0)) == numel(LUT))
@@ -30,23 +28,23 @@ if isempty(LUT) || (numel(find(LUT == 0)) == numel(LUT))
         for j = 1:subsets(i)
             
             LUT(i,j) = counter;
-            filelist = appendLISTS(filelist, sortedfullpath_current(counter));
+            filelist = appendLISTS(filelist, sortlist_fullpath(counter));
             sortlist = appendLISTS(sortlist, sortlist_current(counter));
-            subjectID= appendLISTS(subjectID, subjectID_current(counter));
+            subjectID= appendLISTS(subjectID, sortlist_origfilename(counter));
             counter = counter + 1;
         end
     end
-    
-    
+ 
 else
+    % Need to add current files to the end of the queue
     counter = 1;
     nextfile = numel(sortlist) + 1; % to append to the end of the queue
     
     for i = 1:numel(subsets)
         for j = 1:subsets(i)
             curname = sortlist_current{counter};
-            cursubjectID = subjectID_current{counter};
-            LUT;
+            cursubjectID = sortlist_origfilename{counter};
+    
             % Find the place to put the file
             [row, col, NEW, DUP] = findLUTPLACE(LUT, sortlist, curname, cursubjectID, subjectID, rootname);
             
@@ -57,9 +55,9 @@ else
                     LUT(row,col) = nextfile;
                 elseif DUP
                     % Already added,
-                    sortedfullpath_current(counter) = [];
+                    sortlist_fullpath(counter)      = [];
                     sortlist_current(counter)       = [];
-                    subjectID_current(counter)      = [];
+                    sortlist_origfilename(counter)  = [];
                     
                 else
                     ind = find(LUT(row,:) == 0);
@@ -99,9 +97,9 @@ else
             end
             
             if ~DUP
-                filelist = appendLISTS(filelist, sortedfullpath_current(counter));
+                filelist = appendLISTS(filelist, sortlist_fullpath(counter));
                 sortlist = appendLISTS(sortlist, sortlist_current(counter));
-                subjectID= appendLISTS(subjectID, subjectID_current(counter));
+                subjectID= appendLISTS(subjectID, sortlist_origfilename(counter));
                 
                 nextfile = nextfile + 1;
                 counter = counter + 1;
