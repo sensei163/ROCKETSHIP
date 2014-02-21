@@ -67,7 +67,7 @@ if nargin>1 && numel(varargin)>1 && strcmp(varargin{1},'results_path')
     handles.model_list{1} = varargin{2};
     handles.selected_model = 1;
     [~, name_temp, ext_temp] = fileparts(varargin{2});
-    set(handles.model_box,'String',[name_temp ext_temp], 'Value',1)
+    set(handles.model_box,'String',{[name_temp ext_temp]}, 'Value',1)
     % Update cfit structures
     handles = model_list_changed(handles);
 end

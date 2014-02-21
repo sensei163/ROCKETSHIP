@@ -20,7 +20,7 @@ for i = 1:numel(fullpath)
     % longest continuous number string in the file name
     
     for k = 1:numel(numbers)
-        natdigits = max(natdigits, numbers{k});
+        natdigits = max(natdigits, str2num(numbers{k}));
     end
      
     placeholder = rand(1)*10^natdigits;

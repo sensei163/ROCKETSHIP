@@ -287,15 +287,80 @@ if(drift)
     end
     
     % Now we Drift correct the image
-    originalimg = dynam(:,:,1:1+(slices-1));
+    %Gets all slices from the second time point
+    originalimg = dynam(:,:,(1+slices):(1+slices)+(slices-1));
     
     DYNAM       = [];
     DYNAMLV     = [];
     DYNAMNOISE  = [];
     DYNAMNONVIA = [];
-    counter = 1;
+%     counter = 1;
+%     for i = 1:slices:size(dynam,3)
+%         currentimg       = dynam(:,:,i:i+(slices-1));
+%         for j = 1:slices 
+%             originalimgj = originalimg(:,:,j);
+%             currentimgj  = currentimg(:,:,j);
+%             
+%             % rod mean
+%             OUT = ROD{j}.OUT;
+%             
+%             if(~isempty(OUT))
+%                 ind = sub2ind(size(originalimgj), OUT(:,1), OUT(:,2));
+%                 scalefactor = mean(originalimgj(ind))/mean(currentimgj(ind));
+%                 
+%                 PRECORRECTED(counter,j) = mean(currentimgj(:));
+%                 
+%                 DRIFT(counter,j) = mean(currentimgj(ind));
+%                 
+%                 currentimgj = currentimgj.*scalefactor;
+%                 
+%                 CORRECTED(counter,j) = mean(currentimgj(:));
+%                 
+%                 currentimg(:,:,j) = currentimgj;
+%             end
+%         end
+%         
+%         DYNAM(end+1,:)   = currentimg(tumind);
+%         DYNAMLV(end+1,:) = currentimg(lvind);
+%         DYNAMNOISE(end+1)= std(currentimg(noiseind));
+%         
+%         if(viable)
+%             DYNAMNONVIA(end+1,:) = currentimg(nonvia);
+%         end
+%         
+%         counter = counter+1;
+%     end
+
+    scalefactor = ones(size(dynam,3)/slices,1);
+    scale_fit = cell(1,slices);
+    % Slice loop
+    for j = 1:slices 
+        originalimgj = originalimg(:,:,j);
+        
+        % Time loop
+        time_index = 1;
+        for i = 1:slices:size(dynam,3)
+            currentimg       = dynam(:,:,i:i+(slices-1));
+            currentimgj  = currentimg(:,:,j);
+
+            % rod mean
+            OUT = ROD{j}.OUT;
+
+            if(~isempty(OUT))
+                ind = sub2ind(size(originalimgj), OUT(:,1), OUT(:,2));
+                scalefactor(time_index) = mean(originalimgj(ind))/mean(currentimgj(ind));
+            end
+            time_index = time_index+1;
+        end
+        scale_fit{j} = fit((1:numel(scalefactor))',scalefactor,'poly1');
+    end
+
+        
+    % Time loop
+    time_index = 1;
     for i = 1:slices:size(dynam,3)
         currentimg       = dynam(:,:,i:i+(slices-1));
+        % Slice loop
         for j = 1:slices 
             originalimgj = originalimg(:,:,j);
             currentimgj  = currentimg(:,:,j);
@@ -304,16 +369,13 @@ if(drift)
             OUT = ROD{j}.OUT;
             
             if(~isempty(OUT))
-                ind = sub2ind(size(originalimgj), OUT(:,1), OUT(:,2));
-                scalefactor = mean(originalimgj(ind))/mean(currentimgj(ind));
+                DRIFT(time_index,j) = mean(currentimgj(ind));
                 
-                PRECORRECTED(counter,j) = mean(currentimgj(:));
+                PRECORRECTED(time_index,j) = mean(currentimgj(:));
                 
-                DRIFT(counter,j) = mean(currentimgj(ind));
+                currentimgj = currentimgj.*scale_fit{j}(time_index);
                 
-                currentimgj = currentimgj.*scalefactor;
-                
-                CORRECTED(counter,j) = mean(currentimgj(:));
+                CORRECTED(time_index,j) = mean(currentimgj(:));
                 
                 currentimg(:,:,j) = currentimgj;
             end
@@ -327,8 +389,9 @@ if(drift)
             DYNAMNONVIA(end+1,:) = currentimg(nonvia);
         end
         
-        counter = counter+1;
+        time_index = time_index+1;
     end
+    
     
     % Plot the drift for each slice
     figure,
@@ -338,7 +401,13 @@ if(drift)
         
         if(~isempty(OUT))
             
-            subplot(ceil(sqrt(slices)), ceil(sqrt(slices)), j), hold on,plot(DRIFT(:,j)', 'r.'),  plot(CORRECTED(:,j), 'gx'), plot(PRECORRECTED(:,j), 'b.'), hold off
+            subplot(ceil(sqrt(slices)), ceil(sqrt(slices)), j)
+            hold on
+                plot(DRIFT(:,j)', 'r.')
+                plot(1./scale_fit{j}(1:time_index).*DRIFT(2,j),'k')
+                plot(CORRECTED(:,j), 'gx')
+                plot(PRECORRECTED(:,j), 'b.')
+            hold off
             
             title(['Slice: ' num2str(j)]);
         end
