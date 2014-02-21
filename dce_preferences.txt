@@ -12,7 +12,7 @@ aif_TolX = 10^(-20)
 aif_MaxIter = 1000
 aif_MaxFunEvals = 1000
 %robust options no quotes: "off" "LAR" "Bisquare"
-aif_Robust = Bisquare
+aif_Robust = off
 
 % Voxel fitting options
 %%%%%%%%%%%%%%%%%%%%%%%

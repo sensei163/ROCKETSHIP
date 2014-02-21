@@ -1,20 +1,17 @@
-function subsets = split2subsets(subjectID_current, rootname);
+function subsets = split2subsets(sortlist_origfilename, rootname);
 
-tempsort_list = subjectID_current;
+tempsort_list = sortlist_origfilename;
 subsettotal = 0;
 subsets = [];
 
 
-
 if numel(tempsort_list) == 1
+    % There is only 1 file, no need to split any more
     subsets(1) = 1;
-% elseif allnumeric(tempsort_list)
-%     subsets(1) = numel(tempsort_list);
-%     % All numeric values, belong to the same volume
 else
-    
+   
     while numel(tempsort_list) > 1
- 
+        
         pre = tempsort_list{1};
         post= tempsort_list{2};
         
@@ -22,26 +19,47 @@ else
         % rootname, if so, don't take out as there will be nothing to
         % compare.
         if ~strcmp(pre, rootname)
-        pre = strrep(pre, rootname, '');
+            pre = strrep(pre, rootname, '');
         end
         if ~strcmp(post, rootname)
-        post= strrep(post, rootname, '');
+            post= strrep(post, rootname, '');
         end
         
+        % Find the unique string between the pre and pose filenames
         cursubjectID = finduniqueIDhelper(post, pre);
+      
+        % If the unique string is a number, most likely it's part of the
+        % counter, so we reset cursubjectID to be '';
         
-        for i = 1:numel(tempsort_list)
-            
-            if ~isempty(strfind(tempsort_list{i}, cursubjectID))
-                
-                subsettotal = subsettotal +1;
-            else
-            end
+        if ~isempty(str2num(cursubjectID))
+            cursubjectID = '';
         end
-        subsets(end+1) = subsettotal;
-        tempsort_list(1:subsettotal) = [];
-        subsettotal = 0;
+
+        if isempty(cursubjectID)
+            % Empty, so pre and post belong to separate subsets
+            subsets(end+1) = 1;
+            subsettotal    = 0;
+            tempsort_list(1) = [];
+        else
+            
+            
+            for i = 1:numel(tempsort_list)
+                if ~isempty(strfind(tempsort_list{i}, cursubjectID))
+                    subsettotal = subsettotal +1;
+                end
+            end
+            subsets(end+1) = subsettotal;
+            tempsort_list(1:subsettotal) = [];
+            subsettotal = 0;
+        end
     end
+    
+    % Add last one if still present
+    if numel(tempsort_list) > 0
+        subsets(end+1) = 1;
+    end
+    
 end
+
             
     

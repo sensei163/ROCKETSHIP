@@ -8,7 +8,8 @@ visual_listA = [];
 visual_listB = [];
 visual_listC = [];
 
-LUT = handles.LUT;
+
+LUT = handles.LUT
 %subjectID = handles.subjectID;
 filelist  = handles.filelist;
 %sortlist  = handles.sortlist;
@@ -29,8 +30,7 @@ sizer = longestfilename(filelist);
 for i = 1:size(LUT,1)
 
     for j = 1:size(LUT,2)
-        
-        
+    
         if LUT(i,j) > 0
             [~, namer, ~] = fileparts(filelist{LUT(i,j)});
             if numel(namer) < sizer
@@ -74,6 +74,17 @@ set(handles.DCEfilesA, 'String', visual_listA, 'Value', p1);
 set(handles.DCEfilesB, 'String', visual_listB, 'Value', p2);
 set(handles.DCEfilesC, 'String', visual_listC, 'Value', p3);
 set(handles.rootnameA, 'String', rootname);
+
+if size(LUT,2) > 1 && size(LUT, 1) > 1
+    filevolume = 3;
+    set(handles.filevolume, 'Value', 3);
+elseif xor(size(LUT,1) > 1,size(LUT,2) > 1)
+    filevolume = 2;
+    set(handles.filevolume, 'Value', 2);
+else
+    filevolume = 1;
+    set(handles.filevolume, 'Value', 1);
+end
 
 if filevolume < 2
     set(handles.DCEfilesB,  'Enable', 'off');
