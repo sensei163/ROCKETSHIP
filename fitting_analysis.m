@@ -908,7 +908,7 @@ for n=size(index_selected,2):-1:1
     % Remove from end of list first so resizing does not 
     % change subsequent index numbers
     %disp(['User removed ', list{index_selected(n)}]);
-    if ~isempty(list) && ~strcmp(list,'No Files')
+    if ~isempty(list) && ~strcmp(list(1),'No Files')
         list(index_selected(n)) = [];
     end
     if ~isempty(handles.model_list)
