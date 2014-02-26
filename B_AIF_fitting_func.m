@@ -57,7 +57,7 @@ load(results_a_path);
 rootname = Adata.rootname;
 Cp       = Adata.Cp;
 Ct       = Adata.Ct;
-
+results  = '';
 
 % update output path to be same as location of input
 [PathName1,~,~] = fileparts(results_a_path);
@@ -163,11 +163,25 @@ else
     external = load(import_aif_path);
     if isfield(external,'Cp_use')
         Cp_use = external.Cp_use;
+    elseif isfield(external,'Bdata')
+        if isfield(external.Bdata,'Cp_use')
+            Cp_use = external.Bdata.Cp_use;
+        elseif isfield(external.Bdata,'xdata')
+            Cp_use = external.Bdata.xdata{1}.Cp;
+        end
     elseif isfield(external,'xdata')
         Cp_use = external.xdata{1}.Cp;
     else
         disp('No Cp curve found in selected file')
         return
+    end
+    % Check length, if different try applying time constraints
+    if numel(timer)<numel(Cp_use)
+        Cp_use = Cp_use(start_time:end_time);
+        if numel(timer)~=numel(Cp_use)
+            disp('Imported AIF has different length than data, try using time limits');
+            return;
+        end
     end
     M{2} = 'Imported Curve';
     aif_name = 'imported';

@@ -22,7 +22,7 @@ function varargout = RUNB(varargin)
 
 % Edit the above text to modify the response to help RUNB
 
-% Last Modified by GUIDE v2.5 31-Jan-2014 18:47:20
+% Last Modified by GUIDE v2.5 21-Feb-2014 13:40:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,10 +54,13 @@ function RUNB_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for RUNB
 handles.output = hObject;
+handles.saved_results = '';
 
 % Setup the name of the A results file
-ARESULTS = varargin{1};
-set(handles.results_a_path, 'String', ARESULTS{1});
+if nargin>=1 && numel(varargin)>=1 
+    ARESULTS = varargin{1};
+    set(handles.results_a_path, 'String', ARESULTS{1});
+end
 
 % Update handles structure
 guidata(hObject, handles);
@@ -366,8 +369,9 @@ uiresume(handles.figure1);
 
 % --- Executes on button press in cancel.
 function cancel_Callback(hObject, eventdata, handles)
-% hObject    handle to cancel (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-varargout{1} = ''; %handles.output;
-delete(handles.figure1);
+uiresume(handles.figure1);
+
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+uiresume(handles.figure1);
