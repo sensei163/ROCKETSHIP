@@ -134,7 +134,7 @@ for model_index=1:numel(dce_model_list)
 
 
     % update output path to be same as location of input
-    [PathName,~,~] = fileparts(results_a_path);
+    [PathName,~,~] = fileparts(results_b_path);
 
     % Log input results
     results_base = fullfile(PathName, [rootname cur_dce_model '_fit_voxels']);
@@ -223,6 +223,7 @@ for model_index=1:numel(dce_model_list)
         end
         number_rois = size(roi_list,1);
         roi_name = [];
+        roi_ext = [];
         %After sanitizing make sure we have some left
         if number_rois~=0
             [~, roi_name, roi_ext] = arrayfun(@(x) fileparts(x{:}), roi_list, 'UniformOutput', false);
@@ -230,10 +231,52 @@ for model_index=1:numel(dce_model_list)
             %Load ROI, find the selected voxels
             for r=number_rois:-1:1
                 single_file=cell2mat(roi_list(r));
+                
+                if strcmp(roi_ext(r),'.nii') || strcmp(roi_ext(r),'.hdr') || strcmp(roi_ext(r),'.img')
+                    single_roi = load_nii(single_file);
+                    single_roi = double(single_roi.img);
+                    roi_index{r}= find(single_roi > 0);
+                elseif strcmp(roi_ext(r),'.roi')
+                    single_roi = ReadImageJROI(single_file);
+                    if strcmp(single_roi.strType,'Polygon') || strcmp(single_roi.strType,'Freehand')
+                        roi_image = poly2mask(...
+                            single_roi.mnCoordinates(:,2)+0.5,...
+                            single_roi.mnCoordinates(:,1)+0.5,...
+                            size(currentimg,1),size(currentimg,2));
+                        roi_index{r}= find(roi_image > 0);
+                    
+                    elseif strcmp(single_roi.strType,'Rectangle')
+                        roi_image = poly2mask(...
+                            [square.vnRectBounds(1:2:3) fliplr(square.vnRectBounds(1:2:3))]+0.5,...
+                            [square.vnRectBounds(2) square.vnRectBounds(2) square.vnRectBounds(4) square.vnRectBounds(4)]+0.5,...
+                            size(currentimg,1),size(currentimg,2));
+                        roi_index{r}= find(roi_image > 0);
+                    elseif strcmp(single_roi.strType,'Oval')
+                        center_x = (single_roi.vnRectBounds(3)+single_roi.vnRectBounds(1))/2+0.5;
+                        radius_x = (single_roi.vnRectBounds(3)-single_roi.vnRectBounds(1))/2;
+                        center_y = (single_roi.vnRectBounds(4)+single_roi.vnRectBounds(2))/2+0.5;
+                        radius_y = (single_roi.vnRectBounds(4)-single_roi.vnRectBounds(2))/2;
 
-                single_roi = load_nii(single_file);
-                single_roi = double(single_roi.img);
-                roi_index{r}= find(single_roi > 0);
+                        alpha = linspace(0, 360, (radius_x+radius_y)*100)';
+                        sinalpha = sind(alpha);
+                        cosalpha = cosd(alpha);
+
+                        X = center_x + (radius_x * cosalpha);
+                        Y = center_y + (radius_y * sinalpha);
+    
+                        roi_image = poly2mask(X,Y,size(currentimg,1),size(currentimg,2));
+                        
+                        roi_index{r}= find(roi_image > 0);
+                    else
+                        warning( 'ROI type not supported' );
+                        disp(single_roi.strType);
+                        return;
+                    end
+                else
+                    warning( 'File type for ROI not supported' );
+                    disp(roi_ext(r));
+                    return;
+                end
             end
 
             original_t1 = zeros(size(currentimg));
