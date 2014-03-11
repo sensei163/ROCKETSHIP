@@ -383,7 +383,7 @@ if(drift)
         
         DYNAM(end+1,:)   = currentimg(tumind);
         DYNAMLV(end+1,:) = currentimg(lvind);
-        DYNAMNOISE(end+1)= std(currentimg(noiseind));
+        DYNAMNOISE(end+1)= std(single(currentimg(noiseind)));
         
         if(viable)
             DYNAMNONVIA(end+1,:) = currentimg(nonvia);
