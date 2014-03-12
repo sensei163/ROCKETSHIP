@@ -352,7 +352,7 @@ if(drift)
             end
             time_index = time_index+1;
         end
-        scale_fit{j} = fit((1:numel(scalefactor))',scalefactor,'poly1');
+        scale_fit{j} = fit((1:numel(scalefactor))',scalefactor,'poly3');
     end
 
         

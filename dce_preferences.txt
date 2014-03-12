@@ -20,7 +20,7 @@ voxel_lower_limit_ktrans = 0
 voxel_upper_limit_ktrans = Inf
 voxel_initial_value_ktrans = 0.005
 
-voxel_lower_limit_ve = 0.03
+voxel_lower_limit_ve = 0.01
 voxel_upper_limit_ve = 1
 voxel_initial_value_ve = 0.04
 
