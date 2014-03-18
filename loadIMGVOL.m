@@ -197,10 +197,10 @@ if noise_pathpick
 end
 
 %% Check to make sure the dimensions of the files are consistent
-if ~isequal(size(TUMOR), size(LV)) ||...
+if (~isempty(LV) && ~isequal(size(TUMOR), size(LV))) ||...
         (~isempty(NOISE) && ~isequal(size(TUMOR), size(NOISE))) ||...
         (~isempty(T1MAP) && ~isequal(size(TUMOR), size(T1MAP)))
-    errormsg = 'Input medical sizes not the same';
+    errormsg = 'Input image sizes not the same';
     return;
 end
 %% Now if the noise file is not defined, we make one from the pixelsize
@@ -227,11 +227,7 @@ if filevolume == 1
         DYNAMIC  = img;
         
         DYNAMIC = rescaleDICOM(hdr, DYNAMIC);
-        
-        
-        
-        
-        
+  
     elseif isNIFTI(filelist{id})
         nii = load_untouch_nii(filelist{id});
         img = nii.img;
@@ -243,7 +239,6 @@ if filevolume == 1
     end
 elseif filevolume == 2
     %3D
-    
     if size(LUT,1) == 1
         for i = 1:size(LUT,2)
             id = LUT(1,i);
@@ -307,7 +302,6 @@ elseif filevolume == 2
         end
     end
 elseif filevolume == 3
-    
     % 2D slices
     for i = 1:size(LUT,1)
         for j = 1:size(LUT,2)
@@ -370,7 +364,8 @@ sizerLV = size(LV);
 sizerTUM= size(TUMOR);
 sizerNOI= size(NOISE);
 
-if ~isequal(sizerLV(1:2), sizerTUM(1:2), sizerNOI(1:2))
+if ~isequal(sizerTUM(1:2), sizerNOI(1:2)) || ...
+        (~isempty(LV) && ~isequal(sizerLV(1:2), sizerTUM(1:2))) 
     errormsg = 'X Y dimensions of images are not equal';
 end
 

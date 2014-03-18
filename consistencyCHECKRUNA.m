@@ -1,4 +1,4 @@
-function [notemsg, errormsg] = consistencyCHECKRUNA(handles);
+function [notemsg, errormsg] = consistencyCHECKRUNA(handles)
 
 errormsg = '';
 notemsg  = '';
@@ -15,29 +15,25 @@ snr_filter = str2num(get(handles.snr_filter, 'String')); %#ok<ST2NM>
 relaxivity = str2num(get(handles.relaxivity, 'String')); %#ok<ST2NM>
 injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
 %water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
+quant = get(handles.quant, 'Value');
 
 mask = (get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1);
 
 if isempty(tr) || isempty(fa) || isempty(hematocrit) || isempty(snr_filter) || ...
         isempty(relaxivity) || isempty(injection_time)
-    
     errormsg = 'Problem with image parameters';
     return;
 end
 
 % If the ROI or AIF files are masks, then we need to make sure that the T1 map is defined and vice versa.
-
-if mask
-    
+if mask && quant
     if ~exist(get(handles.t1mappath, 'String'), 'file')
         errormsg = 'T1 map needed';
         return;
     end
 end
     
-
 % Check files
-
 % First, we check whether the dynamic datasets are in order
 
 filevolume = get(handles.filevolume, 'Value');
@@ -53,7 +49,6 @@ if filevolume == 1
     end
 elseif filevolume == 2
     % 3D volume
-    
     if size(LUT,1) > 1 && size(LUT, 2) > 1
           % More files input, but we only take the first one. notify user of
         % this
@@ -61,10 +56,8 @@ elseif filevolume == 2
     end
 elseif filevolume == 3
     % 2D volume
-    
     numfiles = numel(find(LUT(1,:) > 0)); 
     for i = 2:size(LUT,1)
-        
         if numfiles ~= numel(find(LUT(i,:) > 0));
             errormsg = 'Subsets have mismatched # of files';
             return;
@@ -72,7 +65,6 @@ elseif filevolume == 3
     end
     
     % Multislice volume, check if noise/roi files are ok
-
     numaif = numel(handles.t1aiffiles);
     numroi = numel(handles.t1roifiles);
     numt1map=numel(handles.t1mapfiles);
@@ -82,33 +74,22 @@ elseif filevolume == 3
         % We don't care
     end
    
-    
     if numaif ~= numfiles || numroi ~= numfiles || numt1map ~=numfiles
          errormsg = 'ROI files have mismatched # of files';
             return;
     end
         
-    
     if get(handles.noisefile, 'Value')
         numnoise = numel(handles.noisefiles);
         
         if numnoise ~= numfiles
-             errormsg = 'Noise files have mismatched # of files';
+            errormsg = 'Noise files have mismatched # of files';
             return;
         end
     else
-        isempty(noise_pixsize)
-             notemsg = [notemsg 'Noise pixels defaulted to 81'];
-             set(handles.noisepixsize, 'String', num2str(81));
+        if isempty(noise_pixsize)
+            notemsg = [notemsg 'Noise pixels defaulted to 9'];
+            set(handles.noisepixsize, 'String', num2str(9));
+        end
     end
 end
-             
-    
-    
-end
-        
-        
-
-
-    
-

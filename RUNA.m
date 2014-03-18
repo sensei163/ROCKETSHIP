@@ -306,13 +306,11 @@ function done_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 disp('User selected Run A')
-
 disp('Consistency checks before running');
 
 [notemsg, errormsg] = consistencyCHECKRUNA(handles);
 
 if ~isempty(errormsg)
-    
     disp_error(errormsg, handles);
     return;
 else
