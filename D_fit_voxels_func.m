@@ -59,8 +59,8 @@ close_pool = 0;		% Close matlabpool when done with processing
 
 % a) Load the data files
 load(results_b_path);
-results_a_path = Bdata.results_a_path;
-load(results_a_path);
+% results_a_path = Bdata.results_a_path;
+% load(results_a_path);
 
 % Setup DCE model string
 dce_model_string = {};
@@ -91,22 +91,22 @@ results = {};
 for model_index=1:numel(dce_model_list)
     cur_dce_model = dce_model_list{model_index};
 
-    
-    rootname    = Adata.rootname;
+    % Load the variables as needed.
+    rootname    = Bdata.rootname;
+    R1tTOI      = Bdata.R1tTOI;
+    T1TUM       = Bdata.T1TUM;
+    tumind      = Bdata.tumind;
+    dynam_name  = Bdata.dynam_name;
+    currentimg  = Bdata.currentCT;
+    res         = Bdata.res;
+    relaxivity  = Bdata.relaxivity;
+    hdr         = Bdata.hdr;
+%     sliceloc    = Adata.sliceloc;
     xdata       = Bdata.xdata;
-    R1tTOI      = Adata.R1tTOI;
     start_time  = Bdata.start_time;
     end_time    = Bdata.end_time;
-    T1TUM       = Adata.T1TUM;
-    tumind      = Adata.tumind;
-    dynam_name  = Adata.dynam_name;
     numvoxels   = Bdata.numvoxels;
-    currentimg  = Adata.currentCT;
-    res         = Adata.res;
-    relaxivity  = Adata.relaxivity;
-    hdr         = Adata.hdr;
-    sliceloc    = Adata.sliceloc;
-
+    
     if start_time == 0
         start_time = 1;
     end
@@ -116,12 +116,10 @@ for model_index=1:numel(dce_model_list)
 
     % Load and prep raw signal files if required
     if strcmp(cur_dce_model,'auc')
-        Sss                         = Adata.Sss;
-        Ssstum                      = Adata.Ssstum;
-        Stlv                        = Adata.Stlv;
-        Stlv                        = Stlv(start_time:end_time,:);% This was not done in RunB as per others.
-        Sttum                       = Adata.Sttum;
-        Sttum                       = Sttum(start_time:end_time,:);% This was not done in RunB as per others.
+        Sss                         = Bdata.Sss;
+        Ssstum                      = Bdata.Ssstum;
+        Stlv                        = Bdata.Stlv;
+        Sttum                       = Bdata.Sttum;
         xdata{1}.start_injection    = Bdata.start_injection;
         xdata{1}.end_injection      = Bdata.end_injection;
         xdata{1}.Stlv               = Stlv;
@@ -129,9 +127,6 @@ for model_index=1:numel(dce_model_list)
         xdata{1}.Sttum              = Sttum;
         xdata{1}.Sss                = Sss; 
     end
-
-    % Load the variables as needed.
-
 
     % update output path to be same as location of input
     [PathName,~,~] = fileparts(results_b_path);
@@ -436,73 +431,8 @@ for model_index=1:numel(dce_model_list)
         end
     end
 
-    % a.b) Prep for batch.
-%     if strcmp(cur_dce_model,'fxr')
-%         Ddatabatch.T1TUM = T1TUM;
-%         Ddatabatch.relaxivity = relaxivity;
-%     end
-% 
-%     if number_rois
-%                 Ddatabatch.roi_r1 = roi_r1;
-%         Ddatabatch.roi_series_original = roi_series_original;
-%         Ddatabatch.roi_series  = roi_series;
-% 
-%         if strcmp(cur_dce_model,'auc')
-%             Ddatabatch.roi_series_signal = roi_series_signal;
-%         end
-%     end
-% 
-%     Ddatabatch.number_cpus = number_cpus;
-%     Ddatabatch.xdata       = xdata;
-%     Ddatabatch.numvoxels   = numvoxels;
-%     Ddatabatch.dce_model   = dce_model;
-%     Ddatabatch.number_rois = number_rois;
-%     if number_rois~=0
-%         Ddatabatch.roi_name    = roi_name;
-%         Ddatabatch.roi_list    = roi_list;
-%     else
-%         Ddatabatch.roi_name    = [];
-%         Ddatabatch.roi_list    = {};
-%     end
-%     Ddatabatch.neuroecon   = neuroecon;
-%     Ddatabatch.close_pool  = close_pool;
-%     Ddatabatch.rootname    = rootname;
-%     Ddatabatch.hdr         = hdr;
-%     Ddatabatch.outputft    = outputft;
-%     Ddatabatch.sliceloc    = sliceloc;
-%     Ddatabatch.res         = res;
-% 
-%     Ddatabatch.fit_voxels  = fit_voxels;
-%     Ddatabatch.timind      = tumind;
-%     Ddatabatch.dynam_name  = dynam_name;
-%     Ddatabatch.PathName = PathName;
-%     Ddatabatch.time_smoothing = time_smoothing;
-%     Ddatabatch.smoothing_window =time_smoothing_window;
-%     Ddatabatch.currentimg = currentimg;
-%     Ddatabatch.results_a_path = results_a_path;
-%     Ddatabatch.results_b_path = results_b_path;
-% 
-%     if batch
-%         results = fullfile(results_base, '_prep.mat');
-%         save(results,  'Ddatabatch')
-%         Opt.Input = 'file';
-%         mat_md5 = DataHash(results, Opt);
-%         disp(' ')
-%         disp('MAT results saved to: ')
-%         disp(results)
-%         disp(['File MD5 hash: ' mat_md5])
-%         disp(' ');
-%         disp('Prepped D for batch');
-%         disp(datestr(now))
-%         toc
-%         diary off;
-% 
-%         return;
-%     end
-
     % b) voxel by voxel fitting
     %************************
-%     results = D_fit_voxels_batch_func(Ddatabatch);
     disp('  ');
     disp(['Begin making maps for ' cur_dce_model '...']);
     
@@ -531,7 +461,7 @@ for model_index=1:numel(dce_model_list)
             
             if strcmp(cur_dce_model, 'auc')
                 roi_data{1}.Sttum   = roi_series_signal;
-                roi_data{1}.Ssstum  = roi_ss;
+                roi_data{1}.Ssstum  = roi_ss';
                 roi_data{1}.Sss     = Sss;
                 roi_data{1}.Stlv    = Stlv;
                 roi_data{1}.start_injection = Bdata.start_injection;
@@ -611,7 +541,7 @@ for model_index=1:numel(dce_model_list)
 %     Ddata.results_b_path = results_b_path;
     
     results{model_index} = [results_base,'.mat'];
-    save(results{model_index},  'xdata','fit_data','results_a_path','results_b_path')
+    save(results{model_index},  'xdata','fit_data','results_b_path')
 %     results = fullfile(PathName, ['D_' rootname cur_dce_model '_fit_voxels.mat']);
     Opt.Input = 'file';
     mat_md5 = DataHash(results{model_index}, Opt);

@@ -15,9 +15,8 @@ elseif strcmp(plot_data.model_name,'fxr')
     fit_curve_low = fxr_cfit(fit_parameters(5),fit_parameters(7),fit_parameters(9),plot_data.Cp,plot_data.timer,plot_data.R1o,plot_data.R1i,plot_data.r1,plot_data.fw);
     fit_curve_high = fxr_cfit(fit_parameters(6),fit_parameters(8),fit_parameters(10),plot_data.Cp,plot_data.timer,plot_data.R1o,plot_data.R1i,plot_data.r1,plot_data.fw);
 else
-    fit_curve = FXLStep1AIFcfit(fit_parameters(1),fit_parameters(2),plot_data.Cp,plot_data.timer);
-    fit_curve_low = FXLStep1AIFcfit(fit_parameters(5),fit_parameters(7),plot_data.Cp,plot_data.timer);
-    fit_curve_high = FXLStep1AIFcfit(fit_parameters(6),fit_parameters(8),plot_data.Cp,plot_data.timer);
+    disp('Analysis not availble for this model');
+    return
 end
 
 if plot_data.show_original

@@ -227,6 +227,23 @@ Bdata.time_resolution=time_resolution;
 Bdata.timer         = timer;
 Bdata.xdata         = xdata;
 
+% Results from A that need to be passed through
+Bdata.rootname    = Adata.rootname;
+Bdata.R1tTOI      = Adata.R1tTOI;
+Bdata.T1TUM       = Adata.T1TUM;
+Bdata.tumind      = Adata.tumind;
+Bdata.dynam_name  = Adata.dynam_name;
+Bdata.currentCT   = Adata.currentCT;
+Bdata.res         = Adata.res;
+Bdata.relaxivity  = Adata.relaxivity;
+Bdata.hdr         = Adata.hdr;
+% for AUC
+Bdata.Sss         = Adata.Sss;
+Bdata.Ssstum      = Adata.Ssstum;
+Bdata.Stlv        = Adata.Stlv(start_time:end_time,:);
+Bdata.Sttum       = Adata.Sttum(start_time:end_time,:);
+        
+
 results = fullfile(PathName1, ['B_' rootname aif_name '_R1info.mat']);
 
 save(results, 'Bdata');
