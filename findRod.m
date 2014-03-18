@@ -36,8 +36,8 @@ threshold = currentimage(rod(1), rod(2))*0.9;
 % end
 
 
-for i = [-5:5]
-    for j = [-5:5]
+for i = [-3:3]
+    for j = [-3:3]
         
         if((rod(1)+i < size(currentimage,1)) && (rod(2)+j < size(currentimage,2)))
             if(currentimage(rod(1)+i, rod(2)+j) > threshold)

@@ -250,10 +250,6 @@ for i = 1:slices:size(dynam,3)
     
 end
 
-% We save the ROI image as a fig, We save in the same directory as the
-% dynamic file.
-saveas(nn, fullfile(PathName1, [rootname 'image_ROI.fig']));
-
 %% 4. Correcting drift
 
 % If for some reason the MR signal drifts over time, and you have included
@@ -294,42 +290,6 @@ if(drift)
     DYNAMLV     = [];
     DYNAMNOISE  = [];
     DYNAMNONVIA = [];
-%     counter = 1;
-%     for i = 1:slices:size(dynam,3)
-%         currentimg       = dynam(:,:,i:i+(slices-1));
-%         for j = 1:slices 
-%             originalimgj = originalimg(:,:,j);
-%             currentimgj  = currentimg(:,:,j);
-%             
-%             % rod mean
-%             OUT = ROD{j}.OUT;
-%             
-%             if(~isempty(OUT))
-%                 ind = sub2ind(size(originalimgj), OUT(:,1), OUT(:,2));
-%                 scalefactor = mean(originalimgj(ind))/mean(currentimgj(ind));
-%                 
-%                 PRECORRECTED(counter,j) = mean(currentimgj(:));
-%                 
-%                 DRIFT(counter,j) = mean(currentimgj(ind));
-%                 
-%                 currentimgj = currentimgj.*scalefactor;
-%                 
-%                 CORRECTED(counter,j) = mean(currentimgj(:));
-%                 
-%                 currentimg(:,:,j) = currentimgj;
-%             end
-%         end
-%         
-%         DYNAM(end+1,:)   = currentimg(tumind);
-%         DYNAMLV(end+1,:) = currentimg(lvind);
-%         DYNAMNOISE(end+1)= std(currentimg(noiseind));
-%         
-%         if(viable)
-%             DYNAMNONVIA(end+1,:) = currentimg(nonvia);
-%         end
-%         
-%         counter = counter+1;
-%     end
 
     scalefactor = ones(size(dynam,3)/slices,1);
     scale_fit = cell(1,slices);
@@ -394,13 +354,12 @@ if(drift)
     
     
     % Plot the drift for each slice
-    figure,
+    drift_fig = figure;
     
     for j = 1:slices
         OUT = ROD{j}.OUT;
         
         if(~isempty(OUT))
-            
             subplot(ceil(sqrt(slices)), ceil(sqrt(slices)), j)
             hold on
                 plot(DRIFT(:,j)', 'r.')
@@ -413,6 +372,12 @@ if(drift)
         end
     end
 end
+
+% We save the ROI image as a fig, We save in the same directory as the
+% dynamic file.
+saveas(nn, fullfile(PathName1, [rootname 'image_ROI.fig']));
+
+saveas(drift_fig, fullfile(PathName1, [rootname '_drift.fig']));
 
 
 %% 5. Manually select injection point, if required
@@ -515,14 +480,17 @@ AB = A./B;
 % AB should not be less than 0. We interpolate the timeseries to clean
 % this. Threshold is 0.5;
 % up.
-[AB T1LV lvind BADspacelv GOODspacelv] = cleanAB(AB, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.5);
+[AB T1LV lvind BADspacelABv GOODspacelABv] = cleanAB(AB, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.5);
 
 R1tLV = double((1/tr).*log(AB));
-
+Sss = Sss(GOODspacelABv);
+Stlv = Stlv(:,GOODspacelABv);
 % R1 should be real. We interpolate the timeseries to clean
 % this. Threshold is 0.5;
 % up.
 [R1tLV T1LV lvind BADspacelv GOODspacelv] = cleanR1t(R1tLV, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.5);
+Sss = Sss(GOODspacelv);
+Stlv = Stlv(:,GOODspacelv);
 
 for j = 1:numel(T1LV)
     
@@ -551,11 +519,18 @@ for j = 1:numel(T1)
 end
 
 AB = A./B;
-[AB T1TUM tumind BADspace GOODspace] = cleanAB(AB, T1TUM,tumind, 'Tumor', min(numel(T1TUM)), 0.7);
+[AB T1TUM tumind BADspaceAB GOODspaceAB] = cleanAB(AB, T1TUM,tumind, 'Tumor', min(numel(T1TUM)), 0.7);
 
 R1tTOI = double((1/tr).*log(AB));
+Ssstum = Ssstum(GOODspaceAB);
+Sttum = Sttum(:,GOODspaceAB);
+Sstar = Sstar(GOODspaceAB);
 
-[R1tTOI T1TUM tumind BADspace GOODspace] = cleanR1t(R1tTOI, T1TUM,tumind, 'Tumor', min(numel(T1TUM)), 0.7);
+[R1tTOI T1TUM tumind BADspaceT GOODspaceT] = cleanR1t(R1tTOI, T1TUM,tumind, 'Tumor', min(numel(T1TUM)), 0.7);
+
+Ssstum = Ssstum(GOODspaceT);
+Sttum = Sttum(:,GOODspaceT);
+Sstar = Sstar(GOODspaceT);
 
 for j = 1:numel(T1TUM)
     % Scale Sss values to T1 values
@@ -633,8 +608,8 @@ Adata.DYNAMLV_time_average = DYNAMLV_time_average;
 Adata.DYNAMNOISE = DYNAMNOISE;
 Adata.DYNAMNOISE_time_average = DYNAMNOISE_time_average;
 Adata.DYNAMNONVIA = DYNAMNONVIA;
-Adata.GOODspace = GOODspace;
-Adata.GOOODspacelv = GOODspacelv;
+% Adata.GOODspace = GOODspace;
+% Adata.GOOODspacelv = GOODspacelv;
 Adata.LV = LV;
 Adata.NOISE = NOISE;
 Adata.PathName1 = PathName1;

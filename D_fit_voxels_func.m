@@ -280,7 +280,9 @@ for model_index=1:numel(dce_model_list)
             end
 
             original_t1 = zeros(size(currentimg));
+            original_ss_signal = zeros(size(currentimg));
             roi_r1 = zeros(number_rois,1);
+            roi_ss = zeros(number_rois,1);
             original_timepoint = zeros(size(currentimg));
             roi_series = zeros(size(xdata{1}.Ct,1),number_rois);
             for t=1:size(xdata{1}.Ct,1)
@@ -304,10 +306,16 @@ for model_index=1:numel(dce_model_list)
                     end
                 end
             end
-            % For FXR
+            % For FXR and AUC
             original_t1(tumind) = T1TUM;
+            if strcmp(cur_dce_model,'auc')
+                original_ss_signal(tumind) = Ssstum;
+            end
             for r=number_rois:-1:1
                 roi_r1(r) = 1./mean(original_t1(roi_index{r}));
+                if strcmp(cur_dce_model,'auc')
+                    roi_ss(r) = mean(original_ss_signal(roi_index{r}));
+                end
             end
             %make backup
             roi_series_original = roi_series;
@@ -522,7 +530,12 @@ for model_index=1:numel(dce_model_list)
             end
             
             if strcmp(cur_dce_model, 'auc')
-                roi_data{1}.Sttum = roi_series_signal;
+                roi_data{1}.Sttum   = roi_series_signal;
+                roi_data{1}.Ssstum  = roi_ss;
+                roi_data{1}.Sss     = Sss;
+                roi_data{1}.Stlv    = Stlv;
+                roi_data{1}.start_injection = Bdata.start_injection;
+                roi_data{1}.end_injection   = Bdata.end_injection;
             end
             
             [roi_results, roi_residuals] = FXLfit_generic(roi_data, number_rois, cur_dce_model);
@@ -538,6 +551,14 @@ for model_index=1:numel(dce_model_list)
                 xdata{1}.R1i = 1./T1TUM;
                 xdata{1}.relaxivity = relaxivity;
             end
+%             if strcmp(cur_dce_model, 'auc')
+%                 xdata{1}.Sttum   = Bdata.Sttum;
+%                 xdata{1}.Sss     = Bdata.Sss;
+%                 xdata{1}.Ssstum  = Bdata.Ssstum;
+%                 xdata{1}.Stlv    = Bdata.Stlv;
+%                 xdata{1}.start_injection = Bdata.start_injection;
+%                 xdata{1}.end_injection   = Bdata.end_injection;
+%             end
             
             [fitting_results, voxel_residuals] = FXLfit_generic(xdata, numvoxels, cur_dce_model);
             

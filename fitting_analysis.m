@@ -144,8 +144,10 @@ function roi_listbox_Callback(hObject, eventdata, handles)
 if handles.roi_data_ready
     contents = cellstr(get(hObject,'String')); 
     selected_name = contents{get(hObject,'Value')};
-    selected_roi_temp = strfind(handles.model_fit_data{handles.selected_model}.roi_name,selected_name);
-    selected_roi = find(not(cellfun('isempty', selected_roi_temp)));
+    selected_roi_temp = strcmp(handles.model_fit_data{handles.selected_model}.roi_name,selected_name);
+    selected_roi = find(selected_roi_temp);
+%     selected_roi_temp = strfind(handles.model_fit_data{handles.selected_model}.roi_name,selected_name);
+%     selected_roi = find(not(cellfun('isempty', selected_roi_temp)));
 
     plot_data.Ct			= handles.model_xdata{handles.selected_model}.roi_series(:,selected_roi);
     plot_data.Ct_original	= handles.model_xdata{handles.selected_model}.roi_series_original(:,selected_roi);

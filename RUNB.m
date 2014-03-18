@@ -65,6 +65,8 @@ end
 % Update handles structure
 guidata(hObject, handles);
 
+update_importaif(handles);
+
 % UIWAIT makes RUNB wait for user response (see UIRESUME)
  uiwait(handles.figure1);
 
