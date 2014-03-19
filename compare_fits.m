@@ -61,7 +61,7 @@ set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
         size_x = size(background_image,2);
         image_id = image_x+(image_y-1)*size_y+(image_z-1)*size_x*size_y;
         
-        if sum(strcmp(fit_data.model_name,{'aif' 'aif_vp' 'fxr'}))
+        if sum(strcmp(fit_data.model_name,{'aif' 'aif_vp' 'fxr' 'tofts' 'ex_tofts' 'patlak'}))
             voi = find(fit_data.tumind==image_id);
             if ~isempty(voi)
                 plot_data.Ct = xdata{1}.Ct(:,voi);

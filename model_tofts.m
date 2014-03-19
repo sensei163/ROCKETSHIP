@@ -58,11 +58,10 @@ confidence_interval = confint(f,0.95);
 %Calculate the R2 fit
 x(1) = f.Ktrans;			% ktrans
 x(2) = f.ve;				% ve
-x(3) = 1;					% unused
-x(4) = gof.sse;				% residual
-x(5) = confidence_interval(1,1);% (95 lower CI of ktrans)
-x(6) = confidence_interval(2,1);% (95 upper CI of ktrans)
-x(7) = confidence_interval(1,2);% (95 lower CI of ve)
-x(8) = confidence_interval(2,2);% (95 upper CI of ve)
+x(3) = gof.sse;				% residual
+x(4) = confidence_interval(1,1);% (95 lower CI of ktrans)
+x(5) = confidence_interval(2,1);% (95 upper CI of ktrans)
+x(6) = confidence_interval(1,2);% (95 lower CI of ve)
+x(7) = confidence_interval(2,2);% (95 upper CI of ve)
 
 residuals = output.residuals;

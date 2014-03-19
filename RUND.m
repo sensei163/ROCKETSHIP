@@ -22,7 +22,7 @@ function varargout = RUND(varargin)
 
 % Edit the above text to modify the response to help RUND
 
-% Last Modified by GUIDE v2.5 18-Mar-2014 16:01:33
+% Last Modified by GUIDE v2.5 19-Mar-2014 09:35:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -287,12 +287,13 @@ uiremember;
 function done_Callback(hObject, eventdata, handles)
 results_b_path = get(handles.results_b_path,'String');
 
-dce_model.aif    = get(handles.aif, 'Value');
-dce_model.aif_vp = get(handles.aif_vp, 'Value');
+dce_model.tofts  = get(handles.aif, 'Value');
+dce_model.ex_tofts = get(handles.aif_vp, 'Value');
 dce_model.fxr    = get(handles.fxr, 'Value');
 dce_model.fractal= get(handles.fractal, 'Value');
 dce_model.auc    = get(handles.auc, 'Value');
 dce_model.nested = get(handles.nested, 'Value');
+dce_model.patlak = get(handles.patlak, 'Value');
 
 time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
 time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
@@ -313,6 +314,37 @@ guidata(hObject, handles);
 
 uiresume(handles.figure1);
 
+% --- Executes on button press in prep_batch.
+function prep_batch_Callback(hObject, eventdata, handles)
+results_b_path = get(handles.results_b_path,'String');
+
+dce_model.tofts  = get(handles.aif, 'Value');
+dce_model.ex_tofts = get(handles.aif_vp, 'Value');
+dce_model.fxr    = get(handles.fxr, 'Value');
+dce_model.fractal= get(handles.fractal, 'Value');
+dce_model.auc    = get(handles.auc, 'Value');
+dce_model.nested = get(handles.nested, 'Value');
+dce_model.patlak = get(handles.patlak, 'Value');
+
+time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
+time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
+xy_smooth_size = str2num(get(handles.xy_smooth_size, 'String')); %#ok<ST2NM>
+number_cpus = str2num(get(handles.number_cpus, 'String')); %#ok<ST2NM>
+neuroecon = get(handles.neuroecon, 'Value'); 
+
+roi_list = handles.roi_list;
+fit_voxels = get(handles.fit_voxels,'Value');
+outputft = get(handles.outputft, 'Value');
+
+[PathName,b_name,~] = fileparts(results_b_path);
+saved_results = fullfile(PathName, [b_name '_prep.mat']);
+save(saved_results,'results_b_path','dce_model','time_smoothing','time_smoothing_window','xy_smooth_size','number_cpus','roi_list','fit_voxels','neuroecon', 'outputft');
+
+handles.saved_results = saved_results;
+handles.batch = 1;
+guidata(hObject, handles);
+
+uiresume(handles.figure1);
 
 
 % --- Executes on button press in cancel.
@@ -383,37 +415,6 @@ uiremember(handles.rlowess);
 function aif_CreateFcn(hObject, eventdata, handles)
 uirestore;
 
-% --- Executes on button press in prep_batch.
-function prep_batch_Callback(hObject, eventdata, handles)
-results_b_path = get(handles.results_b_path,'String');
-
-dce_model.aif    = get(handles.aif, 'Value');
-dce_model.aif_vp = get(handles.aif_vp, 'Value');
-dce_model.fxr    = get(handles.fxr, 'Value');
-dce_model.fractal= get(handles.fractal, 'Value');
-dce_model.auc    = get(handles.auc, 'Value');
-
-time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
-time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
-xy_smooth_size = str2num(get(handles.xy_smooth_size, 'String')); %#ok<ST2NM>
-number_cpus = str2num(get(handles.number_cpus, 'String')); %#ok<ST2NM>
-neuroecon = get(handles.neuroecon, 'Value'); 
-
-roi_list = handles.roi_list;
-fit_voxels = get(handles.fit_voxels,'Value');
-outputft = get(handles.outputft, 'Value');
-
-[PathName,b_name,~] = fileparts(results_b_path);
-saved_results = fullfile(PathName, [b_name '_prep.mat']);
-save(saved_results,'results_b_path','dce_model','time_smoothing','time_smoothing_window','xy_smooth_size','number_cpus','roi_list','fit_voxels','neuroecon', 'outputft');
-
-handles.saved_results = saved_results;
-handles.batch = 1;
-guidata(hObject, handles);
-
-uiresume(handles.figure1);
-
-
 % --- Executes on button press in FXL_rr.
 function FXL_rr_Callback(hObject, eventdata, handles)
 uiremember;
@@ -462,4 +463,12 @@ uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function nested_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+% --- Executes on button press in patlak.
+function patlak_Callback(hObject, eventdata, handles)
+uiremember;
+
+% --- Executes during object creation, after setting all properties.
+function patlak_CreateFcn(hObject, eventdata, handles)
 uirestore;

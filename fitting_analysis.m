@@ -209,12 +209,15 @@ handles.voxel_data_ready = 0;
 handles.ftest_ready = 0;
 handles.akaike_ready = 0;
 handles.fmi_ready = 0;
+handles.model_xdata = {};
+handles.model_fit_data = {};
 voxel_message = 'No results file selected';
 roi_message = 'No results file selected';
 ftest_message = 'No comparison results file selected';
 akaike_message = 'No comparison results file selected';
 fmi_message = 'No comparison results file selected';
 selected_information = {};
+
 
 for i=1:numel(compare_model_list)
     current_model = cell2mat(compare_model_list(i));
@@ -424,7 +427,7 @@ if compare_voxels
         handles.model_fit_data{higher_model}.model_name '_' ...
         handles.model_fit_data{lower_model}.model_name path_suffix '.nii']);
     
-    stat_matrix     = zeros([256 256]);
+    stat_matrix     = zeros(handles.model_xdata{1}.dimensions)-1;
     stat_matrix(handles.model_fit_data{higher_model}.tumind) = stat_voxels;
     save_nii(make_nii(stat_matrix, [1 1 1], [1 1 1]), save_path);
     disp(['Completed ' test_name_long ' on voxels']);
@@ -473,7 +476,11 @@ if compare_rois
         ['Residual ' handles.model_fit_data{lower_model}.model_name]};
     xls_results = [handles.model_fit_data{higher_model}.roi_name num2cell(stat_rois) num2cell(sse_higher) num2cell(sse_lower)];
     xls_results = [headings; xls_results];
-    
+    % Delete previous results if exist
+    if exist(save_path, 'file')==2
+        delete(save_path);
+    end
+    % Write new results
     xlswrite(save_path,xls_results);
     
     disp(['Completed ' test_name_long ' on ROIs']);
@@ -531,8 +538,8 @@ if compare_voxels
 end
 if compare_rois
     number_rois = numel(handles.model_fit_data{model_index}.roi_results(:,4));
-    stat_rois = 2.*ones(number_rois,number_models);
-    stat2_rois = 2.*ones(number_rois,number_models);
+    stat_rois = 9999.*ones(number_rois,number_models);
+    stat2_rois = 9999.*ones(number_rois,number_models);
     sse_rois = -1.*ones(number_rois,number_models);
 end
 for model_index=1:numel(handles.model_fit_data)
@@ -545,6 +552,11 @@ for model_index=1:numel(handles.model_fit_data)
         stat_name = 'fraction modeled information';
         path_suffix = '_fmi';
         test_name_long = 'modeled and residual information';
+    end
+    if ~is_valid_model(handles.model_fit_data{model_index}.model_name)
+        %Skip this model
+        disp(['Skipping, comparison not supported for model ' handles.model_fit_data{model_index}.model_name]);
+        continue
     end
     
     if compare_voxels
@@ -658,7 +670,7 @@ if strcmp(test_name,'akaike')
         end
         for i=1:number_voxels
             [aic_sorted, sort_index] = sort(stat_voxels(i,:),'ascend');
-            
+
             relative_likelihood_second = exp((aic_sorted(1)-aic_sorted(2))/2);
             min_name = handles.model_fit_data{sort_index(1)}.model_name;
             %second_name = handles.model_fit_data{sort_index(2)}.model_name;
@@ -668,6 +680,10 @@ if strcmp(test_name,'akaike')
                 min_aic(i) = 2;
             elseif strcmp(min_name,'fxr')
                 min_aic(i) = 3;
+            elseif strcmp(min_name,'patlak')
+                min_aic(i) = 4;
+            else
+                foo = 2;
             end
             relative_likelihood_main(i) = relative_likelihood_second;
             
@@ -737,11 +753,9 @@ if strcmp(test_name,'akaike')
         save_path = fullfile(base_path,[base_name '_aic.xls']);
         
         name_list = [handles.model_fit_data{:}];
-        temp_name = 'Relative Likelihood of ';
-        heading_list_a = strcat(temp_name,{name_list.model_name});
-        temp_name = 'Residual of ';
-        heading_list_b = strcat(temp_name,{name_list.model_name});
-        headings = {'ROI', 'Min AIC Model', 'Relative Likelihood of', 'Second Lowest AIC', heading_list_a{:}, heading_list_b{:}};
+        heading_list_a = strcat({'Relative Likelihood of '},{name_list.model_name});
+        heading_list_b = strcat({'Residual of '},{name_list.model_name});
+        headings = {'ROI', 'Min AIC Model', 'Relative Likelihood of Second', 'Second Lowest AIC', heading_list_a{:}, heading_list_b{:}};
         xls_results = [handles.model_fit_data{1}.roi_name ...
             min_aic_name ...
             num2cell(relative_likelihood_main) ...
@@ -749,6 +763,11 @@ if strcmp(test_name,'akaike')
             num2cell(relative_likelihood_extra) ...
             num2cell(sse_rois)];
         xls_results = [headings; xls_results];
+        % Delete previous results if exist
+        if exist(save_path, 'file')==2
+            delete(save_path);
+        end
+        % Write new results
         xlswrite(save_path,xls_results);
         
         disp(['Completed ' test_name_long ' on ROIs']);
@@ -785,18 +804,20 @@ if strcmp(test_name,'fmi')
         save_path = fullfile(base_path,[base_name '_fmi.xls']);
 
         name_list = [handles.model_fit_data{:}];
-        temp_name = 'FMI of ';
-        heading_fmi = strcat(temp_name,{name_list.model_name});
-        temp_name = 'FRI of ';
-        heading_fri = strcat(temp_name,{name_list.model_name});
-        temp_name = 'Residual of ';
-        heading_sse = strcat(temp_name,{name_list.model_name});
+        heading_fmi = strcat({'FMI of '},{name_list.model_name});
+        heading_fri = strcat({'FRI of '},{name_list.model_name});
+        heading_sse = strcat({'Residual of '},{name_list.model_name});
         headings = {'ROI', heading_fmi{:}, heading_fri{:}, heading_sse{:}};
         xls_results = [handles.model_fit_data{1}.roi_name ...
             num2cell(stat_rois) ...
             num2cell(stat2_rois) ...
             num2cell(sse_rois)];
         xls_results = [headings; xls_results]; 
+        % Delete previous results if exist
+        if exist(save_path, 'file')==2
+            delete(save_path);
+        end
+        % Write new results
         xlswrite(save_path,xls_results);
 
         disp(['Completed ' test_name_long ' on ROIs']);
@@ -809,25 +830,30 @@ set(handles.ready_display,'String',status_string);
 set(handles.ready_display, 'ForegroundColor', color);
 
 function [sse, fp, n]=get_sse_and_fp(handles,region,model_index)
-if region==1
-    % Voxel results
-    sse = handles.model_fit_data{model_index}.fitting_results(:,4);
-elseif region==2
-    % ROI results
-    sse = handles.model_fit_data{model_index}.roi_results(:,4);
-end
 
 if strcmp(handles.model_fit_data{model_index}.model_name,'aif') || strcmp(handles.model_fit_data{model_index}.model_name,'tofts')
     fp = 2;
+    sse_index = 3;
 elseif strcmp(handles.model_fit_data{model_index}.model_name,'aif_vp') || strcmp(handles.model_fit_data{model_index}.model_name,'ex_tofts')
     fp = 3;
+    sse_index = 4;
 elseif strcmp(handles.model_fit_data{model_index}.model_name,'fxr')
     fp = 3;
+    sse_index = 4;
+elseif strcmp(handles.model_fit_data{model_index}.model_name,'patlak')
+    fp = 2;
+    sse_index = 3;
 else
     update_status(handles,'selected model not implemented','red');
     return
 end
-
+if region==1
+    % Voxel results
+    sse = handles.model_fit_data{model_index}.fitting_results(:,sse_index);
+elseif region==2
+    % ROI results
+    sse = handles.model_fit_data{model_index}.roi_results(:,sse_index);
+end
 n = numel(handles.model_xdata{model_index}.timer);
 
 
@@ -926,6 +952,16 @@ set(handles.model_box,'String',list, 'Value',handles.selected_model);
 handles = model_list_changed(handles);
 guidata(hObject, handles);
 
+function is_valid = is_valid_model(model_name)
+is_valid = true;
+if ~(strcmp(model_name, 'tofts') || ...
+        strcmp(model_name, 'aif') || ...
+        strcmp(model_name, 'ex_tofts') || ...
+        strcmp(model_name, 'aif_vp') || ...
+        strcmp(model_name, 'fxr') || ...
+        strcmp(model_name, 'patlak'))
+    is_valid = false;
+end
 
 % --- Executes on button press in roi_comparison.
 function roi_comparison_Callback(hObject, eventdata, handles)
