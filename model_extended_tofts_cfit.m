@@ -1,5 +1,5 @@
-%% FXLStep1AAIF, no vp
-function Ct = FXLStep1AIFcfit(Ktrans, ve, Cp, T1)
+%% FXLStep1AAIF, vp
+function Ct = model_extended_tofts_cfit(Ktrans, ve, vp, Cp, T1)
 
 Cp = Cp(:);
 T1 = T1(:);
@@ -24,7 +24,7 @@ for k = 1:numel(T1)
         M = trapz(T,F);
     end
     
-    Ct(k) = Ktrans.*M;
+    Ct(k) = Ktrans.*M+vp*Cp(k);
 end
-    
+
 Ct = Ct';

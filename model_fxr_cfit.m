@@ -1,5 +1,5 @@
 % FWR
-function R1t = fxr_cfit(Ktrans, ve, tau, Cp, T1, R1o, R1i, r1, fw)
+function R1t = model_fxr_cfit(Ktrans, ve, tau, Cp, T1, R1o, R1i, r1, fw)
 
 % Calculate Ct first
 Cp = Cp(:);

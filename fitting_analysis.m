@@ -662,9 +662,9 @@ if strcmp(test_name,'akaike')
             relative_likelihood_second = exp((aic_sorted(1)-aic_sorted(2))/2);
             min_name = handles.model_fit_data{sort_index(1)}.model_name;
             %second_name = handles.model_fit_data{sort_index(2)}.model_name;
-            if strcmp(min_name,'aif')
+            if strcmp(min_name,'aif') || strcmp(min_name,'tofts')
                 min_aic(i) = 1;
-            elseif strcmp(min_name,'aif_vp')
+            elseif strcmp(min_name,'aif_vp') || strcmp(min_name,'ex_tofts')
                 min_aic(i) = 2;
             elseif strcmp(min_name,'fxr')
                 min_aic(i) = 3;
@@ -817,9 +817,9 @@ elseif region==2
     sse = handles.model_fit_data{model_index}.roi_results(:,4);
 end
 
-if strcmp(handles.model_fit_data{model_index}.model_name,'aif')
+if strcmp(handles.model_fit_data{model_index}.model_name,'aif') || strcmp(handles.model_fit_data{model_index}.model_name,'tofts')
     fp = 2;
-elseif strcmp(handles.model_fit_data{model_index}.model_name,'aif_vp')
+elseif strcmp(handles.model_fit_data{model_index}.model_name,'aif_vp') || strcmp(handles.model_fit_data{model_index}.model_name,'ex_tofts')
     fp = 3;
 elseif strcmp(handles.model_fit_data{model_index}.model_name,'fxr')
     fp = 3;

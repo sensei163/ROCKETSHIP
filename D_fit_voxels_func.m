@@ -12,8 +12,9 @@ function results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,tim
 %                       'sauc' = not implemented
 %                       'ss' = not implemented
 %                       'fractal' = not implemented
-%                       'auc' = not implemented
+%                       'auc' = area under the curve
 %                       'auc_rr' = not implemented
+%                       'nested' = series of nested model
 %  time_smoothing     - type of time smoothing
 %                       'none' = no smoothing
 %                       'moving' = moving average
@@ -67,11 +68,11 @@ dce_model_string = {};
 dce_model_list = {};
 if dce_model.aif
     dce_model_string{end+1} = 'Tofts';
-    dce_model_list{end+1} = 'aif';
+    dce_model_list{end+1} = 'tofts';
 end
 if dce_model.aif_vp
     dce_model_string{end+1} = 'Tofts w/ Vp';
-    dce_model_list{end+1} = 'aif_vp';
+    dce_model_list{end+1} = 'ex_tofts';
 end
 if dce_model.fxr
     dce_model_string{end+1} = 'FXR';
@@ -84,6 +85,10 @@ end
 if dce_model.auc
     dce_model_string{end+1} = 'Area under curve';
     dce_model_list{end+1} = 'auc';
+end
+if dce_model.nested
+    dce_model_string{end+1} = 'Nested Models';
+    dce_model_list{end+1} = 'nested';
 end
 
 
@@ -132,7 +137,7 @@ for model_index=1:numel(dce_model_list)
     [PathName,~,~] = fileparts(results_b_path);
 
     % Log input results
-    results_base = fullfile(PathName, [rootname cur_dce_model '_fit_voxels']);
+    results_base = fullfile(PathName, [rootname '_' cur_dce_model '_fit']);
     log_path = [results_base,'.log'];
     if exist(log_path, 'file')==2
         delete(log_path);
@@ -318,7 +323,7 @@ for model_index=1:numel(dce_model_list)
     end
 
     if ~fit_voxels && number_rois==0
-        print('nothing to fit, select an ROI file or check "fit voxels"');
+        disp('nothing to fit, select an ROI file or check "fit voxels"');
         return;
     end
 
@@ -481,14 +486,6 @@ for model_index=1:numel(dce_model_list)
                 xdata{1}.R1i = 1./T1TUM;
                 xdata{1}.relaxivity = relaxivity;
             end
-%             if strcmp(cur_dce_model, 'auc')
-%                 xdata{1}.Sttum   = Bdata.Sttum;
-%                 xdata{1}.Sss     = Bdata.Sss;
-%                 xdata{1}.Ssstum  = Bdata.Ssstum;
-%                 xdata{1}.Stlv    = Bdata.Stlv;
-%                 xdata{1}.start_injection = Bdata.start_injection;
-%                 xdata{1}.end_injection   = Bdata.end_injection;
-%             end
             
             [fitting_results, voxel_residuals] = FXLfit_generic(xdata, numvoxels, cur_dce_model);
             
@@ -598,8 +595,8 @@ for model_index=1:numel(dce_model_list)
     %fit_voxels = 0; %% DEBUG
     %[discard, actual] = fileparts(strrep(dynam_name, '\', '/'));
     
-    if strcmp(cur_dce_model, 'aif')
-        dce_model_name = 'aif';
+    if strcmp(cur_dce_model, 'tofts')
+
         % Write ROI results
         if number_rois~=0
             headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Residual', 'Ktrans 95% low', ...
@@ -697,8 +694,9 @@ for model_index=1:numel(dce_model_list)
                 end
             end
         end
-    elseif strcmp(cur_dce_model, 'aif_vp')
-        dce_model_name = 'aif_vp';
+    % extended tofts and nested have the same data structure
+    elseif strcmp(cur_dce_model, 'ex_tofts') || strcmp(cur_dce_model, 'nested')
+
         % Write ROI results
         if number_rois~=0
             headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Residual', 'Ktrans 95% low', ...
@@ -809,7 +807,7 @@ for model_index=1:numel(dce_model_list)
             end
         end
     elseif strcmp(cur_dce_model, 'fxr')
-        dce_model_name = 'fxr';
+
         % Write ROI results
         if number_rois~=0
             headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Tau','Residual', 'Ktrans 95% low', ...

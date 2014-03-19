@@ -22,7 +22,7 @@ function varargout = RUND(varargin)
 
 % Edit the above text to modify the response to help RUND
 
-% Last Modified by GUIDE v2.5 06-Feb-2014 11:52:43
+% Last Modified by GUIDE v2.5 18-Mar-2014 16:01:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -292,6 +292,7 @@ dce_model.aif_vp = get(handles.aif_vp, 'Value');
 dce_model.fxr    = get(handles.fxr, 'Value');
 dce_model.fractal= get(handles.fractal, 'Value');
 dce_model.auc    = get(handles.auc, 'Value');
+dce_model.nested = get(handles.nested, 'Value');
 
 time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
 time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
@@ -439,11 +440,9 @@ uirestore;
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
 uiresume(hObject);
 
-
 % --- Executes during object creation, after setting all properties.
 function fit_voxels_CreateFcn(hObject, eventdata, handles)
 uirestore;
-
 
 % --- Executes during object creation, after setting all properties.
 function aif_vp_CreateFcn(hObject, eventdata, handles)
@@ -455,4 +454,12 @@ uirestore;
 
 % --- Executes during object creation, after setting all properties.
 function auc_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+% --- Executes on button press in nested.
+function nested_Callback(hObject, eventdata, handles)
+uiremember;
+
+% --- Executes during object creation, after setting all properties.
+function nested_CreateFcn(hObject, eventdata, handles)
 uirestore;
