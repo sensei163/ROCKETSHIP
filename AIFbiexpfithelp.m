@@ -11,9 +11,14 @@ xdata stores the input parameters of the fit
 
 %}
 
-function [out x xdata] = AIFbiexpfithelp(xdata, voxel)
+function [out, x, xdata, rsquare] = AIFbiexpfithelp(xdata, verbose)
 
 warning off
+
+if ~iscell(xdata)
+    foo{1} = xdata;
+    xdata = foo;
+end
 
 Cp = xdata{1}.Cp;
 Cp = Cp(:);
@@ -38,14 +43,16 @@ MaxIter = str2num(prefs.aif_MaxIter);
 MaxFunEvals = str2num(prefs.aif_MaxFunEvals);
 Robust = prefs.aif_Robust;
 
-fprintf('lower_limits = %s\n',num2str(lower_limits));
-fprintf('upper_limits = %s\n',num2str(upper_limits));
-fprintf('initial_values = %s\n',num2str(initial_values));
-fprintf('TolFun = %s\n',num2str(TolFun));
-fprintf('TolX = %s\n',num2str(TolX));
-fprintf('MaxIter = %s\n',num2str(MaxIter));
-fprintf('MaxFunEvals = %s\n',num2str(MaxFunEvals));
-fprintf('Robust = %s\n\n',Robust);
+if verbose>0
+    fprintf('lower_limits = %s\n',num2str(lower_limits));
+    fprintf('upper_limits = %s\n',num2str(upper_limits));
+    fprintf('initial_values = %s\n',num2str(initial_values));
+    fprintf('TolFun = %s\n',num2str(TolFun));
+    fprintf('TolX = %s\n',num2str(TolX));
+    fprintf('MaxIter = %s\n',num2str(MaxIter));
+    fprintf('MaxFunEvals = %s\n',num2str(MaxFunEvals));
+    fprintf('Robust = %s\n\n',Robust);
+end
 
 %configure the optimset for use with lsqcurvefit
 options = optimset('lsqcurvefit');
@@ -67,8 +74,10 @@ options.Robust      = Robust;
 
 %% Split the fitting between the biexponential phase and the linear phase
 t = oldt;
-figure, plot(t, Cp./max(Cp), 'b.');
-title('Weighting, Injection Period, AIF Curve'), xlabel('time (min)');
+if verbose>0
+    figure, plot(t, Cp./max(Cp), 'b.');
+    title('Weighting, Injection Period, AIF Curve'), xlabel('time (min)');
+end
 
 
 %[x y] = ginput(1);
@@ -90,34 +99,36 @@ step(starter1:ender) = 1;
 xdata{1}.step = step;
 
 
-hold on, 
+
 
 % W is the weighting matrix, should you want to emphasise certain
 % datapoints
 W = ones(size(Cp));
-WW= sort(Cp.*step, 'descend');
-% size(WW)
-% size(Cp)
-ind(1) = find(Cp == WW(1));
+[~, ind(1)] = max(Cp.*step);
+% WW= sort(Cp.*step, 'descend');
+% ind(1) = find(Cp == WW(1));
 % ind(2) = find(Cp == WW(2));
 % ind(3) = find(Cp == WW(3));
 
 step(ind(1)+1:end) = 0;
-
 xdata{1}.step = step;
-plot(t,step, 'r'),
 
-plot(t(ind(1)), Cp(ind(1))/max(Cp), 'kx', 'MarkerSize', 30);
+if verbose>0
+    hold on, 
+    plot(t,step, 'r'),
+    plot(t(ind(1)), Cp(ind(1))/max(Cp), 'kx', 'MarkerSize', 30);
+end
 
 % Alter the weightings here.
-W(ind(1)) =1;
-W(ind(1)+1)= 1;
-W(ind(1)-1)= 1;
+% W(ind(1)) =1;
+% W(ind(1)+1)= 1;
+% W(ind(1)-1)= 1;
 
-plot(t, W, 'gx');
+if verbose>0
+    plot(t, W, 'gx');
+end
 
 maxer = Cp(ind(1));
-
 xdata{1}.maxer = maxer;
 Cp = Cp.*W;
 
@@ -126,11 +137,11 @@ Cp = Cp.*W;
     initial_values, xdata, ...
     Cp',lower_limits,upper_limits,options);
 
-% x
 xdata{1}.timer = oldt;
-
 rsquare = 1 - resnorm / norm(Cp-mean(Cp))^2;
-disp(['R^2 of AIF fit = ' num2str(rsquare)]);
+if verbose>0
+    disp(['R^2 of AIF fit = ' num2str(rsquare)]);
+end
 
 out = AIFbiexpcon(x, xdata);
 

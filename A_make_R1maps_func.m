@@ -168,9 +168,14 @@ end
 
 
 %Load AIF dataset, convert T1 from ms to sec
-% LV = load_nii(fullfile(PathName2, place, lv));
-% LV = 1/1000.*double(LV.img);
-lvind = find(LV > 0);
+% lvind = find(LV > 0);
+
+% load('C:\Users\sbarnes\Documents\data\6 DCE Stroke\aging\Sam Analysis\Raw AIF\1 young - Copy\A-aif.mat')
+dce_auto_aif
+lvind = aif_index;
+LV = zeros(size(LV));
+LV(lvind) = t1_blood;
+
 
 testt1 = mean(LV(lvind));
 if testt1 > 50
@@ -469,10 +474,8 @@ Sstar    = ((1-exp(-tr./T1))./(1-cosd(fa).*exp(-tr./T1)));
 Stlv     = Stotallv;%(inj(2):end,:);
 
 for j = 1:size(Stlv,2)
-    
     A(:,j) = 1-cosd(fa).*Sstar(j).*Stlv(:,j)./Sss(j);
     B(:,j)  = 1-Sstar(j).*Stlv(:,j)./Sss(j);
-    
 end
 
 AB = A./B;
@@ -493,11 +496,8 @@ Sss = Sss(GOODspacelv);
 Stlv = Stlv(:,GOODspacelv);
 
 for j = 1:numel(T1LV)
-    
     % Scale Sss values to T1 values
-    
     ScaleFactorlv = (1/T1LV(j)) - mean(R1tLV(round(steady_state_time(1)):round(steady_state_time(2)), j));
-    
     R1tLV(:,j) = R1tLV(:,j) + ScaleFactorlv;
 end
 
