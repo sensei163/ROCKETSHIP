@@ -3,12 +3,12 @@ function results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_i
 % B_AIF_fitting_func - This file is used to apply a model fitting to the
 % arterial input function. AIF is fit to a bi-exponential model with a
 % linear ramp up (from baseline to peak)
-% 
+%
 % Inputs:
 %  results_a_path     - *.mat Results from part A
-%  start_time         - start time to restrict analysis to (in minutes, 0 
+%  start_time         - start time to restrict analysis to (in minutes, 0
 %                       if all)
-%  end_time           - end time to restrict analysis to (in minutes, 0 if 
+%  end_time           - end time to restrict analysis to (in minutes, 0 if
 %                       all)
 %  start_injection    - start of contrast injection (in minutes)
 %  end_injection      - end of contrast injection (in minutes)
@@ -17,15 +17,15 @@ function results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_i
 %  time_resolution    - time resolution of dynamic scan (in minutes)
 %
 %
-% The script loads the data arrays generated from A_make_R1maps_func(). 
-% Then one can 
-% 
-% a) fit to a model. 
-% b) limit the time interval from which further data fitting is performed. 
+% The script loads the data arrays generated from A_make_R1maps_func().
+% Then one can
+%
+% a) fit to a model.
+% b) limit the time interval from which further data fitting is performed.
 % c) There is an option import a population or averaged AIF from multiple
 % datasets should you desire. This may be useful if you want to get better
 % SNR or comparing multiday studies.
-% 
+%
 % Requires:
 % B_AIF_fitting_func.m
 % AIFbiexpfithelp.m
@@ -36,8 +36,8 @@ function results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_i
 % setupxdata2.m *
 % setupxdata3.m *
 % prepandsave.m *
-% 
-% Thomas Ng 
+%
+% Thomas Ng
 % Caltech
 % December 2011
 % Updated Dec 2013 Sam Barnes
@@ -57,6 +57,13 @@ load(results_a_path);
 rootname = Adata.rootname;
 Cp       = Adata.Cp;
 Ct       = Adata.Ct;
+
+% We also load the Rawdata for raw curve fitting if necessary
+Stlv    = Adata.Stlv;
+Sttum   = Adata.Sttum;
+Sss     = Adata.Sss;
+Ssstum  = Adata.Ssstum;
+
 results  = '';
 
 % update output path to be same as location of input
@@ -65,7 +72,7 @@ results  = '';
 % Log input results
 log_path = fullfile(PathName1, ['B_' rootname 'test_R1info.log']);
 if exist(log_path, 'file')==2
-  delete(log_path);
+    delete(log_path);
 end
 diary(log_path);
 fprintf('************** User Input **************\n\n');
@@ -88,6 +95,11 @@ disp('User selected import AIF path: ');
 fprintf('%s\n\n',import_aif_path);
 disp('User selected time resolution (sec)');
 disp(time_resolution*60);
+if quant
+    disp('User selected quantification: ie. use T1 maps');
+else
+    disp('User selected no quantification: raw signal data only');
+end
 fprintf('************** End User Input **************\n\n\n');
 
 disp('Starting Part B - Fitting AIF')
@@ -124,17 +136,21 @@ CpROI          = mean(Cp,2);
 CpROI          = CpROI(start_time:end_time)';
 xdata{1}.Cp    = CpROI;
 
+StlvROI        = mean(Stlv,2);
+StlvROI        = StlvROI(start_time:end_time)';
+xdata{1}.Stlv  = StlvROI;
+
 % threshold (Remove noise manually)
 if(threshold)
     ind = find(CpROI > threshold);
-
+    
     for j = 1:numel(ind)
         CpROI(ind(j)) = [];
         timer(ind(j)) = [];
         Cp1(ind(j), :)= [];
         Cp2(ind(j),:) = [];
     end
-
+    
     xdata{1}.Cp    = CpROI;
     xdata{1}.timer = timer;
 end
@@ -154,23 +170,36 @@ if isempty(import_aif_path)
         Cp_use = Cp_fitted;
         M{2} = 'Fitted Curve';
         aif_name = 'fitted';
+        
+        %Fit raw data curve
+        Cptemp = xdata{1}.Cp;
+        xdata{1}.Cp = xdata{1}.Stlv;
+        [Stlv_fitted, ~, ~] = AIFbiexpfithelp(xdata, 1);
+        xdata{1}.Cp = Cptemp;
+        Stlv_use = Stlv_fitted;
     else
         Cp_use = CpROI;
         M{2} = 'Using Raw Curve';
         aif_name = 'raw';
+        
+        Stlv_use = Stlv_fitted;
     end
 else
     external = load(import_aif_path);
     if isfield(external,'Cp_use')
         Cp_use = external.Cp_use;
+        Stlv_use = external.Stlv_use;
     elseif isfield(external,'Bdata')
         if isfield(external.Bdata,'Cp_use')
             Cp_use = external.Bdata.Cp_use;
+            Stlv_use = external.Bdata.Stlv_use;
         elseif isfield(external.Bdata,'xdata')
             Cp_use = external.Bdata.xdata{1}.Cp;
+            Stlv_use = external.Bdata.xdata{1}.Stlv;
         end
     elseif isfield(external,'xdata')
         Cp_use = external.xdata{1}.Cp;
+        Stlv_use = exernal.xdata{1}.Stlv_use;
     else
         disp('No Cp curve found in selected file')
         return
@@ -178,6 +207,7 @@ else
     % Check length, if different try applying time constraints
     if numel(timer)<numel(Cp_use)
         Cp_use = Cp_use(start_time:end_time);
+        Stlv_use = Stlv_use(start_time:end_time);
         if numel(timer)~=numel(Cp_use)
             disp('Imported AIF has different length than data, try using time limits');
             return;
@@ -189,6 +219,7 @@ end
 
 % 5.5 Plot the results
 b = figure;
+subplot(1,2,1)
 plot(timer,CpROI,'r.');
 hold on;
 plot(timer, Cp_use,'b');
@@ -203,6 +234,18 @@ hold off;
 title([root_modified ' - AIF Bi-Exponential, Linear Upslope'], 'Interpreter', 'none');
 ylabel('Concentration (mM)');
 xlabel('Time (min)');
+
+subplot(1,2,2)
+plot(timer,StlvROI,'r.');
+hold on;
+plot(timer, Stlv_use,'b');
+
+M{1} = 'Original Plasma Curve: Raw data';
+legend(M);
+hold off;
+title([root_modified ' - AIF Bi-Exponential, Linear Upslope'], 'Interpreter', 'none');
+ylabel('Signal (a.u)');
+xlabel('Time (min)');
 saveas(b, fullfile(PathName1, [rootname 'AIF_fitting.fig']));
 
 %% 6.  Save for voxel by voxel fitting, setup ready to go
@@ -210,6 +253,9 @@ xdata{1}.timer = timer;
 xdata{1}.Ct    = Ct(start_time:end_time,:);
 numvoxels      = size(Ct,2);
 xdata{1}.Cp = Cp_use;
+
+xdata{1}.Sttum = Sttum(start_time:end_time,:);
+xdata{1}.Stlv  = Stlv_use;
 
 %% 7. Setup  Bresults to output
 Bdata.CpROI         = CpROI;
@@ -229,7 +275,10 @@ Bdata.xdata         = xdata;
 
 % Results from A that need to be passed through
 Bdata.rootname    = Adata.rootname;
-Bdata.R1tTOI      = Adata.R1tTOI;
+Bdata.R1tTOI      = Adata.R1tTOI(start_time:end_time,:);
+Bdata.R1tLV       = Adata.R1tLV(start_time:end_time,:);
+Bdata.deltaR1LV   = Adata.deltaR1LV(start_time:end_time,:);
+Bdata.deltaR1TOI  = Adta.deltaR1TOI(start_time:end_time,:);
 Bdata.T1TUM       = Adata.T1TUM;
 Bdata.tumind      = Adata.tumind;
 Bdata.dynam_name  = Adata.dynam_name;
@@ -240,9 +289,8 @@ Bdata.hdr         = Adata.hdr;
 % for AUC
 Bdata.Sss         = Adata.Sss;
 Bdata.Ssstum      = Adata.Ssstum;
-Bdata.Stlv        = Adata.Stlv(start_time:end_time,:);
-Bdata.Sttum       = Adata.Sttum(start_time:end_time,:);
-        
+
+
 
 results = fullfile(PathName1, ['B_' rootname aif_name '_R1info.mat']);
 

@@ -114,6 +114,11 @@ disp('User selected end of steady state time (image number): ');
 disp(steady_state_time);
 disp('User selected drift correction: ');
 disp(drift);
+if quant
+    disp('User selected quantification: ie. T1 maps');
+else
+    disp('User selected no quantification: raw signal data only');
+end
 fprintf('************** End User Input **************\n\n\n');
 
 disp('Starting Part A Processing')
@@ -158,11 +163,13 @@ dynam = DYNAMIC; %double(dynam.img);
 tumind= find(TUMOR > 0);
 
 testt1 = mean(TUMOR(tumind));
+if quant
 if testt1 > 50
     disp('T1 maps of data likely in ms, converting to s...');
     TUMOR = (1/1000).*double(TUMOR);
 else
     disp('T1 maps of data likely in sec, no conversion');
+end
 end
 
 
@@ -173,11 +180,14 @@ end
 lvind = find(LV > 0);
 
 testt1 = mean(LV(lvind));
+
+if quant
 if testt1 > 50
     disp('T1 maps of AIF likely in ms, converting to s...');
     LV = (1/1000).*double(LV);
 else
     disp('T1 maps of AIF likely in sec, no conversion');
+end
 end
 
 %Load noise ROI files
@@ -377,8 +387,9 @@ end
 % dynamic file.
 saveas(nn, fullfile(PathName1, [rootname 'image_ROI.fig']));
 
+if drift
 saveas(drift_fig, fullfile(PathName1, [rootname '_drift.fig']));
-
+end
 
 %% 5. Manually select injection point, if required
 if(steady_state_time == -1)
@@ -494,11 +505,18 @@ Stlv = Stlv(:,GOODspacelv);
 
 for j = 1:numel(T1LV)
     
-    % Scale Sss values to T1 values
+    % Scale R1 time curve values to initial T1 values
     
     ScaleFactorlv = (1/T1LV(j)) - mean(R1tLV(round(steady_state_time(1)):round(steady_state_time(2)), j));
     
     R1tLV(:,j) = R1tLV(:,j) + ScaleFactorlv;
+end
+
+if ~quant
+    % R1 curves are not real, so we re-process Sss Stlv, we keep the other
+    % time streams just to keep legacy downstream code nice.
+    Sss      = mean(Stotallv(round(steady_state_time(1)):round(steady_state_time(2)),:));
+Stlv     = Stotallv;%(inj(2):end,:);
 end
 
 %% 8. Convert Tumor ROI to R1
@@ -538,10 +556,17 @@ for j = 1:numel(T1TUM)
     R1tTOI(:,j) = R1tTOI(:,j) + ScaleFactortum;
 end
 
+if ~quant
+    Ssstum = mean(Stotaltum(round(steady_state_time(1)):round(steady_state_time(2)),:));
+Sttum = Stotaltum;
+end
+
+
 n = figure; 
+if quant
 subplot(421),plot(mean(R1tTOI,2), 'r.'), title('R1 maps pre-filtering ROI'), ylabel('sec^-1')
 subplot(422), plot(mean(R1tLV,2), 'b.'), title('R1 maps pre-filtering AIF'), ylabel('sec^-1')
-
+end
 %% 9. Convert to concentrations
 
 % f.1 AIF
@@ -564,6 +589,7 @@ Ct = (R1tTOI-repmat((1./T1TUM)', [size(R1tTOI, 1) 1]))./relaxivity;
 
 %% 10. Save the Ct file as a dynamic curve
 
+if quant
 CTFILE = zeros(size(dynam));
 
 for i = 1:size(Ct,1)
@@ -577,7 +603,7 @@ end
 CC = make_nii(CTFILE, res, [1 1 1]);
 
 save_nii(CC, fullfile(PathName1, [rootname 'dynamicCt.nii']));
-
+end
 %% 11. Save as delta R1 values (May be useful if the Contrast agent has longer correlation time).
 
 deltaR1LV = R1tLV-repmat(mean(R1tLV(round(steady_state_time(1)):round(steady_state_time(2)), :), 1), [size(R1tLV,1) 1]);
@@ -588,12 +614,15 @@ deltaR1TOI= R1tTOI-repmat(mean(R1tTOI(round(steady_state_time(1)):round(steady_s
 %% 12. Plot the time curves
 
 figure(n), 
+if quant
 subplot(423),plot(mean(Ct,2), 'r'), title('Ct maps pre-filtering ROI'), ylabel('mmol')
 subplot(424), plot(mean(Cp,2), 'b'), title('Cp maps pre-filtering AIF'), ylabel('mmol')
-subplot(425), plot(RawTUM, 'r'), title('T1-weighted ROI'), ylabel('a.u.')
-subplot(426), plot(RawLV, 'b'), title('T1-weighted AIF'), ylabel('a.u.')
+
 subplot(427), plot(mean(deltaR1TOI,2), 'b.'), title('Delta R1 ROI'), ylabel('sec^-1')
 subplot(428), plot(mean(deltaR1LV,2), 'r.'), title('Delta R1 AIF') , ylabel('sec^-1')
+end
+subplot(425), plot(RawTUM, 'r'), title('T1-weighted ROI'), ylabel('a.u.')
+subplot(426), plot(RawLV, 'b'), title('T1-weighted AIF'), ylabel('a.u.')
 saveas(n,fullfile(PathName1, [rootname 'timecurves.fig']));
 
 %% 13. Setup output structure
@@ -615,8 +644,6 @@ Adata.NOISE = NOISE;
 Adata.PathName1 = PathName1;
 Adata.R1tLV = R1tLV;
 Adata.R1tTOI= R1tTOI;
-Adata.RawLV = RawLV;
-Adata.RawTUM = RawTUM;
 Adata.ScaleFactorlv = ScaleFactorlv;
 Adata.ScaleFactortum= ScaleFactortum;
 Adata.Sss = Sss;
