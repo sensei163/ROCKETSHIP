@@ -163,7 +163,7 @@ xdata{1}.step = [start_injection end_injection];
 
 %% 5. Either Fit the curve to the model, keep the curve as raw data, or replace the curve with an AIF from another dataset.
 % NEED TO WORK ON FITTING TO BE MORE ROBUST
-save('TEMP.mat')
+
 M{1} = '';
 aif_name = '';
 if isempty(import_aif_path)
