@@ -493,7 +493,7 @@ for model_index=1:numel(dce_model_list)
                 xdata{1}.R1i = 1./T1TUM;
                 xdata{1}.relaxivity = relaxivity;
             end
-            
+
             [fitting_results, voxel_residuals] = FXLfit_generic(xdata, numvoxels, cur_dce_model);
             
             disp('Voxel fitting done')

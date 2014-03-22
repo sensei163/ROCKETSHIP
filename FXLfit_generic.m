@@ -189,8 +189,9 @@ elseif strcmp(model, 'auc')
     
     % Substract steady state signal from time curves
     Sttum = Sttum - repmat(Ssstum, [size(Sttum,1) 1]);
-    Stlv  = Stlv - repmat(Sss, [size(Stlv,1) 1]);
-    Stlv  = mean(Stlv, 2);
+    Sss = mean(Sss);
+    Stlv  = Stlv - Sss;%repmat(Sss, [size(Stlv,1) 1]);
+    %Stlv  = mean(Stlv, 2);
     
     timer_data      = xdata{1}.timer;
     start_injection = xdata{1}.start_injection;
@@ -220,7 +221,7 @@ elseif strcmp(model, 'auc')
     if diary_restore, diary on, end;
     
 elseif strcmp(model, 'fractal')
-
+    
 elseif strcmp(model, 'nested')
     
     % Get values from pref file
@@ -273,7 +274,7 @@ elseif strcmp(model, 'nested')
         diary_restore = 1;
     end
     p = ProgressBar(number_voxels);
-
+    
     parfor i = 1:number_voxels
         % Fit 0 order model
         [GG_zero, residuals(i,:)] = model_0(Ct_data(:,i));
@@ -300,7 +301,7 @@ elseif strcmp(model, 'nested')
             GG(i,:) = GG_local;
             residuals(i,:) = residuals_b';
             fp_lower = 1;
-        
+            
             % Continue, Fit 2nd order model
             [GG_two, residuals_b] = model_patlak(Ct_data(:,i),Cp_data,timer_data,prefs);
             fp_higher = 2;
@@ -319,7 +320,7 @@ elseif strcmp(model, 'nested')
                 GG(i,:) = GG_local;
                 residuals(i,:) = residuals_b';
                 fp_lower = 2;
-            
+                
                 % Continue, Fit 3rd order model
                 [GG_three, residuals_b] = model_extended_tofts(Ct_data(:,i),Cp_data,timer_data,prefs);
                 fp_higher = 3;
@@ -333,12 +334,12 @@ elseif strcmp(model, 'nested')
                 end
             end
         end
-
+        
         p.progress;
     end;
     p.stop;
     if diary_restore, diary on, end;
-
+    
 elseif strcmp(model, 'patlak')
     
     % Get values from pref file

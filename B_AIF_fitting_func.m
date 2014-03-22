@@ -53,7 +53,7 @@ threshold = 0;
 load(results_a_path);
 
 % unload the variables from previous data array
-
+quant    = Adata.quant;
 rootname = Adata.rootname;
 Cp       = Adata.Cp;
 Ct       = Adata.Ct;
@@ -162,12 +162,16 @@ end
 xdata{1}.step = [start_injection end_injection];
 
 %% 5. Either Fit the curve to the model, keep the curve as raw data, or replace the curve with an AIF from another dataset.
+% NEED TO WORK ON FITTING TO BE MORE ROBUST
+save('TEMP.mat')
 M{1} = '';
 aif_name = '';
 if isempty(import_aif_path)
     if(fit_aif)
-        [Cp_fitted xAIF xdataAIF] = AIFbiexpfithelp(xdata, 1);
-        Cp_use = Cp_fitted;
+      
+            [Cp_fitted xAIF xdataAIF] = AIFbiexpfithelp(xdata, 1);
+            Cp_use = Cp_fitted;
+ 
         M{2} = 'Fitted Curve';
         aif_name = 'fitted';
         
@@ -182,7 +186,7 @@ if isempty(import_aif_path)
         M{2} = 'Using Raw Curve';
         aif_name = 'raw';
         
-        Stlv_use = Stlv_fitted;
+        Stlv_use = StlvROI;
     end
 else
     external = load(import_aif_path);
@@ -278,7 +282,7 @@ Bdata.rootname    = Adata.rootname;
 Bdata.R1tTOI      = Adata.R1tTOI(start_time:end_time,:);
 Bdata.R1tLV       = Adata.R1tLV(start_time:end_time,:);
 Bdata.deltaR1LV   = Adata.deltaR1LV(start_time:end_time,:);
-Bdata.deltaR1TOI  = Adta.deltaR1TOI(start_time:end_time,:);
+Bdata.deltaR1TOI  = Adata.deltaR1TOI(start_time:end_time,:);
 Bdata.T1TUM       = Adata.T1TUM;
 Bdata.tumind      = Adata.tumind;
 Bdata.dynam_name  = Adata.dynam_name;
@@ -286,6 +290,7 @@ Bdata.currentCT   = Adata.currentCT;
 Bdata.res         = Adata.res;
 Bdata.relaxivity  = Adata.relaxivity;
 Bdata.hdr         = Adata.hdr;
+Bdata.quant       = quant;
 % for AUC
 Bdata.Sss         = Adata.Sss;
 Bdata.Ssstum      = Adata.Ssstum;

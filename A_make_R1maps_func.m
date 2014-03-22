@@ -1,10 +1,10 @@
-function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynam_name, aiforRR, ... 
+function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynam_name, aiforRR, ...
     tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time, drift, sliceloc)
 
 % A_make_R1maps_func - Generate concentration versus time curves for the
 % tumor region and the arterial input region. The setup follows Loveless
 % et. al 2011 MRM method of AIF filtering based upon SNR.
-% 
+%
 % Inputs:
 %  DYNAMIC            - Image matrix that contains the dynamic
 %                       dataset. Formated as volume x time points.
@@ -41,23 +41,23 @@ function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,
 %                       graphically
 %  drift              - boolean value, perform drift correction based on
 %                       a rod phantom in image FOV
-% 
+%
 % We assume that the T1 maps and the DCE-MRI files contain the same field of
 % view.
-% 
+%
 % The script uses the T1 maps to calculate the R1 changes over time for the
-% dynamic dataset using the gradient echo signal equation. 
-% 
+% dynamic dataset using the gradient echo signal equation.
+%
 % Voxels whereby the R1 calculation creates unreasonable values (e.g. complex
 % values) are filtered out.
-% 
+%
 % For the AIF (or reference region), a SNR filter is applied. Voxels that
-% have SNR less than denoted will be filtered out. 
-% 
-% Concentration maps and time curves are saved. 
-% 
+% have SNR less than denoted will be filtered out.
+%
+% Concentration maps and time curves are saved.
+%
 % A matlab data .mat file is saved for further processing.
-% 
+%
 % Requires:
 % A_make_R1maps_func.m
 % DataHash.m
@@ -65,7 +65,7 @@ function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,
 % cleanR1t.m
 % findRod.m
 % niftitools
-% 
+%
 % Thomas Ng
 % Caltech, Dec 2011
 % Updated April 2012
@@ -88,7 +88,7 @@ viable= 0;
 log_path = dynampath;
 log_path = fullfile(log_path, ['A_' rootname 'R1info.log']);
 if exist(log_path, 'file')==2
-  delete(log_path);
+    delete(log_path);
 end
 diary(log_path);
 fprintf('************** User Input **************\n\n');
@@ -133,22 +133,22 @@ place = '';
 [PathName1,~,~] = fileparts(log_path);
 % [PathName1,base,ext] = fileparts(dce_path);
 % dynam = [base ext];
-% 
+%
 % [PathName2,base,ext] = fileparts(t1_aif_path);
 % lv = [base ext];
-% 
+%
 % [PathName3,base,ext] = fileparts(t1_roi_path);
 % tumor = [base ext];
-% 
+%
 % [PathName4,base,ext] = fileparts(noise_path);
 % noise = [base ext];
-% 
+%
 % % Output name
 % rootname = strrep(dynam,'.nii','_');
 
 % %Load DCE dataset
 % dynam = load_nii(fullfile(PathName1, place, dynam));
-% 
+%
 % %image resolution
 % res  = dynam.hdr.dime.pixdim;
 % save for part D
@@ -164,12 +164,12 @@ tumind= find(TUMOR > 0);
 
 testt1 = mean(TUMOR(tumind));
 if quant
-if testt1 > 50
-    disp('T1 maps of data likely in ms, converting to s...');
-    TUMOR = (1/1000).*double(TUMOR);
-else
-    disp('T1 maps of data likely in sec, no conversion');
-end
+    if testt1 > 50
+        disp('T1 maps of data likely in ms, converting to s...');
+        TUMOR = (1/1000).*double(TUMOR);
+    else
+        disp('T1 maps of data likely in sec, no conversion');
+    end
 end
 
 
@@ -182,12 +182,12 @@ lvind = find(LV > 0);
 testt1 = mean(LV(lvind));
 
 if quant
-if testt1 > 50
-    disp('T1 maps of AIF likely in ms, converting to s...');
-    LV = (1/1000).*double(LV);
-else
-    disp('T1 maps of AIF likely in sec, no conversion');
-end
+    if testt1 > 50
+        disp('T1 maps of AIF likely in ms, converting to s...');
+        LV = (1/1000).*double(LV);
+    else
+        disp('T1 maps of AIF likely in sec, no conversion');
+    end
 end
 
 %Load noise ROI files
@@ -214,7 +214,7 @@ end
 slices = size(TUMOR, 3);
 
 % The TR is in ms
-tr = tr/1000; 
+tr = tr/1000;
 
 %% 3. Setup the data for next step.
 
@@ -235,7 +235,7 @@ for i = 1:slices:size(dynam,3)
     DYNAMLV(end+1,:) = currentimg(lvind);
     DYNAMNOISE(end+1)= std(single(currentimg(noiseind)));
     
-
+    
     % This is used for create a graphic showing the ROIs in relation to the
     % DCE MRI image.
     matchimg = currentimg;
@@ -281,12 +281,12 @@ if(drift)
             
             OUT = [];
         else
-        OUT = findRod(dynam(:,:,j), [x(1) y(1)],[x(2) y(2)], []);
-          
-        title('');
-        cumatchimg(OUT(:,1), OUT(:,2)) = 600000;
-        
-        subplot(2, slices, j+slices), imagesc(cumatchimg'), axis off
+            OUT = findRod(dynam(:,:,j), [x(1) y(1)],[x(2) y(2)], []);
+            
+            title('');
+            cumatchimg(OUT(:,1), OUT(:,2)) = 600000;
+            
+            subplot(2, slices, j+slices), imagesc(cumatchimg'), axis off
         end
         
         ROD{j}.OUT = OUT;
@@ -300,11 +300,11 @@ if(drift)
     DYNAMLV     = [];
     DYNAMNOISE  = [];
     DYNAMNONVIA = [];
-
+    
     scalefactor = ones(size(dynam,3)/slices,1);
     scale_fit = cell(1,slices);
     % Slice loop
-    for j = 1:slices 
+    for j = 1:slices
         originalimgj = originalimg(:,:,j);
         
         % Time loop
@@ -312,10 +312,10 @@ if(drift)
         for i = 1:slices:size(dynam,3)
             currentimg       = dynam(:,:,i:i+(slices-1));
             currentimgj  = currentimg(:,:,j);
-
+            
             % rod mean
             OUT = ROD{j}.OUT;
-
+            
             if(~isempty(OUT))
                 ind = sub2ind(size(originalimgj), OUT(:,1), OUT(:,2));
                 scalefactor(time_index) = mean(originalimgj(ind))/mean(currentimgj(ind));
@@ -324,14 +324,14 @@ if(drift)
         end
         scale_fit{j} = fit((1:numel(scalefactor))',scalefactor,'poly3');
     end
-
-        
+    
+    
     % Time loop
     time_index = 1;
     for i = 1:slices:size(dynam,3)
         currentimg       = dynam(:,:,i:i+(slices-1));
         % Slice loop
-        for j = 1:slices 
+        for j = 1:slices
             originalimgj = originalimg(:,:,j);
             currentimgj  = currentimg(:,:,j);
             
@@ -372,10 +372,10 @@ if(drift)
         if(~isempty(OUT))
             subplot(ceil(sqrt(slices)), ceil(sqrt(slices)), j)
             hold on
-                plot(DRIFT(:,j)', 'r.')
-                plot(1./scale_fit{j}(1:time_index).*DRIFT(2,j),'k')
-                plot(CORRECTED(:,j), 'gx')
-                plot(PRECORRECTED(:,j), 'b.')
+            plot(DRIFT(:,j)', 'r.')
+            plot(1./scale_fit{j}(1:time_index).*DRIFT(2,j),'k')
+            plot(CORRECTED(:,j), 'gx')
+            plot(PRECORRECTED(:,j), 'b.')
             hold off
             
             title(['Slice: ' num2str(j)]);
@@ -388,7 +388,7 @@ end
 saveas(nn, fullfile(PathName1, [rootname 'image_ROI.fig']));
 
 if drift
-saveas(drift_fig, fullfile(PathName1, [rootname '_drift.fig']));
+    saveas(drift_fig, fullfile(PathName1, [rootname '_drift.fig']));
 end
 
 %% 5. Manually select injection point, if required
@@ -448,17 +448,17 @@ DYNAMLV(:,ind) = [];
 voxelSNR_filtered = voxelSNR;
 voxelSNR_filtered(ind) = [];
 
-snrfilter = snrfilter + numel(ind);  
+snrfilter = snrfilter + numel(ind);
 % for i = 1:size(DYNAM,1)
 %     currentSNR = DYNAMLV(i,:)./DYNAMNOISE(i);
-%     
+%
 %     ind = find(currentSNR < snr_filter);
-%     
+%
 %     lvind(ind) = [];
 %     DYNAMLV(:,ind) = [];
-%     
+%
 %     numel(ind);
-%     snrfilter = snrfilter + numel(ind);  
+%     snrfilter = snrfilter + numel(ind);
 % end
 
 disp(['AIF SNR filter requires average SNR > ' num2str(snr_filter)]);
@@ -491,7 +491,7 @@ AB = A./B;
 % AB should not be less than 0. We interpolate the timeseries to clean
 % this. Threshold is 0.5;
 % up.
-[AB T1LV lvind BADspacelABv GOODspacelABv] = cleanAB(AB, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.5);
+[AB T1LV lvind BADspacelABv GOODspacelABv] = cleanAB(AB, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.5, quant);
 
 R1tLV = double((1/tr).*log(AB));
 Sss = Sss(GOODspacelABv);
@@ -499,7 +499,7 @@ Stlv = Stlv(:,GOODspacelABv);
 % R1 should be real. We interpolate the timeseries to clean
 % this. Threshold is 0.5;
 % up.
-[R1tLV T1LV lvind BADspacelv GOODspacelv] = cleanR1t(R1tLV, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.5);
+[R1tLV T1LV lvind BADspacelv GOODspacelv] = cleanR1t(R1tLV, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.5, quant);
 Sss = Sss(GOODspacelv);
 Stlv = Stlv(:,GOODspacelv);
 
@@ -516,10 +516,11 @@ if ~quant
     % R1 curves are not real, so we re-process Sss Stlv, we keep the other
     % time streams just to keep legacy downstream code nice.
     Sss      = mean(Stotallv(round(steady_state_time(1)):round(steady_state_time(2)),:));
-Stlv     = Stotallv;%(inj(2):end,:);
+    Stlv     = Stotallv;%(inj(2):end,:);
 end
 
 %% 8. Convert Tumor ROI to R1
+clear A B AB
 
 T1TUM     = TUMOR(tumind);
 T1        = T1TUM;
@@ -537,14 +538,15 @@ for j = 1:numel(T1)
 end
 
 AB = A./B;
-[AB T1TUM tumind BADspaceAB GOODspaceAB] = cleanAB(AB, T1TUM,tumind, 'Tumor', min(numel(T1TUM)), 0.7);
+[AB T1TUM tumind BADspaceAB GOODspaceAB] = cleanAB(AB, T1TUM,tumind, 'Tumor', min(numel(T1TUM)), 0.7, quant);
 
 R1tTOI = double((1/tr).*log(AB));
+
 Ssstum = Ssstum(GOODspaceAB);
 Sttum = Sttum(:,GOODspaceAB);
 Sstar = Sstar(GOODspaceAB);
 
-[R1tTOI T1TUM tumind BADspaceT GOODspaceT] = cleanR1t(R1tTOI, T1TUM,tumind, 'Tumor', min(numel(T1TUM)), 0.7);
+[R1tTOI T1TUM tumind BADspaceT GOODspaceT] = cleanR1t(R1tTOI, T1TUM,tumind, 'Tumor', min(numel(T1TUM)), 0.7, quant);
 
 Ssstum = Ssstum(GOODspaceT);
 Sttum = Sttum(:,GOODspaceT);
@@ -556,16 +558,17 @@ for j = 1:numel(T1TUM)
     R1tTOI(:,j) = R1tTOI(:,j) + ScaleFactortum;
 end
 
-if ~quant
-    Ssstum = mean(Stotaltum(round(steady_state_time(1)):round(steady_state_time(2)),:));
+
+
+Ssstum = mean(Stotaltum(round(steady_state_time(1)):round(steady_state_time(2)),:));
 Sttum = Stotaltum;
-end
 
 
-n = figure; 
+
+n = figure;
 if quant
-subplot(421),plot(mean(R1tTOI,2), 'r.'), title('R1 maps pre-filtering ROI'), ylabel('sec^-1')
-subplot(422), plot(mean(R1tLV,2), 'b.'), title('R1 maps pre-filtering AIF'), ylabel('sec^-1')
+    subplot(421),plot(mean(R1tTOI,2), 'r.'), title('R1 maps pre-filtering ROI'), ylabel('sec^-1')
+    subplot(422), plot(mean(R1tLV,2), 'b.'), title('R1 maps pre-filtering AIF'), ylabel('sec^-1')
 end
 %% 9. Convert to concentrations
 
@@ -589,7 +592,7 @@ Ct = (R1tTOI-repmat((1./T1TUM)', [size(R1tTOI, 1) 1]))./relaxivity;
 
 %% 10. Save the Ct file as a dynamic curve
 
-if quant
+
 CTFILE = zeros(size(dynam));
 
 for i = 1:size(Ct,1)
@@ -601,8 +604,8 @@ end
 % Save as dynamic file, with the TUMOR ROI only.
 
 CC = make_nii(CTFILE, res, [1 1 1]);
-
-save_nii(CC, fullfile(PathName1, [rootname 'dynamicCt.nii']));
+if quant
+    save_nii(CC, fullfile(PathName1, [rootname 'dynamicCt.nii']));
 end
 %% 11. Save as delta R1 values (May be useful if the Contrast agent has longer correlation time).
 
@@ -613,21 +616,22 @@ deltaR1TOI= R1tTOI-repmat(mean(R1tTOI(round(steady_state_time(1)):round(steady_s
 
 %% 12. Plot the time curves
 
-figure(n), 
+figure(n),
 if quant
-subplot(423),plot(mean(Ct,2), 'r'), title('Ct maps pre-filtering ROI'), ylabel('mmol')
-subplot(424), plot(mean(Cp,2), 'b'), title('Cp maps pre-filtering AIF'), ylabel('mmol')
-
-subplot(427), plot(mean(deltaR1TOI,2), 'b.'), title('Delta R1 ROI'), ylabel('sec^-1')
-subplot(428), plot(mean(deltaR1LV,2), 'r.'), title('Delta R1 AIF') , ylabel('sec^-1')
+    subplot(423),plot(mean(Ct,2), 'r'), title('Ct maps pre-filtering ROI'), ylabel('mmol')
+    subplot(424), plot(mean(Cp,2), 'b'), title('Cp maps pre-filtering AIF'), ylabel('mmol')
+    
+    subplot(427), plot(mean(deltaR1TOI,2), 'b.'), title('Delta R1 ROI'), ylabel('sec^-1')
+    subplot(428), plot(mean(deltaR1LV,2), 'r.'), title('Delta R1 AIF') , ylabel('sec^-1')
 end
 subplot(425), plot(RawTUM, 'r'), title('T1-weighted ROI'), ylabel('a.u.')
 subplot(426), plot(RawLV, 'b'), title('T1-weighted AIF'), ylabel('a.u.')
 saveas(n,fullfile(PathName1, [rootname 'timecurves.fig']));
 
 %% 13. Setup output structure
-
-Adata.CTFILE = CTFILE;
+if quant
+    Adata.CTFILE = CTFILE;
+end
 Adata.Cp     = Cp;
 Adata.Ct     = Ct;
 Adata.DYNAM  = DYNAM;
