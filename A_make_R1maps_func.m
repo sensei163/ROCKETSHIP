@@ -169,8 +169,6 @@ end
 
 %Load AIF dataset, convert T1 from ms to sec
 % lvind = find(LV > 0);
-
-% load('C:\Users\sbarnes\Documents\data\6 DCE Stroke\aging\Sam Analysis\Raw AIF\1 young - Copy\A-aif.mat')
 dce_auto_aif
 lvind = aif_index;
 LV = zeros(size(LV));
@@ -230,26 +228,54 @@ for i = 1:slices:size(dynam,3)
     DYNAMLV(end+1,:) = currentimg(lvind);
     DYNAMNOISE(end+1)= std(single(currentimg(noiseind)));
     
-
-    % This is used for create a graphic showing the ROIs in relation to the
-    % DCE MRI image.
-    matchimg = currentimg;
-    
-    matchimg(tumind) = 300000;
-    matchimg(lvind)  = 300000;
-    matchimg(noiseind)=400000;
-    
-    if(viable)
-        matchimg(nonvia) = 50000;
-    end
-    
-    
     if(i == 1)
+        % This is used for create a graphic showing the ROIs in relation to the
+        % DCE MRI image.
+        matchimg = currentimg;
+    %     matchimg(tumind) = 300000;
+    %     matchimg(lvind)  = 300000;
+    %     matchimg(noiseind)=400000;
+        size_image = [size(matchimg,1),size(matchimg,2)];
+
+        red_mask = cat(3, ones(size_image)', zeros(size_image)', zeros(size_image)');
+        green_mask = cat(3, zeros(size_image)', ones(size_image)', zeros(size_image)');
+        blue_mask = cat(3, zeros(size_image)', zeros(size_image)', ones(size_image)');
+        yellow_mask = cat(3, zeros(size_image)', ones(size_image)', ones(size_image)');
+        cyan_mask = cat(3, ones(size_image)', zeros(size_image)', ones(size_image)');
+        region_mask = zeros(size_image);
+        aif_mask = zeros(size_image);
+        noise_mask = zeros(size_image);
+        drift_mask = zeros(size_image);
+        region_mask(tumind) = 1;
+        aif_mask(lvind)  = 1;
+        noise_mask(noiseind)=1;
+
+        if(viable)
+    %         matchimg(nonvia) = 50000;
+            nonviable_mask = zeros(size_image);
+            nonviable_mask(nonvia)=1;
+        end
+    
+    
+    
         nn = figure;
         
         for j = 1:slices
             subplot(2,slices, j), imagesc(currentimg(:,:,j)'), axis off
             subplot(2,slices,j+slices), imagesc(matchimg(:,:,j)'), axis off
+            colormap('gray')
+            hold on
+            h_mask = imagesc(red_mask); axis off
+            set(h_mask, 'AlphaData',double(aif_mask(:,:,j)'));
+            h_mask = imagesc(green_mask); axis off
+            set(h_mask, 'AlphaData',double(region_mask(:,:,j)'));
+            h_mask = imagesc(blue_mask); axis off
+            set(h_mask, 'AlphaData',double(noise_mask(:,:,j)'));
+            if(viable)
+                h_mask = imagesc(yellow_mask); axis off
+                set(h_mask, 'AlphaData',double(nonviable_mask(:,:,j)'));
+            end
+            hold off;
         end
     end
     
@@ -273,15 +299,19 @@ if(drift)
         y = round(y);
         
         if(button(1) > 1)
-            
             OUT = [];
         else
-        OUT = findRod(dynam(:,:,j), [x(1) y(1)],[x(2) y(2)], []);
-          
-        title('');
-        cumatchimg(OUT(:,1), OUT(:,2)) = 600000;
-        
-        subplot(2, slices, j+slices), imagesc(cumatchimg'), axis off
+            OUT = findRod(dynam(:,:,j), [x(1) y(1)],[x(2) y(2)], []);
+
+            title('Selected ROIs');
+%             cumatchimg(OUT(:,1), OUT(:,2)) = 600000;
+%             subplot(2, slices, j+slices), imagesc(cumatchimg'), axis off
+            drift_mask(OUT(:,1), OUT(:,2), j)=1;
+            
+            subplot(2, slices, j+slices), hold on
+            h_mask = imagesc(cyan_mask); axis off;
+            hold off
+            set(h_mask, 'AlphaData',double(drift_mask(:,:,j)'));
         end
         
         ROD{j}.OUT = OUT;

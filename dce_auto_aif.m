@@ -18,7 +18,10 @@ time_points = size(DYNAMIC,3);
 dynam_pre_smooth = double(reshape(DYNAMIC,spatial_points,time_points)');
 dynam_smooth = smooth(dynam_pre_smooth,25,'moving');
 dynam_smooth = reshape(dynam_smooth,time_points,spatial_points);
-              
+% Scale from 0 to 1 so edge detector threshold is consistant
+max_smooth = max(max(dynam_smooth));
+min_smooth = min(min(dynam_smooth));
+dynam_smooth = (dynam_smooth-min_smooth)./(max_smooth-min_smooth);
 
 edge_detected = zeros(spatial_points,1);
 all_edges = 0;
@@ -31,10 +34,24 @@ p = ProgressBar(100);
 xdata = cell(spatial_points,1);
 parfor voxel_index = 1:spatial_points
     % Edge detect with sobel filter
-    bw= edge(dynam_smooth(:,voxel_index),'sobel',200);
+    [bw thresh]= edge(dynam_smooth(:,voxel_index),'sobel',0.007);
     % Look only for edges within injection window
     if max(bw(end_ss:end_inject))==1   
         all_edges = all_edges+1;
+        
+        
+%         bw_plot = bw*0.5;     
+% %         bw_plot = is_edge_positive_robust.*10+min(dynam_smooth(:,voxel_index));
+%         figure(1); 
+%         plot(dynam_smooth(:,voxel_index)); hold on
+% %         plot(dynam_smooth_robust); hold on
+%         plot(bw_plot,'r');
+%         hold off;
+% %         figure(2);
+% %         plot(dynam_pre_smooth(:,voxel_index));
+% %         thresh
+% %         waitforbuttonpress
+        
         
         % Calculate gradient to see if edge is positive
         op = fspecial('sobel')/8;
@@ -43,35 +60,29 @@ parfor voxel_index = 1:spatial_points
         is_edge_positive = -bw.*bx;
 
         % Eliminate negative edges
-        if max(is_edge_positive(end_ss:end_inject))>1
+        if max(is_edge_positive(end_ss:end_inject))>0
             positive_edges = positive_edges+1;
             % Run robust smoothing to remove more noise
             % Very slow so only do it after is has been pre selected
             % with faster algorithm
-            dynam_smooth_robust = smooth(dynam_pre_smooth(:,voxel_index),25,'rlowess');
-            
-            bw_robust = edge(dynam_smooth_robust,'sobel',200);
-            is_edge_positive_robust = -bw_robust.*bx;
+%             dynam_smooth_robust = smooth(dynam_pre_smooth(:,voxel_index),25,'rlowess');
+%             max_smooth = max(dynam_smooth_robust);
+%             min_smooth = min(dynam_smooth_robust);
+%             dynam_smooth_robust = (dynam_smooth_robust-min_smooth)./(max_smooth-min_smooth);
+% 
+%             bw_robust = edge(dynam_smooth_robust,'sobel',0.007);
+%             is_edge_positive_robust = -bw_robust.*bx;
             
             % Remove edges that fail after robust smoothing
-            if max(is_edge_positive_robust(end_ss:end_inject))>1
+            if max(is_edge_positive(end_ss:end_inject))>0
                 positive_edges_robust = positive_edges_robust+1;
-                      
-%                 bw_plot = bw*(max(dynam_smooth(:,voxel_index))-min(dynam_smooth(:,voxel_index)))+min(dynam_smooth(:,voxel_index));     
-%                 bw_plot = is_edge_positive_robust.*10+min(dynam_smooth(:,voxel_index));
-%                 figure(1); 
-%                 plot(dynam_smooth(:,voxel_index)); hold on
-%                 plot(dynam_smooth_robust); hold on
-%                 plot(bw_plot,'r');
-%                 hold off;
-%                 figure(2);
-%                 plot(dynam_pre_smooth(:,voxel_index));
-%                 waitforbuttonpress
 
                 % Fit voxel to biexponential and see what r^2 is
                 aif_x = dynam_pre_smooth(:,voxel_index);
                 % Set baseline to zero so it will fit properly
                 aif_x = aif_x - mean(aif_x(1:end_ss));
+                % Scale to 1
+                aif_x = aif_x./max(aif_x);
                 xdata{voxel_index}.Cp    = aif_x;
                 xdata{voxel_index}.timer = timer(start_time:end_time)';
                 xdata{voxel_index}.step = [end_ss*time_resolution end_inject*time_resolution];
@@ -123,19 +134,24 @@ set(h_mask, 'AlphaData',double(aif_mask'));
 
 % Fit average AIF
 aif_index = find(edge_detected>0);
-aif_found = mean(dynam_pre_smooth(:,aif_index),2);
-aif_found = aif_found - mean(aif_found(1:end_ss));
-xdata{1}.Cp    = aif_found;
-xdata{1}.timer = timer(start_time:end_time)';
-xdata{1}.step = [end_ss*time_resolution end_inject*time_resolution];
-% Show fit
-[aif_fitted, xAIF, xdataAIF, rsquare] = AIFbiexpfithelp(xdata, 1);
-figure;
-plot(timer,aif_found,'r.');
-hold on;
-plot(timer, aif_fitted,'b');
-title(num2str(rsquare));
-hold off;
+if ~isempty(aif_index)
+    aif_found = mean(dynam_pre_smooth(:,aif_index),2);
+    aif_found = aif_found - mean(aif_found(1:end_ss));
+    aif_found = aif_found./max(aif_found);
+    xdata{1}.Cp    = aif_found;
+    xdata{1}.timer = timer(start_time:end_time)';
+    xdata{1}.step = [end_ss*time_resolution end_inject*time_resolution];
+    % Show fit
+    [aif_fitted, xAIF, xdataAIF, rsquare] = AIFbiexpfithelp(xdata, 1);
+    figure;
+    plot(timer,aif_found,'r.');
+    hold on;
+    plot(timer, aif_fitted,'b');
+    title(num2str(rsquare));
+    hold off;
+else
+    disp('No AIF found');
+end
                 
 
 %%
