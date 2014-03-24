@@ -22,7 +22,7 @@ function varargout = RUND(varargin)
 
 % Edit the above text to modify the response to help RUND
 
-% Last Modified by GUIDE v2.5 19-Mar-2014 09:35:24
+% Last Modified by GUIDE v2.5 21-Mar-2014 06:39:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,6 +59,8 @@ handles.output = hObject;
 BRESULTS = varargin{1};
 
 set(handles.results_b_path, 'String', BRESULTS{1});
+
+set(handles.number_cpus, 'String', num2str(feature('numCores')));
 
 handles.batch = 0; % Batch central 
 

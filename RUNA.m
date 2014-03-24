@@ -22,7 +22,7 @@ function varargout = RUNA(varargin)
 
 % Edit the above text to modify the response to help RUNA
 
-% Last Modified by GUIDE v2.5 04-Feb-2014 15:12:30
+% Last Modified by GUIDE v2.5 24-Mar-2014 11:07:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -906,10 +906,11 @@ uiremember;
 
 function update_disable_options(handles)
 if (get(handles.roimaskroi, 'Value') == 2 && get(handles.aifmaskroi, 'Value') == 2) || ~get(handles.quant, 'Value')
-    % The input is a mask, so we don't need a T1 map
+    % The input is a T1 values, so we don't need a seperate T1 map
     set(handles.t1mapfile, 'Enable', 'off');
     set(handles.t1mappath, 'Enable', 'off');
 elseif (get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1) && get(handles.quant, 'Value')
+    % The input is a mask, so we need a seperate T1 map
     set(handles.t1mapfile, 'Enable', 'on');
     set(handles.t1mappath, 'Enable', 'on');
 end
@@ -976,3 +977,13 @@ function noisefile_CreateFcn(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function noisepixels_CreateFcn(hObject, eventdata, handles)
 % uirestore;
+
+
+function blood_t1_Callback(hObject, eventdata, handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function blood_t1_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
