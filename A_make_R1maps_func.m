@@ -181,22 +181,6 @@ end
 
 %Load AIF dataset, convert T1 from ms to sec
 lvind = find(LV > 0);
-
-if strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static')
-    % Auto finding
-    aif_index = dce_auto_aif(DYNAMIC,lvind);
-    lvind = aif_index;
-    if strcmp(aif_rr_type,'aif_auto_static')
-        LV = zeros(size(TUMOR));
-        LV(lvind) = blood_t1;
-    else
-        LV_temp = zeros(size(TUMOR));
-        LV_temp(lvind) = LV(lvind);
-        LV = LV_temp;
-    end
-end
-
-
 testt1 = mean(LV(lvind));
 
 if quant
@@ -215,7 +199,6 @@ noiseind = find(NOISE > 0);
 
 % If viable toggle is on, choose the file that is generated with the
 % viable tumor region.
-
 if(viable)
     [VIA,PathName1,FilterIndex] = uigetfile([PathName1 '/*.nii'],'Choose Ktrans file Region file');
     VIA = load_nii(fullfile(PathName1, place, VIA));
@@ -256,23 +239,24 @@ for i = 1:slices:size(dynam,3)
         % This is used for create a graphic showing the ROIs in relation to the
         % DCE MRI image.
         matchimg = currentimg;
-        size_image = [size(matchimg,1),size(matchimg,2)];
+        size_image_2d = [size(matchimg,1),size(matchimg,2)];
+        size_image_3d = [size(matchimg,1),size(matchimg,2), slices];
 
-        red_mask = cat(3, ones(size_image)', zeros(size_image)', zeros(size_image)');
-        green_mask = cat(3, zeros(size_image)', ones(size_image)', zeros(size_image)');
-        blue_mask = cat(3, zeros(size_image)', zeros(size_image)', ones(size_image)');
-        yellow_mask = cat(3, zeros(size_image)', ones(size_image)', ones(size_image)');
-        cyan_mask = cat(3, zeros(size_image)', ones(size_image)', ones(size_image)');
-        region_mask = zeros(size_image);
-        aif_mask = zeros(size_image);
-        noise_mask = zeros(size_image);
-        drift_mask = zeros(size_image);
+        red_mask = cat(3, ones(size_image_2d)', zeros(size_image_2d)', zeros(size_image_2d)');
+        green_mask = cat(3, zeros(size_image_2d)', ones(size_image_2d)', zeros(size_image_2d)');
+        blue_mask = cat(3, zeros(size_image_2d)', zeros(size_image_2d)', ones(size_image_2d)');
+        yellow_mask = cat(3, zeros(size_image_2d)', ones(size_image_2d)', ones(size_image_2d)');
+        cyan_mask = cat(3, zeros(size_image_2d)', ones(size_image_2d)', ones(size_image_2d)');
+        region_mask = zeros(size_image_3d);
+        aif_mask = zeros(size_image_3d);
+        noise_mask = zeros(size_image_3d);
+        drift_mask = zeros(size_image_3d);
         region_mask(tumind) = 1;
         aif_mask(lvind)  = 1;
         noise_mask(noiseind)=1;
 
         if(viable)
-            nonviable_mask = zeros(size_image);
+            nonviable_mask = zeros(size_image_3d);
             nonviable_mask(nonvia)=1;
         end
     
@@ -283,8 +267,10 @@ for i = 1:slices:size(dynam,3)
             subplot(2,slices,j+slices), imagesc(matchimg(:,:,j)'), axis off
             colormap('gray')
             hold on
-            h_mask = imagesc(red_mask); axis off
-            set(h_mask, 'AlphaData',double(aif_mask(:,:,j)'));
+            if ~(strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static'))
+                h_mask = imagesc(red_mask); axis off
+                set(h_mask, 'AlphaData',double(aif_mask(:,:,j)'));
+            end
             h_mask = imagesc(green_mask); axis off
             set(h_mask, 'AlphaData',double(region_mask(:,:,j)'));
             h_mask = imagesc(blue_mask); axis off
@@ -426,15 +412,50 @@ if(drift)
             title(['Slice: ' num2str(j)]);
         end
     end
+    
+    saveas(drift_fig, fullfile(PathName1, [rootname '_drift.fig']));
 end
+
+%% 4.5. Automatically find AIF voxels
+if strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static')
+    % Auto finding
+    dimx = size(DYNAMIC,1);
+    dimy = size(DYNAMIC,2);
+    dimz = slices;
+    [aif_index, DYNAM_AUTO_AIF] = dce_auto_aif(DYNAMLV,lvind,dimx,dimy,dimz);
+    lvind = aif_index;
+    DYNAMLV = DYNAM_AUTO_AIF;
+    if strcmp(aif_rr_type,'aif_auto_static')
+        LV = zeros(size(TUMOR));
+        LV(lvind) = blood_t1/1000; %covert from ms to sec
+        % If using a static T1 value, average curve before mmol fitting to
+        % reduce noise
+        mean_aif = mean(DYNAMLV,2);
+        for n=1:size(DYNAMLV,2)
+            DYNAMLV(:,n) = mean_aif;
+        end
+    else
+        LV_temp = zeros(size(TUMOR));
+        LV_temp(lvind) = LV(lvind);
+        LV = LV_temp;
+    end
+    
+    % Update the ROI plot with the new AIF roi
+    aif_mask = zeros(size_image_3d);
+    aif_mask(lvind)  = 1;
+    figure(nn);
+    for j = 1:slices
+        subplot(2, slices, j+slices), hold on
+        h_mask = imagesc(red_mask); axis off
+        set(h_mask, 'AlphaData',double(aif_mask(:,:,j)'));
+        hold off;
+    end
+end
+
 
 % We save the ROI image as a fig, We save in the same directory as the
 % dynamic file.
-saveas(nn, fullfile(PathName1, [rootname 'image_ROI.fig']));
-
-if drift
-    saveas(drift_fig, fullfile(PathName1, [rootname '_drift.fig']));
-end
+saveas(nn, fullfile(PathName1, [rootname '_image_ROI.fig']));
 
 %% 5. Manually select injection point, if required
 if(steady_state_time == -1)
@@ -671,7 +692,7 @@ end
 subplot(425), plot(RawTUM, 'r'), title('T1-weighted ROI'), ylabel('a.u.')
 subplot(426), plot(RawLV, 'b'), title('T1-weighted AIF'), ylabel('a.u.')
 
-saveas(n,fullfile(PathName1, [rootname 'timecurves.fig']));
+saveas(n,fullfile(PathName1, [rootname '_timecurves.fig']));
 
 %% 13. Setup output structure
 if quant

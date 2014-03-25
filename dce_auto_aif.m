@@ -1,5 +1,7 @@
-function aif_index = dce_auto_aif(DYNAMIC, mask_index)
+function [aif_index, dynamic_output] = dce_auto_aif(dynamic_input, mask_index,dimx,dimy,dimz)
 % load('C:\Users\sbarnes\Documents\data\6 DCE Stroke\aging\Sam Analysis\Raw AIF\1 young - Copy\A-preAIFcalc.mat')
+% load('C:\Users\sbarnes\Documents\data\6 DCE Stroke\aging\Sam Analysis\Fitted Auto AIF\1 young\A-preAIFcalcPostDrift.mat')
+% load('C:\Users\sbarnes\Documents\data\6 DCE Stroke\aging\Sam Analysis\Fitted Auto AIF\2 old\A-preAutoFitWithDrift.mat')
 
 % TODO fix hard coded values
 % TODO fix for 3D DYNAMIC
@@ -8,35 +10,37 @@ disp('Running auto AIF selection, searching for AIF...');
 end_ss = 110; %4.76 min
 end_inject = 127; %5.5 min
 time_resolution = 2.6/60;
-timer   = 0:time_resolution:time_resolution*(size(DYNAMIC,3)-1);
+timer   = 0:time_resolution:time_resolution*(size(dynamic_input,1)-1);
 start_time = 1;
 end_time = numel(timer);
 
 % Shape data for detection
-spatial_points = size(DYNAMIC,1)*size(DYNAMIC,2);
-time_points = size(DYNAMIC,3);
-dynam_pre_smooth = double(reshape(DYNAMIC,spatial_points,time_points)');
-dynam_smooth = smooth(dynam_pre_smooth,25,'moving');
+spatial_points = size(dynamic_input,2);
+time_points = size(dynamic_input,1);
+% dynam_pre_smooth = double(reshape(DYNAMIC,spatial_points,time_points)');
+% dynamic_input = dynamic_input;
+dynam_smooth = smooth(dynamic_input,25,'moving');
 dynam_smooth = reshape(dynam_smooth,time_points,spatial_points);
 % Scale from 0 to 1 so edge detector threshold is consistant
 max_smooth = max(max(dynam_smooth));
 min_smooth = min(min(dynam_smooth));
 dynam_smooth = (dynam_smooth-min_smooth)./(max_smooth-min_smooth);
 
+dynamic_output = [];
 edge_detected = zeros(spatial_points,1);
 all_edges = 0;
 positive_edges = 0;
-positive_edges_robust = 0;
+% positive_edges_robust = 0;
 good_fit_edges = 0;
 tic
 p = ProgressBar(100);
 % Hack to make xdata compatible with parfor
 xdata = cell(spatial_points,1);
-for voxel_index = 1:spatial_points
+parfor voxel_index = 1:spatial_points
     % Only consider points that are inside the mask
-    if isempty(find(voxel_index==mask_index,1))
-        continue;
-    end
+%     if isempty(find(voxel_index==mask_index,1))
+%         continue;
+%     end
     
     % Edge detect with sobel filter
     [bw thresh]= edge(dynam_smooth(:,voxel_index),'sobel',0.007);
@@ -83,7 +87,7 @@ for voxel_index = 1:spatial_points
 %                 positive_edges_robust = positive_edges_robust+1;
 
             % Fit voxel to biexponential and see what r^2 is
-            aif_x = dynam_pre_smooth(:,voxel_index);
+            aif_x = dynamic_input(:,voxel_index);
             % Set baseline to zero so it will fit properly
             aif_x = aif_x - mean(aif_x(1:end_ss));
             % Scale to 1
@@ -94,7 +98,7 @@ for voxel_index = 1:spatial_points
             % Run fit
             [aif_fitted, ~, ~, rsquare] = AIFbiexpfithelp(xdata{voxel_index}, 0);
             % Remove bad fits
-            if rsquare>0.8 && aif_fitted(end)<0.4
+            if rsquare>0.8 && aif_fitted(end)<0.3
                 edge_detected(voxel_index) = 1; 
                 good_fit_edges = good_fit_edges+1;                  
 %                 figure;
@@ -128,11 +132,14 @@ toc
 
 % Plot found AIF voxels on image
 figure;
-imagesc(DYNAMIC(:,:,end_inject)'), axis off;
+dynamic_slice = zeros(dimx,dimy);
+dynamic_slice(mask_index) = dynamic_input(end_inject,:);
+imagesc(dynamic_slice'), axis off;
 colormap('gray');
-size_image = size(DYNAMIC(:,:,end_inject)');
-red_mask = cat(3, ones(size_image), zeros(size_image), zeros(size_image));
-aif_mask = reshape(edge_detected,size(DYNAMIC,1),size(DYNAMIC,2));
+red_mask = cat(3, ones([dimy dimx]), zeros([dimy dimx]), zeros([dimy dimx]));
+aif_mask = zeros(dimx,dimy);
+aif_mask(mask_index) = edge_detected;
+% aif_mask = reshape(edge_detected,dimx,dimy);
 hold on;
 h_mask = imagesc(red_mask);
 hold off;
@@ -141,9 +148,11 @@ set(h_mask, 'AlphaData',double(aif_mask'));
 
 
 % Fit average AIF
-aif_index = find(edge_detected>0);
+aif_index = find(aif_mask>0);
+dynamic_output = dynamic_input(:,edge_detected>0);
+
 if ~isempty(aif_index)
-    aif_found = mean(dynam_pre_smooth(:,aif_index),2);
+    aif_found = mean(dynamic_output,2);
     aif_found = aif_found - mean(aif_found(1:end_ss));
     aif_found = aif_found./max(aif_found);
     xdata{1}.Cp    = aif_found;
