@@ -1,5 +1,5 @@
-function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynam_name, aiforRR, ... 
-    tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time, drift, sliceloc)
+function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynam_name, aif_rr_type, ... 
+    tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time, drift, sliceloc, blood_t1)
 
 % A_make_R1maps_func - Generate concentration versus time curves for the
 % tumor region and the arterial input region. The setup follows Loveless
@@ -27,8 +27,11 @@ function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,
 %  rootname           - Name of output file
 %  dynampath          - Name of output path
 %  dynamname          - Name of final file for part D
-%  aiforRR            - Toggle indicating whether the auxiliary ROI is AIF (1)
-%                       or reference region (2)
+%  aif_rr_type        - Indicates the type of auxiliary ROI, as reference 
+%                       region 'rr' or arterial input 'aif_roi'. May also
+%                       indicate if the AIF is to be auto found 'aif_auto'
+%                       or auto found with a static T1 value
+%                       'aif_auto_static'
 %  tr                 - reptition time (in ms) of dynamic scan
 %  fa                 - flip angle (in degrees) of dynamic scan
 %  hematocrit         - hematocrit percent (0 - 1.00) of subject
@@ -41,6 +44,8 @@ function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,
 %                       graphically
 %  drift              - boolean value, perform drift correction based on
 %                       a rod phantom in image FOV
+%  blood_t1           - the T1 value of blood (in ms) only used if 
+%                       aif_rr_type is set to 'aif_auto_static'
 % 
 % We assume that the T1 maps and the DCE-MRI files contain the same field of
 % view.
@@ -80,7 +85,7 @@ function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,
 % Toggle to re-calculate the average values only in the regions that the
 % voxel curvefit was able to give good fitting; ie. the viable regions.
 viable= 0;
-
+opengl('software');
 
 %% DO NOT ALTER LINES BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
 % Log input results
@@ -175,11 +180,21 @@ end
 
 
 %Load AIF dataset, convert T1 from ms to sec
-% lvind = find(LV > 0);
-dce_auto_aif
-lvind = aif_index;
-LV = zeros(size(LV));
-LV(lvind) = t1_blood;
+lvind = find(LV > 0);
+
+if strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static')
+    % Auto finding
+    aif_index = dce_auto_aif(DYNAMIC,lvind);
+    lvind = aif_index;
+    if strcmp(aif_rr_type,'aif_auto_static')
+        LV = zeros(size(TUMOR));
+        LV(lvind) = blood_t1;
+    else
+        LV_temp = zeros(size(TUMOR));
+        LV_temp(lvind) = LV(lvind);
+        LV = LV_temp;
+    end
+end
 
 
 testt1 = mean(LV(lvind));
@@ -202,7 +217,6 @@ noiseind = find(NOISE > 0);
 % viable tumor region.
 
 if(viable)
-    
     [VIA,PathName1,FilterIndex] = uigetfile([PathName1 '/*.nii'],'Choose Ktrans file Region file');
     VIA = load_nii(fullfile(PathName1, place, VIA));
     VIA = VIA.img;
@@ -242,17 +256,13 @@ for i = 1:slices:size(dynam,3)
         % This is used for create a graphic showing the ROIs in relation to the
         % DCE MRI image.
         matchimg = currentimg;
-    %     matchimg(tumind) = 300000;
-    %     matchimg(lvind)  = 300000;
-    %     matchimg(noiseind)=400000;
         size_image = [size(matchimg,1),size(matchimg,2)];
-
 
         red_mask = cat(3, ones(size_image)', zeros(size_image)', zeros(size_image)');
         green_mask = cat(3, zeros(size_image)', ones(size_image)', zeros(size_image)');
         blue_mask = cat(3, zeros(size_image)', zeros(size_image)', ones(size_image)');
         yellow_mask = cat(3, zeros(size_image)', ones(size_image)', ones(size_image)');
-        cyan_mask = cat(3, ones(size_image)', zeros(size_image)', ones(size_image)');
+        cyan_mask = cat(3, zeros(size_image)', ones(size_image)', ones(size_image)');
         region_mask = zeros(size_image);
         aif_mask = zeros(size_image);
         noise_mask = zeros(size_image);
@@ -262,14 +272,9 @@ for i = 1:slices:size(dynam,3)
         noise_mask(noiseind)=1;
 
         if(viable)
-
-    %         matchimg(nonvia) = 50000;
             nonviable_mask = zeros(size_image);
             nonviable_mask(nonvia)=1;
         end
-    
-    
-
     
         nn = figure;
         
@@ -303,11 +308,14 @@ end
 if(drift)
     for j = 1:slices
         figure(nn);
-        cumatchimg = (matchimg(:,:,j));
+%         cumatchimg = (matchimg(:,:,j));
         
         subplot(2, slices,j), title('First left click in the rod region and then noise region, right click if no rod (twice)');
         
-        [x, y, button] = ginput(2);
+        % Can't use ginput as it causes a problem with the transparency
+        % maps, this is a bug with the openGL drivers, other workarounds
+        % include running the command "opengl('software')"
+        [x, y, button] = myginput(2,'crosshair');
         x = round(x);
         y = round(y);
         
@@ -316,12 +324,10 @@ if(drift)
         else
             OUT = findRod(dynam(:,:,j), [x(1) y(1)],[x(2) y(2)], []);
             
-
             title('Selected ROIs');
 %             cumatchimg(OUT(:,1), OUT(:,2)) = 600000;
 %             subplot(2, slices, j+slices), imagesc(cumatchimg'), axis off
             drift_mask(OUT(:,1), OUT(:,2), j)=1;
-            
             subplot(2, slices, j+slices), hold on
             h_mask = imagesc(cyan_mask); axis off;
             hold off
@@ -659,8 +665,8 @@ if quant
     subplot(423),plot(mean(Ct,2), 'r'), title('Ct maps pre-filtering ROI'), ylabel('mmol')
     subplot(424), plot(mean(Cp,2), 'b'), title('Cp maps pre-filtering AIF'), ylabel('mmol')
     
-    subplot(427), plot(mean(deltaR1TOI,2), 'b.'), title('Delta R1 ROI'), ylabel('sec^-1')
-    subplot(428), plot(mean(deltaR1LV,2), 'r.'), title('Delta R1 AIF') , ylabel('sec^-1')
+    subplot(427), plot(mean(deltaR1TOI,2), 'r.'), title('Delta R1 ROI'), ylabel('sec^-1')
+    subplot(428), plot(mean(deltaR1LV,2), 'b.'), title('Delta R1 AIF') , ylabel('sec^-1')
 end
 subplot(425), plot(RawTUM, 'r'), title('T1-weighted ROI'), ylabel('a.u.')
 subplot(426), plot(RawLV, 'b'), title('T1-weighted AIF'), ylabel('a.u.')
@@ -699,7 +705,7 @@ Adata.T1 = T1;
 Adata.T1LV = T1LV;
 Adata.T1TUM=T1TUM;
 Adata.TUMOR= TUMOR;
-Adata.aiforRR = aiforRR;
+Adata.aif_rr_type = aif_rr_type;
 Adata.currentCT=currentCT;
 Adata.deltaR1LV = deltaR1LV;
 Adata.deltaR1TOI= deltaR1TOI;

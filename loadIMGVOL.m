@@ -24,7 +24,8 @@ fileorder = get(get(handles.fileorder,'SelectedObject'),'Tag');
 
 quant     = get(handles.quant, 'Value');
 
-mask = (get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1);
+mask_roi = get(handles.roimaskroi, 'Value') == 1;
+mask_aif = get(handles.aifmaskroi, 'Value') == 1;
 
 % Initialize Image sets
 TUMOR = [];
@@ -39,46 +40,11 @@ hdr = [];
 res = [];
 %% Load image files
 
-% Load AIF - either 3D volume or 2D slice
 
-sliceloc = [];
-for i = 1:numel(t1aiffiles)
-    
-    if isDICOM(t1aiffiles{i})
-        hdr = dicominfo(t1aiffiles{i});
-        img = dicomread(hdr);
-        if i == 1
-            LV  = img;
-            LV = rescaleDICOM(hdr, LV);
-            sliceloc(end+1) = hdr.(dicomlookup('20', '1041'));
-        else
-            LV(:,:,end+1) = rescaleDICOM(hdr, img);
-            sliceloc(end+1) = hdr.(dicomlookup('20', '1041'));
-        end
-        
-        
-    elseif isNIFTI(t1aiffiles{i})
-        nii = load_nii(t1aiffiles{i});
-        img = nii.img;
-        if i == 1
-            LV = img;
-        else
-            LV(:,:,end+1) = img;
-        end
-    else
-        errormsg = 'Unknown file type - AIF';
-        return;
-    end
-end
-
-% if slicelocations known, resort
-LV = sortIMGVOL(LV, sliceloc);
-
-
-lvroi = find(LV > 0);
 
 % Load ROI file - either 3D volume or 2D slice
 % hdr , res are derived from here
+%%%%%%%%%%%%%%%%%
 sliceloc = [];
 for i = 1:numel(t1roifiles)
     
@@ -116,11 +82,56 @@ end
 
 % if slicelocations known, resort
 TUMOR = sortIMGVOL(TUMOR, sliceloc);
-
 tumorroi = find(TUMOR > 0);
 
-if quant && mask
-    % Load T1 map if quantitative parameters desired and the ROIs are masks
+
+% Load AIF - either 3D volume or 2D slice
+%%%%%%%%%%%%%%%%%
+if numel(t1aiffiles)>0
+    sliceloc = [];
+    for i = 1:numel(t1aiffiles)
+
+        if isDICOM(t1aiffiles{i})
+            hdr = dicominfo(t1aiffiles{i});
+            img = dicomread(hdr);
+            if i == 1
+                LV  = img;
+                LV = rescaleDICOM(hdr, LV);
+                sliceloc(end+1) = hdr.(dicomlookup('20', '1041'));
+            else
+                LV(:,:,end+1) = rescaleDICOM(hdr, img);
+                sliceloc(end+1) = hdr.(dicomlookup('20', '1041'));
+            end
+
+
+        elseif isNIFTI(t1aiffiles{i})
+            nii = load_nii(t1aiffiles{i});
+            img = nii.img;
+            if i == 1
+                LV = img;
+            else
+                LV(:,:,end+1) = img;
+            end
+        else
+            errormsg = 'Unknown file type - AIF';
+            return;
+        end
+    end
+
+    % if slicelocations known, resort
+    LV = sortIMGVOL(LV, sliceloc);
+    
+    lvroi = find(LV > 0);
+else
+    % no aif T1 map or mask selected, must be auto finding
+    lvroi = 1:numel(TUMOR);
+    LV = ones(size(TUMOR));
+end
+
+
+% Load T1 map if selected
+%%%%%%%%%%%%%%%%%
+if numel(t1mapfiles)>0
     sliceloc = [];
  
     for i = 1:numel(t1mapfiles)
@@ -156,9 +167,13 @@ if quant && mask
     T1MAP = sortIMGVOL(T1MAP, sliceloc);
     
     % Assign the LV and TUMOR to have T1 values
-    LV(lvroi) = T1MAP(lvroi);
-    TUMOR(tumorroi) = T1MAP(tumorroi);
-    disp('Applying Mask to T1 map...');
+    if mask_aif
+        LV(lvroi) = T1MAP(lvroi);
+        disp('Applying AIF/RR mask to T1 map...');
+    elseif mask_roi
+        TUMOR(tumorroi) = T1MAP(tumorroi);
+        disp('Applying ROI mask to T1 map...');
+    end
 end
 
 if noise_pathpick

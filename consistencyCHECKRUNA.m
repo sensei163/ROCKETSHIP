@@ -17,7 +17,9 @@ injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
 %water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
 quant = get(handles.quant, 'Value');
 
-mask = (get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1);
+% mask = (get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1);
+mask_roi = get(handles.roimaskroi, 'Value') == 1;
+mask_aif = get(handles.aifmaskroi, 'Value') == 1;
 
 if isempty(tr) || isempty(fa) || isempty(hematocrit) || isempty(snr_filter) || ...
         isempty(relaxivity) || isempty(injection_time)
@@ -26,7 +28,7 @@ if isempty(tr) || isempty(fa) || isempty(hematocrit) || isempty(snr_filter) || .
 end
 
 % If the ROI or AIF files are masks, then we need to make sure that the T1 map is defined and vice versa.
-if mask && quant
+if quant && (mask_roi || (mask_aif && ~get(handles.aif_auto_static, 'Value')))
     if ~exist(get(handles.t1mappath, 'String'), 'file')
         errormsg = 'T1 map needed';
         return;

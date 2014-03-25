@@ -22,7 +22,7 @@ function varargout = RUNA(varargin)
 
 % Edit the above text to modify the response to help RUNA
 
-% Last Modified by GUIDE v2.5 24-Mar-2014 11:07:28
+% Last Modified by GUIDE v2.5 24-Mar-2014 13:11:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -72,9 +72,12 @@ handles.t1mapfiles = [];
 handles.saved_results = '';
 
 % Properly enables or disables options
-update_disable_options(handles);
 uirestore(handles.xyzt);
 uirestore(handles.xytz);
+uirestore(handles.aif_auto);
+uirestore(handles.aif_auto_static);
+uirestore(handles.aif_roi);
+update_disable_options(handles);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -343,7 +346,11 @@ end
 
 % image parameters
 quant     = get(handles.quant, 'Value');
-aiforRR = get(handles.aiforrr, 'Value');
+if get(handles.aiforrr, 'Value')==2
+    aif_rr_type = 'rr';
+else
+    aif_rr_type = get(get(handles.aif_type,'SelectedObject'),'Tag');
+end
 tr = str2num(get(handles.tr, 'String')); %#ok<ST2NM>
 fa = str2num(get(handles.fa, 'String')); %#ok<ST2NM>
 % time_resolution = str2num(get(handles.time_resolution, 'String')); %#ok<ST2NM>
@@ -353,10 +360,11 @@ relaxivity = str2num(get(handles.relaxivity, 'String')); %#ok<ST2NM>
 injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
 %water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
 drift = get(handles.drift, 'Value');
+blood_t1 = str2num(get(handles.blood_t1, 'String')); %#ok<ST2NM>
 
 %time_resolution = time_resolution/60; %convert to minutes
-saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynamname, aiforRR, ... 
-    tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift, sliceloc);
+saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynamname, aif_rr_type, ... 
+    tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift, sliceloc,blood_t1);
 
 % saved_results = 'aaa';
 %set(handles.results_a_path,'String',saved_results);
@@ -804,6 +812,7 @@ end
 
 % --- Executes on selection change in aiforrr.
 function aiforrr_Callback(hObject, eventdata, handles)
+update_disable_options(handles);
 uiremember;
 
 % --- Executes during object creation, after setting all properties.
@@ -905,25 +914,57 @@ update_disable_options(handles);
 uiremember;
 
 function update_disable_options(handles)
-if (get(handles.roimaskroi, 'Value') == 2 && get(handles.aifmaskroi, 'Value') == 2) || ~get(handles.quant, 'Value')
-    % The input is a T1 values, so we don't need a seperate T1 map
-    set(handles.t1mapfile, 'Enable', 'off');
-    set(handles.t1mappath, 'Enable', 'off');
-elseif (get(handles.roimaskroi, 'Value') == 1 || get(handles.aifmaskroi, 'Value') == 1) && get(handles.quant, 'Value')
-    % The input is a mask, so we need a seperate T1 map
-    set(handles.t1mapfile, 'Enable', 'on');
-    set(handles.t1mappath, 'Enable', 'on');
-end
 if get(handles.quant, 'Value')
 %     set(handles.aifRRtxt, 'Enable', 'on');
     set(handles.aiforrr, 'Enable', 'on');
 %     set(handles.t1_roi_path, 'Enable', 'on');
 %     set(handles.t1mappath, 'Enable', 'on');
+    if get(handles.aiforrr, 'Value') == 1
+        % AIF
+        set(handles.aif_roi, 'Enable', 'on');
+        set(handles.aif_auto, 'Enable', 'on');
+        set(handles.aif_auto_static, 'Enable', 'on');
+        if get(handles.aif_auto_static, 'Value')
+            set(handles.blood_t1, 'Enable', 'on');
+        else
+            set(handles.blood_t1, 'Enable', 'off');
+        end
+        if get(handles.aif_roi, 'Value')
+            set(handles.aifmaskroi, 'Enable', 'on');
+        else
+            % Auto so need complete T1 map, not T1 map of small AIF ROI
+            set(handles.aifmaskroi, 'Value',1);
+            set(handles.aifmaskroi, 'Enable', 'off');
+        end
+    else
+        % RR, no AIF
+        set(handles.aif_roi, 'Enable', 'off');
+        set(handles.aif_auto, 'Enable', 'off');
+        set(handles.aif_auto_static, 'Enable', 'off');
+        set(handles.blood_t1, 'Enable', 'off');
+        set(handles.aifmaskroi, 'Enable', 'on');
+    end
 else
 %     set(handles.aifRRtxt, 'Enable', 'on');
     set(handles.aiforrr, 'Enable', 'off');
 %     set(handles.t1_roi_path, 'Enable', 'on');
 %     set(handles.t1mappath, 'Enable', 'off');
+    set(handles.aif_roi, 'Enable', 'off');
+    set(handles.aif_auto, 'Enable', 'off');
+    set(handles.aif_auto_static, 'Enable', 'off');
+    set(handles.blood_t1, 'Enable', 'off');
+    set(handles.aifmaskroi, 'Enable', 'on');
+end
+if (get(handles.roimaskroi, 'Value') == 2 && get(handles.aifmaskroi, 'Value') == 2) || ...
+        ~get(handles.quant, 'Value') || ...
+        (get(handles.roimaskroi, 'Value') == 2 && get(handles.aif_auto_static, 'Value') && strcmp(get(handles.aif_auto_static, 'Enable'),'on') )
+    % The input is a T1 values, so we don't need a seperate T1 map
+    set(handles.t1mapfile, 'Enable', 'off');
+    set(handles.t1mappath, 'Enable', 'off');
+else
+    % The input is a mask, so we need a seperate T1 map
+    set(handles.t1mapfile, 'Enable', 'on');
+    set(handles.t1mappath, 'Enable', 'on');
 end
 if get(handles.noisepixels,'Value')
     set(handles.noise_path, 'Enable', 'off');
@@ -987,3 +1028,11 @@ function blood_t1_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes when selected object is changed in aif_type.
+function aif_type_SelectionChangeFcn(hObject, eventdata, handles)
+uiremember(handles.aif_auto);
+uiremember(handles.aif_auto_static);
+uiremember(handles.aif_roi);
+update_disable_options(handles);
