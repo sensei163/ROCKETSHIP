@@ -7,12 +7,15 @@ function [aif_index, dynamic_output] = dce_auto_aif(dynamic_input, mask_index,di
 % TODO fix for 3D DYNAMIC
 disp('Running auto AIF selection, searching for AIF...');
 % Hard coded
-end_ss = 110; %4.76 min
-end_inject = 127; %5.5 min
-time_resolution = 2.6/60;
-timer   = 0:time_resolution:time_resolution*(size(dynamic_input,1)-1);
-start_time = 1;
-end_time = numel(timer);
+% end_ss = 97; %4.76 min
+% end_inject = 112; %5.5 min
+% time_resolution = 2.6/60;
+% timer   = 0:time_resolution:time_resolution*(size(dynamic_input,1)-1);
+timer   = 0:size(dynamic_input,1)-1;
+% start_time = 1;
+% end_time = numel(timer);
+r_square_threshold = 0.8;
+end_signal_threshold = 0.35;
 
 % Shape data for detection
 spatial_points = size(dynamic_input,2);
@@ -26,24 +29,60 @@ max_smooth = max(max(dynam_smooth));
 min_smooth = min(min(dynam_smooth));
 dynam_smooth = (dynam_smooth-min_smooth)./(max_smooth-min_smooth);
 
+
+% Find start of injection
+global_dyn = mean(dynamic_input,2);
+global_smooth = smooth(global_dyn,9,'moving');
+max_smooth = max(max(global_smooth));
+min_smooth = min(min(global_smooth));
+global_smooth = (global_smooth-min_smooth)./(max_smooth-min_smooth);
+% [bw thresh]= edge(global_smooth,'sobel',0.010);
+% Calculate sobel derivative look for min value (max rising edge)
+% Predict that backwards to find the beginning of the rising edge
+op = fspecial('sobel')/8;
+x_mask = op;
+bx = imfilter(global_smooth,x_mask,'replicate');
+[slope, i] = min(bx);
+slope = mean(bx(i-1:i+1));
+midpoint = global_smooth(i);
+offset = midpoint/slope;
+end_ss=round(i+offset);
+offset_forward = (1-midpoint)/-slope;
+end_inject=round(i+offset_forward);
+
+% slope = mean(bx(end_ss:end_inject));
+% offset = midpoint/slope;
+% end_ss=round(i+offset);
+% offset_forward = (1-midpoint)/-slope;
+% end_inject=round(i+offset_forward);
+figure
+plot(global_smooth)
+hold on;
+injection = zeros(size(global_smooth));
+injection(end_ss) = 1;
+injection(end_inject) = 1;
+plot(injection,'r');
+hold off;
+% plot(bw,'r');
+% plot(bx,'r');
+waitforbuttonpress
+
 dynamic_output = [];
 edge_detected = zeros(spatial_points,1);
 all_edges = 0;
 positive_edges = 0;
 % positive_edges_robust = 0;
+rsquare_edges = 0;
 good_fit_edges = 0;
 tic
 p = ProgressBar(100);
+progress_interval = round(spatial_points/100);
 % Hack to make xdata compatible with parfor
 xdata = cell(spatial_points,1);
 parfor voxel_index = 1:spatial_points
-    % Only consider points that are inside the mask
-%     if isempty(find(voxel_index==mask_index,1))
-%         continue;
-%     end
-    
+
     % Edge detect with sobel filter
-    [bw thresh]= edge(dynam_smooth(:,voxel_index),'sobel',0.007);
+    [bw thresh]= edge(dynam_smooth(:,voxel_index),'sobel',0.005);
     % Look only for edges within injection window
     if max(bw(end_ss:end_inject))==1   
         all_edges = all_edges+1;
@@ -93,37 +132,41 @@ parfor voxel_index = 1:spatial_points
             % Scale to 1
             aif_x = aif_x./max(aif_x);
             xdata{voxel_index}.Cp    = aif_x;
-            xdata{voxel_index}.timer = timer(start_time:end_time)';
-            xdata{voxel_index}.step = [end_ss*time_resolution end_inject*time_resolution];
+            xdata{voxel_index}.timer = timer';
+            xdata{voxel_index}.step = [end_ss end_inject];
             % Run fit
             [aif_fitted, ~, ~, rsquare] = AIFbiexpfithelp(xdata{voxel_index}, 0);
             % Remove bad fits
-            if rsquare>0.8 && aif_fitted(end)<0.3
-                edge_detected(voxel_index) = 1; 
-                good_fit_edges = good_fit_edges+1;                  
-%                 figure;
-%                 plot(timer,aif_x,'r.');
-%                 hold on;
-%                 plot(timer, aif_fitted,'b');
-%                 title(num2str(rsquare));
-%                 hold off;
-%                 waitforbuttonpress
+            if rsquare>r_square_threshold
+                rsquare_edges = rsquare_edges+1;
+                if aif_fitted(end)<end_signal_threshold
+                    edge_detected(voxel_index) = 1; 
+                    good_fit_edges = good_fit_edges+1;                  
+    %                 figure;
+    %                 plot(timer,aif_x,'r.');
+    %                 hold on;
+    %                 plot(timer, aif_fitted,'b');
+    %                 title(num2str(rsquare));
+    %                 hold off;
+    %                 waitforbuttonpress
+                end
             end
 %             end
         end
     end
-    if mod(voxel_index,100)==0, p.progress; end
+    if mod(voxel_index,progress_interval)==0, p.progress; end
 end
 p.stop;
 % Free memeory
 clear xdata
+% Report results
 disp('Finished AIF search');
 disp(['Found ' num2str(good_fit_edges) ' AIF voxels']);
 toc
-% all_edges %#ok<NOPRT>
-% positive_edges %#ok<NOPRT>
-% positive_edges_robust %#ok<NOPRT>
-% good_fit_edges %#ok<NOPRT>
+fprintf('Edges detected with Sobel filter: %d\n',all_edges);
+fprintf('Rising edges: %d\n',positive_edges);
+fprintf('Fit with r^2 > %.2f: %d\n',r_square_threshold,rsquare_edges);
+fprintf('End signal < %.2f of max: %d\n',end_signal_threshold, good_fit_edges);
 
 % figure(1)
 % imshow(DYNAMIC(:,:,125)',[]);
@@ -132,34 +175,37 @@ toc
 
 % Plot found AIF voxels on image
 figure;
-dynamic_slice = zeros(dimx,dimy);
+dynamic_slice = zeros(dimx,dimy,dimz);
 dynamic_slice(mask_index) = dynamic_input(end_inject,:);
-imagesc(dynamic_slice'), axis off;
-colormap('gray');
 red_mask = cat(3, ones([dimy dimx]), zeros([dimy dimx]), zeros([dimy dimx]));
-aif_mask = zeros(dimx,dimy);
+aif_mask = zeros(dimx,dimy,dimz);
 aif_mask(mask_index) = edge_detected;
-% aif_mask = reshape(edge_detected,dimx,dimy);
-hold on;
-h_mask = imagesc(red_mask);
-hold off;
-set(h_mask, 'AlphaData',double(aif_mask'));
+    
+for j = 1:dimz
+    subplot(ceil(sqrt(dimz)), ceil(sqrt(dimz)), j)
+    imagesc(dynamic_slice(:,:,j)'), axis off;
+    colormap('gray');
+    hold on;
+    h_mask = imagesc(red_mask);
+    hold off;
+    set(h_mask, 'AlphaData',double(aif_mask(:,:,j)'));
+    title(['Slice: ' num2str(j)]);
+end
 
 
-
-% Fit average AIF
+% Generate output, list of aif voxels and associated time curves
 aif_index = find(aif_mask>0);
 dynamic_output = dynamic_input(:,edge_detected>0);
-
+% Plot average of found AIF and fit
 if ~isempty(aif_index)
     aif_found = mean(dynamic_output,2);
     aif_found = aif_found - mean(aif_found(1:end_ss));
     aif_found = aif_found./max(aif_found);
     xdata{1}.Cp    = aif_found;
-    xdata{1}.timer = timer(start_time:end_time)';
-    xdata{1}.step = [end_ss*time_resolution end_inject*time_resolution];
+    xdata{1}.timer = timer';
+    xdata{1}.step = [end_ss end_inject];
     % Show fit
-    [aif_fitted, xAIF, xdataAIF, rsquare] = AIFbiexpfithelp(xdata, 0);
+    [aif_fitted, ~, ~, rsquare] = AIFbiexpfithelp(xdata, 0);
     figure;
     plot(timer,aif_found,'r.');
     hold on;

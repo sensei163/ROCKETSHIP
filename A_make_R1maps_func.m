@@ -324,60 +324,64 @@ if(drift)
     end
     
     % Now we Drift correct the image
+    
+    % First get time curve of rod and fit to poly
     %Gets all slices from the second time point
     originalimg = dynam(:,:,(1+slices):(1+slices)+(slices-1));
-    
-    DYNAM       = [];
-    DYNAMLV     = [];
-    DYNAMNOISE  = [];
-    DYNAMNONVIA = [];
-
-    scalefactor = ones(size(dynam,3)/slices,1);
     scale_fit = cell(1,slices);
     % Slice loop
     for j = 1:slices 
+        % Slice j from second time point
         originalimgj = originalimg(:,:,j);
+        scalefactor = ones(size(dynam,3)/slices,1);
         
         % Time loop
         time_index = 1;
         for i = 1:slices:size(dynam,3)
+            % All slices at the time i
             currentimg       = dynam(:,:,i:i+(slices-1));
+            % Slice j at time i
             currentimgj  = currentimg(:,:,j);
 
-            % rod mean
+            % rod voxel locations
             OUT = ROD{j}.OUT;
 
             if(~isempty(OUT))
-                ind = sub2ind(size(originalimgj), OUT(:,1), OUT(:,2));
-                scalefactor(time_index) = mean(originalimgj(ind))/mean(currentimgj(ind));
+                rod_index = sub2ind(size(originalimgj), OUT(:,1), OUT(:,2));
+                % signal relative to that at the second time point
+                scalefactor(time_index) = mean(originalimgj(rod_index))/mean(currentimgj(rod_index));
             end
             time_index = time_index+1;
         end
-        scale_fit{j} = fit((1:numel(scalefactor))',scalefactor,'poly3');
+        % Fit time curve of rod to poly3
+        scale_fit{j} = fit((1:numel(scalefactor))',scalefactor,'poly4','Robust','on');
     end
 
-        
+    % Second Scale images
+    DYNAM       = [];
+    DYNAMLV     = [];
+    DYNAMNOISE  = [];
+    DYNAMNONVIA = [];
     % Time loop
     time_index = 1;
     for i = 1:slices:size(dynam,3)
+        % All slices at the time i
         currentimg       = dynam(:,:,i:i+(slices-1));
         % Slice loop
         for j = 1:slices 
-            originalimgj = originalimg(:,:,j);
+%             originalimgj = originalimg(:,:,j);
+            % Slice j at time i
             currentimgj  = currentimg(:,:,j);
             
-            % rod mean
+            % rod voxel locations
             OUT = ROD{j}.OUT;
             
             if(~isempty(OUT))
-                DRIFT(time_index,j) = mean(currentimgj(ind));
-                
+                rod_index = sub2ind(size(currentimgj), OUT(:,1), OUT(:,2));
+                DRIFT(time_index,j) = mean(currentimgj(rod_index));
                 PRECORRECTED(time_index,j) = mean(currentimgj(:));
-                
                 currentimgj = currentimgj.*scale_fit{j}(time_index);
-                
                 CORRECTED(time_index,j) = mean(currentimgj(:));
-                
                 currentimg(:,:,j) = currentimgj;
             end
         end
@@ -530,7 +534,9 @@ snrfilter = snrfilter + numel(ind);
 disp(['AIF SNR filter requires average SNR > ' num2str(snr_filter)]);
 disp(['AIF SNR filter has removed: ' num2str(snrfilter) ' of ' num2str(prefilter_number_aif_voxels) ' AIF voxels.']);
 disp(['After filter average AIF SNR (all voxels, all time points) = ' num2str(mean(voxelSNR_filtered))]);
-if snrfilter>=prefilter_number_aif_voxels
+if prefilter_number_aif_voxels==0
+    error('Error no AIF selected, or auto AIF failed to find any voxels');
+elseif snrfilter>=prefilter_number_aif_voxels
     error('Error SNR filter removed all AIF points, lower SNR filter requirement');
 end
 

@@ -481,6 +481,7 @@ guidata(hObject, handles);
     'Choose ROI image of region of interest', 'MultiSelect', 'on'); %#ok<NASGU>
 if isequal(filename,0)
     %disp('User selected Cancel')
+    fullpath = '';
 else
     %disp(['User selected ', fullfile(pathname, filename)])
     

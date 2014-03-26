@@ -81,7 +81,7 @@ end
 
 
 %[x y] = ginput(1);
-x = 1;
+% x = 1;
 % temp = abs(x-t);
 % ind  = find(temp == min(temp));
 
@@ -90,45 +90,48 @@ start = xdata{1}.step;
 ended = start(2);
 start = start(1);
 
-starter1 = find(abs(timer - start) == min(abs(timer - start)));
-ender   = find(abs(timer - ended) == min(abs(timer - ended)));
+start_index = find(abs(timer - start) == min(abs(timer - start)));
+end_index   = find(abs(timer - ended) == min(abs(timer - ended)));
 
 step = zeros(size(timer));
-step(starter1:ender) = 1;
-
+step(start_index:end_index) = 1;
 xdata{1}.step = step;
-
-
-
 
 % W is the weighting matrix, should you want to emphasise certain
 % datapoints
 W = ones(size(Cp));
-[~, ind(1)] = max(Cp.*step);
+[~, max_index] = max(Cp.*step);
 % WW= sort(Cp.*step, 'descend');
 % ind(1) = find(Cp == WW(1));
 % ind(2) = find(Cp == WW(2));
 % ind(3) = find(Cp == WW(3));
 
-step(ind(1)+1:end) = 0;
+step(max_index+1:end) = 0;
 xdata{1}.step = step;
+
+if isempty(find(step==1,1))
+    % Something has gone wrong, reset to default
+    step = zeros(size(timer));
+    step(start_index:end_index) = 1;
+    xdata{1}.step = step;
+end
 
 if verbose>0
     hold on, 
     plot(t,step, 'r'),
-    plot(t(ind(1)), Cp(ind(1))/max(Cp), 'kx', 'MarkerSize', 30);
+    plot(t(max_index), Cp(max_index)/max(Cp), 'kx', 'MarkerSize', 30);
 end
 
 % Alter the weightings here.
-% W(ind(1)) =1;
-% W(ind(1)+1)= 1;
-% W(ind(1)-1)= 1;
+% W(max_index) =1;
+% W(max_index+1)= 1;
+% W(max_index-1)= 1;
 
 if verbose>0
     plot(t, W, 'gx');
 end
 
-maxer = Cp(ind(1));
+maxer = Cp(max_index);
 xdata{1}.maxer = maxer;
 Cp = Cp.*W;
 
