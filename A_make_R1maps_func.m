@@ -1,5 +1,5 @@
 function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynam_name, aif_rr_type, ... 
-    tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time, drift, sliceloc, blood_t1)
+    tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time, drift, sliceloc, blood_t1, injection_duration)
 
 % A_make_R1maps_func - Generate concentration versus time curves for the
 % tumor region and the arterial input region. The setup follows Loveless
@@ -46,6 +46,8 @@ function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,
 %                       a rod phantom in image FOV
 %  blood_t1           - the T1 value of blood (in ms) only used if 
 %                       aif_rr_type is set to 'aif_auto_static'
+%  injection_duration - the length of the contrast agent injection in
+%                       number of acquisitions, for auto AIF only
 % 
 % We assume that the T1 maps and the DCE-MRI files contain the same field of
 % view.
@@ -426,7 +428,11 @@ if strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static')
     dimx = size(DYNAMIC,1);
     dimy = size(DYNAMIC,2);
     dimz = slices;
-    [aif_index, DYNAM_AUTO_AIF] = dce_auto_aif(DYNAMLV,lvind,dimx,dimy,dimz);
+    [end_ss, aif_index, DYNAM_AUTO_AIF] = dce_auto_aif(DYNAMLV,lvind,dimx,dimy,dimz,injection_duration);
+    if isempty(aif_index)
+        saved_results = '';
+        return;
+    end
     lvind = aif_index;
     DYNAMLV = DYNAM_AUTO_AIF;
     if strcmp(aif_rr_type,'aif_auto_static')
@@ -482,6 +488,15 @@ if(steady_state_time == -1)
         %No zero index in matlab
         steady_state_time(1) = 1;
     end
+elseif (steady_state_time == -2)
+    if ~exist('end_ss','var')
+        dimx = size(DYNAMIC,1);
+        dimy = size(DYNAMIC,2);
+        dimz = slices;
+        end_ss = dce_auto_aif(DYNAMLV,lvind,dimx,dimy,dimz,injection_duration);
+    end
+    steady_state_time(2) = end_ss;
+    steady_state_time(1) = 1; 
 else
     %No zero index in matlab
     steady_state_time(2) = steady_state_time;
@@ -628,12 +643,6 @@ for j = 1:numel(T1TUM)
     ScaleFactortum = (1/T1TUM(j)) - mean(R1tTOI(round(steady_state_time(1)):round(steady_state_time(2)), j));
     R1tTOI(:,j) = R1tTOI(:,j) + ScaleFactortum;
 end
-
-
-
-Ssstum = mean(Stotaltum(round(steady_state_time(1)):round(steady_state_time(2)),:));
-Sttum = Stotaltum;
-
 
 
 n = figure; 

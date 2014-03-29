@@ -316,7 +316,7 @@ for model_index=1:numel(dce_model_list)
             % For FXR and AUC
             original_t1(tumind) = T1TUM;
             if strcmp(cur_dce_model,'auc')
-                original_ss_signal(tumind) = Ssstum;
+                original_ss_signal(tumind) = xdata{1}.Ssstum;
             end
             for r=number_rois:-1:1
                 roi_r1(r) = 1./mean(original_t1(roi_index{r}));

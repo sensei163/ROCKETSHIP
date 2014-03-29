@@ -1,27 +1,31 @@
-function [aif_index, dynamic_output] = dce_auto_aif(dynamic_input, mask_index,dimx,dimy,dimz)
+function [end_ss, aif_index, dynamic_output] = dce_auto_aif(dynamic_input, mask_index,dimx,dimy,dimz,injection_duration)
 % load('C:\Users\sbarnes\Documents\data\6 DCE Stroke\aging\Sam Analysis\Raw AIF\1 young - Copy\A-preAIFcalc.mat')
 % load('C:\Users\sbarnes\Documents\data\6 DCE Stroke\aging\Sam Analysis\Fitted Auto AIF\1 young\A-preAIFcalcPostDrift.mat')
 % load('C:\Users\sbarnes\Documents\data\6 DCE Stroke\aging\Sam Analysis\Fitted Auto AIF\2 old\A-preAutoFitWithDrift.mat')
 
-% TODO fix hard coded values
-% TODO fix for 3D DYNAMIC
-disp('Running auto AIF selection, searching for AIF...');
-% Hard coded
-% end_ss = 97; %4.76 min
-% end_inject = 112; %5.5 min
-% time_resolution = 2.6/60;
-% timer   = 0:time_resolution:time_resolution*(size(dynamic_input,1)-1);
-timer   = 0:size(dynamic_input,1)-1;
-% start_time = 1;
-% end_time = numel(timer);
-r_square_threshold = 0.8;
-end_signal_threshold = 0.35;
+% Only calculate the end of steady state, stop here
+if nargout == 1
+    disp('Running auto find end baseline/steady state, searching...');
+else
+    disp('Running auto AIF selection, searching for AIF...');
+end
+
+
+% Get preferences
+prefs = parse_preference_file('dce_preferences.txt',0,...
+    {'autoaif_r_square_threshold' 'autoaif_end_signal_threshold' ...
+    'autoaif_sobel_threshold' });
+r_square_threshold = str2num(prefs.autoaif_r_square_threshold);
+end_signal_threshold = str2num(prefs.autoaif_end_signal_threshold);
+sobel_threshold = str2num(prefs.autoaif_sobel_threshold);
+% r_square_threshold = 0.8;
+% end_signal_threshold = 0.35;
+
 
 % Shape data for detection
 spatial_points = size(dynamic_input,2);
 time_points = size(dynamic_input,1);
-% dynam_pre_smooth = double(reshape(DYNAMIC,spatial_points,time_points)');
-% dynamic_input = dynamic_input;
+timer   = 0:time_points-1;
 dynam_smooth = smooth(dynamic_input,25,'moving');
 dynam_smooth = reshape(dynam_smooth,time_points,spatial_points);
 % Scale from 0 to 1 so edge detector threshold is consistant
@@ -43,18 +47,33 @@ op = fspecial('sobel')/8;
 x_mask = op;
 bx = imfilter(global_smooth,x_mask,'replicate');
 [slope, i] = min(bx);
-slope = mean(bx(i-1:i+1));
-midpoint = global_smooth(i);
-offset = midpoint/slope;
-end_ss=round(i+offset);
-offset_forward = (1-midpoint)/-slope;
-end_inject=round(i+offset_forward);
-
-% slope = mean(bx(end_ss:end_inject));
+% slope = mean(bx(i-1:i+1));
+% midpoint = global_smooth(i);
 % offset = midpoint/slope;
 % end_ss=round(i+offset);
 % offset_forward = (1-midpoint)/-slope;
 % end_inject=round(i+offset_forward);
+
+% all_rsquare(1) = 0;
+end_ss = i-1;
+for n=2:(i-1)
+    [fitobject, gof] = fit((n:i)',global_smooth(n:i),'poly1');
+%     all_rsquare(n) = gof.rsquare;
+    if gof.rsquare> 0.95
+        end_ss = n;
+        break;
+    end
+end
+
+fprintf('Found end steady state at image number: %d\n',end_ss);
+
+% Only calculate the end of steady state, stop here
+if nargout == 1
+    return;
+end
+
+end_inject = end_ss + injection_duration;
+
 figure
 plot(global_smooth)
 hold on;
@@ -65,7 +84,7 @@ plot(injection,'r');
 hold off;
 % plot(bw,'r');
 % plot(bx,'r');
-waitforbuttonpress
+% waitforbuttonpress
 
 dynamic_output = [];
 edge_detected = zeros(spatial_points,1);
@@ -82,7 +101,7 @@ xdata = cell(spatial_points,1);
 parfor voxel_index = 1:spatial_points
 
     % Edge detect with sobel filter
-    [bw thresh]= edge(dynam_smooth(:,voxel_index),'sobel',0.005);
+    [bw thresh]= edge(dynam_smooth(:,voxel_index),'sobel',sobel_threshold);
     % Look only for edges within injection window
     if max(bw(end_ss:end_inject))==1   
         all_edges = all_edges+1;
@@ -139,7 +158,7 @@ parfor voxel_index = 1:spatial_points
             % Remove bad fits
             if rsquare>r_square_threshold
                 rsquare_edges = rsquare_edges+1;
-                if aif_fitted(end)<end_signal_threshold
+                if aif_fitted(end)/max(aif_fitted)<end_signal_threshold
                     edge_detected(voxel_index) = 1; 
                     good_fit_edges = good_fit_edges+1;                  
     %                 figure;

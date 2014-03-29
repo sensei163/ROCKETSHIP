@@ -22,7 +22,7 @@ function varargout = RUNA(varargin)
 
 % Edit the above text to modify the response to help RUNA
 
-% Last Modified by GUIDE v2.5 24-Mar-2014 13:11:21
+% Last Modified by GUIDE v2.5 28-Mar-2014 10:43:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -358,13 +358,14 @@ hematocrit = str2num(get(handles.hematocrit, 'String')); %#ok<ST2NM>
 snr_filter = str2num(get(handles.snr_filter, 'String')); %#ok<ST2NM>
 relaxivity = str2num(get(handles.relaxivity, 'String')); %#ok<ST2NM>
 injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
+injection_duration = str2num(get(handles.injection_duration, 'String')); %#ok<ST2NM>
 %water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
 drift = get(handles.drift, 'Value');
 blood_t1 = str2num(get(handles.blood_t1, 'String')); %#ok<ST2NM>
 
 %time_resolution = time_resolution/60; %convert to minutes
 saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynamname, aif_rr_type, ... 
-    tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift, sliceloc,blood_t1);
+    tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift, sliceloc,blood_t1, injection_duration);
 
 % saved_results = 'aaa';
 %set(handles.results_a_path,'String',saved_results);
@@ -932,10 +933,13 @@ if get(handles.quant, 'Value')
         end
         if get(handles.aif_roi, 'Value')
             set(handles.aifmaskroi, 'Enable', 'on');
+            set(handles.injection_duration, 'Enable', 'off');
         else
-            % Auto so need complete T1 map, not T1 map of small AIF ROI
+            % Auto so cannot use T1 map of small AIF ROI
+            % Can only use a mask
             set(handles.aifmaskroi, 'Value',1);
             set(handles.aifmaskroi, 'Enable', 'off');
+            set(handles.injection_duration, 'Enable', 'on');
         end
     else
         % RR, no AIF
@@ -944,6 +948,7 @@ if get(handles.quant, 'Value')
         set(handles.aif_auto_static, 'Enable', 'off');
         set(handles.blood_t1, 'Enable', 'off');
         set(handles.aifmaskroi, 'Enable', 'on');
+        set(handles.injection_duration, 'Enable', 'off');
     end
 else
 %     set(handles.aifRRtxt, 'Enable', 'on');
@@ -955,6 +960,7 @@ else
     set(handles.aif_auto_static, 'Enable', 'off');
     set(handles.blood_t1, 'Enable', 'off');
     set(handles.aifmaskroi, 'Enable', 'on');
+    set(handles.injection_duration, 'Enable', 'off');
 end
 if (get(handles.roimaskroi, 'Value') == 2 && get(handles.aifmaskroi, 'Value') == 2) || ...
         ~get(handles.quant, 'Value') || ...
@@ -1022,14 +1028,14 @@ function noisepixels_CreateFcn(hObject, eventdata, handles)
 
 
 function blood_t1_Callback(hObject, eventdata, handles)
-
+uiremember();
 
 % --- Executes during object creation, after setting all properties.
 function blood_t1_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
+uirestore;
 
 % --- Executes when selected object is changed in aif_type.
 function aif_type_SelectionChangeFcn(hObject, eventdata, handles)
@@ -1037,3 +1043,15 @@ uiremember(handles.aif_auto);
 uiremember(handles.aif_auto_static);
 uiremember(handles.aif_roi);
 update_disable_options(handles);
+
+
+
+function injection_duration_Callback(hObject, eventdata, handles)
+uiremember();
+
+% --- Executes during object creation, after setting all properties.
+function injection_duration_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+uirestore;

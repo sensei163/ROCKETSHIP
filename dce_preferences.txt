@@ -1,3 +1,10 @@
+% Auto AIF finding options
+%%%%%%%%%%%%%%%%%%%%%%
+autoaif_r_square_threshold = 0.8
+autoaif_end_signal_threshold = 0.45
+autoaif_sobel_threshold = 0.005
+
+
 % AIF fitting options
 %%%%%%%%%%%%%%%%%%%%%%
 % aif function = A*exp(-c*t)+B*exp(-d*t)
