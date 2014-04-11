@@ -352,8 +352,10 @@ for model_index=1:numel(dce_model_list)
         h = fspecial('gaussian', [xy_smooth_size_odd xy_smooth_size_odd],xy_smooth_size);
         for i=1:size(xdata{1}.Ct,1)
             original_timepoint(tumind) = xdata{1}.Ct(i,:);
-            % 	imshow(smooth_timepoint.*20000)
-            smooth_timepoint = filter2(h, original_timepoint);
+            smooth_timepoint = zeros(size(original_timepoint));
+            for z=1:size(original_timepoint,3)
+                smooth_timepoint(:,:,z) = filter2(h, original_timepoint(:,:,z));
+            end
             xdata{1}.Ct(i,:) = smooth_timepoint(tumind)';
             
             if strcmp(cur_dce_model,'auc')

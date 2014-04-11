@@ -3,41 +3,45 @@ fit_parameters = plot_data.fit_parameters;
 if fit_parameters(4)==-1, fit_parameters(4)=nan; end
 if fit_parameters(5)==-1, fit_parameters(5)=nan; end
 
+x_min = min(plot_data.x_values);
+x_max = max(plot_data.x_values);
+xdata_curve = x_min:(x_max-x_min)/100:x_max;
+
 if(strcmp(plot_data.model_name,'t2_exponential') || ...
         strcmp(plot_data.model_name,'ADC_exponential'))
-    fit_curve = exp(-plot_data.x_values./fit_parameters(1)).*fit_parameters(2);
-    fit_curve_low = exp(-plot_data.x_values./fit_parameters(4)).*fit_parameters(2);
-    fit_curve_high = exp(-plot_data.x_values./fit_parameters(5)).*fit_parameters(2);
+    fit_curve = exp(-xdata_curve./fit_parameters(1)).*fit_parameters(2);
+    fit_curve_low = exp(-xdata_curve./fit_parameters(4)).*fit_parameters(2);
+    fit_curve_high = exp(-xdata_curve./fit_parameters(5)).*fit_parameters(2);
 elseif(strcmp(plot_data.model_name,'ADC_linear_weighted') || ...
        strcmp(plot_data.model_name,'t2_linear_weighted') || ...
        strcmp(plot_data.model_name,'t2_linear_simple') || ...
        strcmp(plot_data.model_name,'ADC_linear_simple') || ...
        strcmp(plot_data.model_name,'t2_linear_fast') || ...
        strcmp(plot_data.model_name,'ADC_linear_fast'))
-    fit_curve = exp(-plot_data.x_values./fit_parameters(1)).*exp(fit_parameters(2));
-    fit_curve_low = exp(-plot_data.x_values./fit_parameters(4)).*exp(fit_parameters(2));
-    fit_curve_high = exp(-plot_data.x_values./fit_parameters(5)).*exp(fit_parameters(2));
+    fit_curve = exp(-xdata_curve./fit_parameters(1)).*exp(fit_parameters(2));
+    fit_curve_low = exp(-xdata_curve./fit_parameters(4)).*exp(fit_parameters(2));
+    fit_curve_high = exp(-xdata_curve./fit_parameters(5)).*exp(fit_parameters(2));
 elseif(strcmp(plot_data.model_name,'t1_tr_fit'))
-    fit_curve = (1-exp(-plot_data.x_values./fit_parameters(1))).*fit_parameters(2);
-    fit_curve_low = (1-exp(-plot_data.x_values./fit_parameters(4))).*fit_parameters(2);
-    fit_curve_high = (1-exp(-plot_data.x_values./fit_parameters(5))).*fit_parameters(2);
+    fit_curve = (1-exp(-xdata_curve./fit_parameters(1))).*fit_parameters(2);
+    fit_curve_low = (1-exp(-xdata_curve./fit_parameters(4))).*fit_parameters(2);
+    fit_curve_high = (1-exp(-xdata_curve./fit_parameters(5))).*fit_parameters(2);
 elseif(strcmp(plot_data.model_name,'t1_fa_fit'))
-    fit_curve = fit_parameters(2).*( (1-exp(-plot_data.tr/fit_parameters(1))).*sind(plot_data.x_values) )./( 1-exp(-plot_data.tr/fit_parameters(1)).*cosd(plot_data.x_values) );
-    fit_curve_low = fit_parameters(2).*( (1-exp(-plot_data.tr/fit_parameters(4))).*sind(plot_data.x_values) )./( 1-exp(-plot_data.tr/fit_parameters(4)).*cosd(plot_data.x_values) );
-    fit_curve_high = fit_parameters(2).*( (1-exp(-plot_data.tr/fit_parameters(5))).*sind(plot_data.x_values) )./( 1-exp(-plot_data.tr/fit_parameters(5)).*cosd(plot_data.x_values) );
+    fit_curve = fit_parameters(2).*( (1-exp(-plot_data.tr/fit_parameters(1))).*sind(xdata_curve) )./( 1-exp(-plot_data.tr/fit_parameters(1)).*cosd(xdata_curve) );
+    fit_curve_low = fit_parameters(2).*( (1-exp(-plot_data.tr/fit_parameters(4))).*sind(xdata_curve) )./( 1-exp(-plot_data.tr/fit_parameters(4)).*cosd(xdata_curve) );
+    fit_curve_high = fit_parameters(2).*( (1-exp(-plot_data.tr/fit_parameters(5))).*sind(xdata_curve) )./( 1-exp(-plot_data.tr/fit_parameters(5)).*cosd(xdata_curve) );
 elseif(strcmp(plot_data.model_name,'t1_fa_linear_fit'))
 %     y_lin = si./sin(pi/180*parameter);
 %     x_lin = si./tan(pi/180*parameter);
-    lin_curve = exp(-plot_data.tr/fit_parameters(1)).*plot_data.y_values./tand(plot_data.x_values)+fit_parameters(2);
-    fit_curve = lin_curve.*sind(plot_data.x_values);
-    lin_curve_low = exp(-plot_data.tr/fit_parameters(4)).*plot_data.y_values./tand(plot_data.x_values)+fit_parameters(2);
-    fit_curve_low = lin_curve_low.*sind(plot_data.x_values);
-    lin_curve_high = exp(-plot_data.tr/fit_parameters(5)).*plot_data.y_values./tand(plot_data.x_values)+fit_parameters(2);
-    fit_curve_high = lin_curve_high.*sind(plot_data.x_values);
+    lin_curve = exp(-plot_data.tr/fit_parameters(1)).*plot_data.y_values./tand(xdata_curve)+fit_parameters(2);
+    fit_curve = lin_curve.*sind(xdata_curve);
+    lin_curve_low = exp(-plot_data.tr/fit_parameters(4)).*plot_data.y_values./tand(xdata_curve)+fit_parameters(2);
+    fit_curve_low = lin_curve_low.*sind(xdata_curve);
+    lin_curve_high = exp(-plot_data.tr/fit_parameters(5)).*plot_data.y_values./tand(xdata_curve)+fit_parameters(2);
+    fit_curve_high = lin_curve_high.*sind(xdata_curve);
 elseif(strcmp(plot_data.model_name,'t1_ti_exponential_fit'))
-    fit_curve = abs( fit_parameters(2).*(1-2.*exp(-plot_data.x_values./fit_parameters(1))-exp(-plot_data.x_values./fit_parameters(1)) ) );
-    fit_curve_low = abs( fit_parameters(2).*(1-2.*exp(-plot_data.x_values./fit_parameters(4))-exp(-plot_data.x_values./fit_parameters(4)) ) );
-    fit_curve_high = abs( fit_parameters(2).*(1-2.*exp(-plot_data.x_values./fit_parameters(5))-exp(-plot_data.x_values./fit_parameters(5)) ) );  
+    fit_curve = abs( fit_parameters(2).*(1-2.*exp(-xdata_curve./fit_parameters(1))-exp(-xdata_curve./fit_parameters(1)) ) );
+    fit_curve_low = abs( fit_parameters(2).*(1-2.*exp(-xdata_curve./fit_parameters(4))-exp(-xdata_curve./fit_parameters(4)) ) );
+    fit_curve_high = abs( fit_parameters(2).*(1-2.*exp(-xdata_curve./fit_parameters(5))-exp(-xdata_curve./fit_parameters(5)) ) );  
 elseif(strcmp(plot_data.model_name, 'user_input'))
 %     [PATHSTR,NAME,~] = fileparts(userfile);
 %     userFN = str2func(NAME);
@@ -49,7 +53,7 @@ end
 [xsorted, i_sort] = sort(plot_data.x_values);
 
 p = plot(xsorted,plot_data.y_values(i_sort),...
-    xsorted,fit_curve(i_sort));
+    xdata_curve,fit_curve);
 set(p(1),'Marker','.','MarkerSize',14,'LineStyle','none');
 set(p(1),'Color','k');
 set(p(2),'Color','b');
