@@ -149,27 +149,47 @@ if handles.roi_data_ready
 %     selected_roi_temp = strfind(handles.model_fit_data{handles.selected_model}.roi_name,selected_name);
 %     selected_roi = find(not(cellfun('isempty', selected_roi_temp)));
 
-    plot_data.Ct			= handles.model_xdata{handles.selected_model}.roi_series(:,selected_roi);
-    plot_data.Ct_original	= handles.model_xdata{handles.selected_model}.roi_series_original(:,selected_roi);
-    plot_data.Cp			= handles.model_xdata{handles.selected_model}.Cp;
-    plot_data.timer			= handles.model_xdata{handles.selected_model}.timer;
-    plot_data.x_units = 'Time (minutes)';
-    plot_data.y_units =  'Concentration (mmol)';
-    plot_data.fit_parameters= handles.model_fit_data{handles.selected_model}.roi_results(selected_roi,:);
-    plot_data.model_name		= handles.model_fit_data{handles.selected_model}.model_name;
-    plot_data.show_original = get(handles.show_original,'Value');
-    plot_data.show_ci		= get(handles.show_ci,'Value');
-    plot_data.title = [plot_data.model_name ' for ROI "' selected_name '"'];
+    if sum(strcmp(handles.model_fit_data{handles.selected_model}.model_name,{'aif' 'aif_vp' 'fxr' 'tofts' 'ex_tofts' 'patlak' 'nested'}))
+        plot_data.Ct			= handles.model_xdata{handles.selected_model}.roi_series(:,selected_roi);
+        plot_data.Ct_original	= handles.model_xdata{handles.selected_model}.roi_series_original(:,selected_roi);
+        plot_data.Cp			= handles.model_xdata{handles.selected_model}.Cp;
+        plot_data.timer			= handles.model_xdata{handles.selected_model}.timer;
+        plot_data.x_units       = 'Time (minutes)';
+        plot_data.y_units       = 'Concentration (mmol)';
+        plot_data.fit_parameters= handles.model_fit_data{handles.selected_model}.roi_results(selected_roi,:);
+        plot_data.model_name	= handles.model_fit_data{handles.selected_model}.model_name;
+        plot_data.show_original = get(handles.show_original,'Value');
+        plot_data.show_ci		= get(handles.show_ci,'Value');
+        plot_data.title         = [plot_data.model_name ' for ROI "' selected_name '"'];
 
-    if strcmp(handles.model_fit_data{handles.selected_model}.model_name,'fxr')
-        plot_data.R1o = handles.model_xdata{handles.selected_model}.roi_r1(selected_roi);
-        plot_data.R1i = handles.model_xdata{handles.selected_model}.roi_r1(selected_roi);
-        plot_data.r1 = handles.model_xdata{handles.selected_model}.relaxivity;
-        plot_data.fw = 0.8;
+        if strcmp(handles.model_fit_data{handles.selected_model}.model_name,'fxr')
+            plot_data.R1o = handles.model_xdata{handles.selected_model}.roi_r1(selected_roi);
+            plot_data.R1i = handles.model_xdata{handles.selected_model}.roi_r1(selected_roi);
+            plot_data.r1  = handles.model_xdata{handles.selected_model}.relaxivity;
+            plot_data.fw  = 0.8;
+        end
+
+        figure(2);
+        plot_dce_curve(plot_data);
+    else
+        % Assume it is a decay model then
+        plot_data.x_values      = handles.model_xdata{handles.selected_model}.x_values;
+        plot_data.y_values      = handles.model_xdata{handles.selected_model}.roi_y_values(selected_roi,:);
+        plot_data.x_units       = handles.model_xdata{handles.selected_model}.x_units;
+        plot_data.y_units       = handles.model_xdata{handles.selected_model}.y_units;
+        plot_data.fit_parameters= handles.model_fit_data{handles.selected_model}.roi_results(selected_roi,:);
+        plot_data.model_name	= handles.model_fit_data{handles.selected_model}.model_name;
+        plot_data.show_original = get(handles.show_original,'Value');
+        plot_data.show_ci		= get(handles.show_ci,'Value');
+        plot_data.title         = [plot_data.model_name ' for ROI "' selected_name '"'];
+        
+        if strfind(handles.model_fit_data{handles.selected_model}.model_name,'t1_fa')
+            plot_data.tr = handles.model_xdata{handles.selected_model}.tr;
+        end
+
+        figure(2);
+        plot_curve(plot_data);
     end
-
-    figure(2);
-    plot_dce_curve(plot_data);
 else
     handles = load_check_data(handles,'roi');
     % Update handles structure
@@ -296,7 +316,7 @@ for i=1:numel(compare_model_list)
         % Set error message
         if ~exist(current_model,'file')
             ready_message = [current_name current_ext ' file not found'];
-        elseif ~exist('xdata','var') || ~exist('fit_data','var')
+        elseif ~isfield(temp_model,'xdata') || ~isfield(temp_model,'fit_data')
             ready_message = [current_name current_ext ' file does not contain fit data'];
         elseif ~isfield(handles.model_fit_data{i},'fit_voxels') ||...
                 ~isfield(handles.model_fit_data{i},'number_rois') ||...

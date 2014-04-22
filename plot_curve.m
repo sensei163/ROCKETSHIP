@@ -60,8 +60,8 @@ set(p(2),'Color','b');
 
 if plot_data.show_ci
     hold on
-    p_ci = plot(xsorted,fit_curve_low(i_sort),...
-        xsorted,fit_curve_high(i_sort));
+    p_ci = plot(xdata_curve,fit_curve_low,...
+        xdata_curve,fit_curve_high);
     set(p_ci(1),'Color',[0.5 0.5 0.6]);
     set(p_ci(2),'Color',[0.5 0.5 0.6]);
 end

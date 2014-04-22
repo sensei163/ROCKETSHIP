@@ -225,6 +225,12 @@ nArrowHeadSize = fread(fidROI, 1, 'uint8');
 nRoundedRectArcSize = fread(fidROI, 1, 'int16');
 nPosition = fread(fidROI, 1, 'int16');
 
+% Edit 4-21-14 SB, above reads nPosition at byte positions 57-58
+% actual position appears to be at 58-59
+% - Seek to get nPosition (slice)
+fseek(fidROI, 58, 'bof');
+nPosition = fread(fidROI, 1, 'int16');
+
 % - Seek to get aspect ratio
 fseek(fidROI, 52, 'bof');
 fAspectRatio = fread(fidROI, 1, 'float32');
@@ -324,8 +330,13 @@ switch nTypeID
 end
 
 
+% -- Handle version >= 223
+if (sROI.nVersion > 223)
+    sROI.nPosition = nPosition;
+else
+    sROI.nPosition = 0;
+end
 % -- Handle version >= 218
-
 if (sROI.nVersion >= 218)
    sROI.nStrokeWidth = nStrokeWidth;
    sROI.nStrokeColor = nStrokeColor;
