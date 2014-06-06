@@ -364,6 +364,8 @@ if(drift)
     DYNAMLV     = [];
     DYNAMNOISE  = [];
     DYNAMNONVIA = [];
+    scale_index = zeros(1,slices);
+    
     % Time loop
     time_index = 1;
     for i = 1:slices:size(dynam,3)
@@ -378,11 +380,34 @@ if(drift)
             % rod voxel locations
             OUT = ROD{j}.OUT;
             
-            if(~isempty(OUT))
+            if(~isempty(OUT)) 
+                scale_index(j) = j;
+            else
+                % Try to find a suitable scale factor in another slice
+                for delta = 1:slices-1
+                    if j-delta >= 1
+                        if(~isempty(ROD{j-delta}.OUT))
+                            scale_index(j) = j-delta;
+                            OUT = ROD{scale_index(j)}.OUT;
+                            break
+                        end
+                    end
+                    
+                    if j+delta <= slices
+                        if(~isempty(ROD{j+delta}.OUT))
+                            scale_index(j) = j+delta;
+                            OUT = ROD{scale_index(j)}.OUT;
+                            break
+                        end
+                    end
+                end
+            end
+                            
+            if(scale_index(j))
                 rod_index = sub2ind(size(currentimgj), OUT(:,1), OUT(:,2));
                 DRIFT(time_index,j) = mean(currentimgj(rod_index));
                 PRECORRECTED(time_index,j) = mean(currentimgj(:));
-                currentimgj = currentimgj.*scale_fit{j}(time_index);
+                currentimgj = currentimgj.*scale_fit{scale_index(j)}(time_index);
                 CORRECTED(time_index,j) = mean(currentimgj(:));
                 currentimg(:,:,j) = currentimgj;
             end
@@ -404,13 +429,17 @@ if(drift)
     drift_fig = figure;
     
     for j = 1:slices
-        OUT = ROD{j}.OUT;
+%         OUT = ROD{j}.OUT;
         
-        if(~isempty(OUT))
+        if(scale_index)
             subplot(ceil(sqrt(slices)), ceil(sqrt(slices)), j)
             hold on
-                plot(DRIFT(:,j)', 'r.')
-                plot(1./scale_fit{j}(1:time_index).*DRIFT(2,j),'k')
+                if scale_index(j)==j
+                    % only plot rod signal if that is what was used for
+                    % this correction
+                    plot(DRIFT(:,j)', 'r.')
+                end
+                plot(1./scale_fit{scale_index(j)}(1:time_index).*DRIFT(2,j),'k')
                 plot(CORRECTED(:,j), 'gx')
                 plot(PRECORRECTED(:,j), 'b.')
             hold off

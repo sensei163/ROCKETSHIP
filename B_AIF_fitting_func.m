@@ -192,14 +192,24 @@ else
     external = load(import_aif_path);
     if isfield(external,'Cp_use')
         Cp_use = external.Cp_use;
-        Stlv_use = external.Stlv_use;
+        Stlv_use = external.Stlv_use;       % FIXME You can't do this, need to check if exists
     elseif isfield(external,'Bdata')
         if isfield(external.Bdata,'Cp_use')
             Cp_use = external.Bdata.Cp_use;
-            Stlv_use = external.Bdata.Stlv_use;
         elseif isfield(external.Bdata,'xdata')
             Cp_use = external.Bdata.xdata{1}.Cp;
+        else
+            disp('No Cp curve found in selected file')
+            return
+        end
+        
+        if isfield(external.Bdata,'Stlv_use')
+            Stlv_use = external.Bdata.Stlv_use;
+        elseif isfield(external.Bdata,'xdata')
             Stlv_use = external.Bdata.xdata{1}.Stlv;
+        else
+            disp('No STLV curve found in selected file')
+            return
         end
     elseif isfield(external,'xdata')
         Cp_use = external.xdata{1}.Cp;
@@ -208,6 +218,28 @@ else
         disp('No Cp curve found in selected file')
         return
     end
+    
+    % Line up imported AIF with current data
+    if isfield(external,'Bdata')
+        imported_injection_time = external.Bdata.start_injection/external.Bdata.time_resolution;
+        current_injection_time = start_injection/time_resolution;
+        
+        shift_by = round(current_injection_time - imported_injection_time);
+        
+        if shift_by>0
+            shifted_cp = [ones(1,shift_by)*Cp_use(1) Cp_use(1:end-shift_by)];
+            Cp_use = shifted_cp;
+        elseif shift_by<0
+            shift_by = abs(shift_by);
+            shifted_cp = [Cp_use(1+shift_by:end) ones(1,shift_by)*Cp_use(end)];
+            Cp_use = shifted_cp;
+        end
+        
+        fprintf('AIF Shifted by %d images\n',shift_by);
+    else
+        warning('cannot line up imported AIF with current data')
+    end
+    
     % Check length, if different try applying time constraints
     if numel(timer)<numel(Cp_use)
         Cp_use = Cp_use(start_time:end_time);
