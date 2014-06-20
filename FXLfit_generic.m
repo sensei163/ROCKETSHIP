@@ -1,5 +1,7 @@
-function [GG, residuals] = FXLfit_generic(xdata, number_voxels, model)
-% DEBUG number_voxels = 5
+function [GG, residuals] = FXLfit_generic(xdata, number_voxels, model, verbose)
+if nargin < 4
+    verbose = 1;
+end
 residuals = [];
 if strcmp(model, 'ex_tofts')
     
@@ -24,20 +26,22 @@ if strcmp(model, 'ex_tofts')
     prefs.MaxFunEvals = str2num(prefs_str.voxel_MaxFunEvals);
     prefs.Robust = prefs_str.voxel_Robust;
     %Log values used
-    fprintf('lower_limit_ktrans = %s\n',num2str(prefs.lower_limit_ktrans));
-    fprintf('upper_limit_ktrans = %s\n',num2str(prefs.upper_limit_ktrans));
-    fprintf('initial_value_ktrans = %s\n',num2str(prefs.initial_value_ktrans));
-    fprintf('lower_limit_ve = %s\n',num2str(prefs.lower_limit_ve));
-    fprintf('upper_limit_ve = %s\n',num2str(prefs.upper_limit_ve));
-    fprintf('initial_value_ve = %s\n',num2str(prefs.initial_value_ve));
-    fprintf('lower_limit_vp = %s\n',num2str(prefs.lower_limit_vp));
-    fprintf('upper_limit_vp = %s\n',num2str(prefs.upper_limit_vp));
-    fprintf('initial_value_vp = %s\n',num2str(prefs.initial_value_vp));
-    fprintf('TolFun = %s\n',num2str(prefs.TolFun));
-    fprintf('TolX = %s\n',num2str(prefs.TolX));
-    fprintf('MaxIter = %s\n',num2str(prefs.MaxIter));
-    fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
-    fprintf('Robust = %s\n',num2str(prefs.Robust));
+    if verbose
+        fprintf('lower_limit_ktrans = %s\n',num2str(prefs.lower_limit_ktrans));
+        fprintf('upper_limit_ktrans = %s\n',num2str(prefs.upper_limit_ktrans));
+        fprintf('initial_value_ktrans = %s\n',num2str(prefs.initial_value_ktrans));
+        fprintf('lower_limit_ve = %s\n',num2str(prefs.lower_limit_ve));
+        fprintf('upper_limit_ve = %s\n',num2str(prefs.upper_limit_ve));
+        fprintf('initial_value_ve = %s\n',num2str(prefs.initial_value_ve));
+        fprintf('lower_limit_vp = %s\n',num2str(prefs.lower_limit_vp));
+        fprintf('upper_limit_vp = %s\n',num2str(prefs.upper_limit_vp));
+        fprintf('initial_value_vp = %s\n',num2str(prefs.initial_value_vp));
+        fprintf('TolFun = %s\n',num2str(prefs.TolFun));
+        fprintf('TolX = %s\n',num2str(prefs.TolX));
+        fprintf('MaxIter = %s\n',num2str(prefs.MaxIter));
+        fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
+        fprintf('Robust = %s\n',num2str(prefs.Robust));
+    end
     
     % Preallocate for speed
     GG = zeros([number_voxels 10],'double');
@@ -52,7 +56,7 @@ if strcmp(model, 'ex_tofts')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels);
+    p = ProgressBar(number_voxels,'verbose',verbose);
     parfor i = 1:number_voxels
         [GG(i,:), residuals(i,:)] = model_extended_tofts(Ct_data(:,i),Cp_data,timer_data,prefs);
         p.progress;
@@ -78,17 +82,19 @@ elseif strcmp(model, 'tofts')
     prefs.MaxFunEvals = str2num(prefs_str.voxel_MaxFunEvals);
     prefs.Robust = prefs_str.voxel_Robust;
     %Log values used
-    fprintf('lower_limit_ktrans = %s\n',num2str(prefs.lower_limit_ktrans));
-    fprintf('upper_limit_ktrans = %s\n',num2str(prefs.upper_limit_ktrans));
-    fprintf('initial_value_ktrans = %s\n',num2str(prefs.initial_value_ktrans));
-    fprintf('lower_limit_ve = %s\n',num2str(prefs.lower_limit_ve));
-    fprintf('upper_limit_ve = %s\n',num2str(prefs.upper_limit_ve));
-    fprintf('initial_value_ve = %s\n',num2str(prefs.initial_value_ve));
-    fprintf('TolFun = %s\n',num2str(prefs.TolFun));
-    fprintf('TolX = %s\n',num2str(prefs.TolX));
-    fprintf('MaxIter = %s\n',num2str(prefs.MaxIter));
-    fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
-    fprintf('Robust = %s\n',num2str(prefs.Robust));
+    if verbose
+        fprintf('lower_limit_ktrans = %s\n',num2str(prefs.lower_limit_ktrans));
+        fprintf('upper_limit_ktrans = %s\n',num2str(prefs.upper_limit_ktrans));
+        fprintf('initial_value_ktrans = %s\n',num2str(prefs.initial_value_ktrans));
+        fprintf('lower_limit_ve = %s\n',num2str(prefs.lower_limit_ve));
+        fprintf('upper_limit_ve = %s\n',num2str(prefs.upper_limit_ve));
+        fprintf('initial_value_ve = %s\n',num2str(prefs.initial_value_ve));
+        fprintf('TolFun = %s\n',num2str(prefs.TolFun));
+        fprintf('TolX = %s\n',num2str(prefs.TolX));
+        fprintf('MaxIter = %s\n',num2str(prefs.MaxIter));
+        fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
+        fprintf('Robust = %s\n',num2str(prefs.Robust));
+    end
     
     % Preallocate for speed
     GG = zeros([number_voxels 7],'double');
@@ -103,7 +109,7 @@ elseif strcmp(model, 'tofts')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels);
+    p = ProgressBar(number_voxels,'verbose',verbose);
     parfor i = 1:number_voxels
         [GG(i,:), residuals(i,:)] = model_tofts(Ct_data(:,i),Cp_data,timer_data,prefs);
         p.progress;
@@ -134,21 +140,23 @@ elseif strcmp(model, 'fxr')
     prefs.Robust = prefs_str.voxel_Robust;
     prefs.fxr_fw = str2num(prefs_str.fxr_fw);
     %Log values used
-    fprintf('lower_limit_ktrans = %s\n',num2str(prefs.lower_limit_ktrans));
-    fprintf('upper_limit_ktrans = %s\n',num2str(prefs.upper_limit_ktrans));
-    fprintf('initial_value_ktrans = %s\n',num2str(prefs.initial_value_ktrans));
-    fprintf('lower_limit_ve = %s\n',num2str(prefs.lower_limit_ve));
-    fprintf('upper_limit_ve = %s\n',num2str(prefs.upper_limit_ve));
-    fprintf('initial_value_ve = %s\n',num2str(prefs.initial_value_ve));
-    fprintf('lower_limit_tau = %s\n',num2str(prefs.lower_limit_tau));
-    fprintf('upper_limit_tau = %s\n',num2str(prefs.upper_limit_tau));
-    fprintf('initial_value_tau = %s\n',num2str(prefs.initial_value_tau));
-    fprintf('TolFun = %s\n',num2str(prefs.TolFun));
-    fprintf('TolX = %s\n',num2str(prefs.TolX));
-    fprintf('MaxIter = %s\n',num2str(prefs.MaxIter));
-    fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
-    fprintf('Robust = %s\n',num2str(prefs.Robust));
-    fprintf('fxr_fw = %s\n',num2str(prefs.fxr_fw));
+    if verbose
+        fprintf('lower_limit_ktrans = %s\n',num2str(prefs.lower_limit_ktrans));
+        fprintf('upper_limit_ktrans = %s\n',num2str(prefs.upper_limit_ktrans));
+        fprintf('initial_value_ktrans = %s\n',num2str(prefs.initial_value_ktrans));
+        fprintf('lower_limit_ve = %s\n',num2str(prefs.lower_limit_ve));
+        fprintf('upper_limit_ve = %s\n',num2str(prefs.upper_limit_ve));
+        fprintf('initial_value_ve = %s\n',num2str(prefs.initial_value_ve));
+        fprintf('lower_limit_tau = %s\n',num2str(prefs.lower_limit_tau));
+        fprintf('upper_limit_tau = %s\n',num2str(prefs.upper_limit_tau));
+        fprintf('initial_value_tau = %s\n',num2str(prefs.initial_value_tau));
+        fprintf('TolFun = %s\n',num2str(prefs.TolFun));
+        fprintf('TolX = %s\n',num2str(prefs.TolX));
+        fprintf('MaxIter = %s\n',num2str(prefs.MaxIter));
+        fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
+        fprintf('Robust = %s\n',num2str(prefs.Robust));
+        fprintf('fxr_fw = %s\n',num2str(prefs.fxr_fw));
+    end
     
     % Preallocate for speed
     GG = zeros([number_voxels 10],'double');
@@ -167,7 +175,7 @@ elseif strcmp(model, 'fxr')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels);
+    p = ProgressBar(number_voxels,'verbose',verbose);
     parfor i = 1:number_voxels
         [GG(i,:), residuals(i,:)] = model_fxr(Ct_data(:,i),Cp_data,timer_data,R1o(i),R1i(i),r1,fw,prefs);
         p.progress;
@@ -212,7 +220,7 @@ elseif strcmp(model, 'auc')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels);
+    p = ProgressBar(number_voxels,'verbose',verbose);
     parfor i = 1:number_voxels
         GG(i,:) = auc_helper(Sttum(:,i),Stlv, Ct_data(:,i), Cp_data, timer_data);
         p.progress;
@@ -245,20 +253,22 @@ elseif strcmp(model, 'nested')
     prefs.MaxFunEvals = str2num(prefs_str.voxel_MaxFunEvals);
     prefs.Robust = prefs_str.voxel_Robust;
     %Log values used
-    fprintf('lower_limit_ktrans = %s\n',num2str(prefs.lower_limit_ktrans));
-    fprintf('upper_limit_ktrans = %s\n',num2str(prefs.upper_limit_ktrans));
-    fprintf('initial_value_ktrans = %s\n',num2str(prefs.initial_value_ktrans));
-    fprintf('lower_limit_ve = %s\n',num2str(prefs.lower_limit_ve));
-    fprintf('upper_limit_ve = %s\n',num2str(prefs.upper_limit_ve));
-    fprintf('initial_value_ve = %s\n',num2str(prefs.initial_value_ve));
-    fprintf('lower_limit_vp = %s\n',num2str(prefs.lower_limit_vp));
-    fprintf('upper_limit_vp = %s\n',num2str(prefs.upper_limit_vp));
-    fprintf('initial_value_vp = %s\n',num2str(prefs.initial_value_vp));
-    fprintf('TolFun = %s\n',num2str(prefs.TolFun));
-    fprintf('TolX = %s\n',num2str(prefs.TolX));
-    fprintf('MaxIter = %s\n',num2str(prefs.MaxIter));
-    fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
-    fprintf('Robust = %s\n',num2str(prefs.Robust));
+    if verbose
+        fprintf('lower_limit_ktrans = %s\n',num2str(prefs.lower_limit_ktrans));
+        fprintf('upper_limit_ktrans = %s\n',num2str(prefs.upper_limit_ktrans));
+        fprintf('initial_value_ktrans = %s\n',num2str(prefs.initial_value_ktrans));
+        fprintf('lower_limit_ve = %s\n',num2str(prefs.lower_limit_ve));
+        fprintf('upper_limit_ve = %s\n',num2str(prefs.upper_limit_ve));
+        fprintf('initial_value_ve = %s\n',num2str(prefs.initial_value_ve));
+        fprintf('lower_limit_vp = %s\n',num2str(prefs.lower_limit_vp));
+        fprintf('upper_limit_vp = %s\n',num2str(prefs.upper_limit_vp));
+        fprintf('initial_value_vp = %s\n',num2str(prefs.initial_value_vp));
+        fprintf('TolFun = %s\n',num2str(prefs.TolFun));
+        fprintf('TolX = %s\n',num2str(prefs.TolX));
+        fprintf('MaxIter = %s\n',num2str(prefs.MaxIter));
+        fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
+        fprintf('Robust = %s\n',num2str(prefs.Robust));
+    end
     
     % Preallocate for speed
     GG = zeros([number_voxels 10],'double');
@@ -273,7 +283,7 @@ elseif strcmp(model, 'nested')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels);
+    p = ProgressBar(number_voxels,'verbose',verbose);
     
     parfor i = 1:number_voxels
         % Fit 0 order model
@@ -359,17 +369,19 @@ elseif strcmp(model, 'patlak')
     prefs.MaxFunEvals = str2num(prefs_str.voxel_MaxFunEvals);
     prefs.Robust = prefs_str.voxel_Robust;
     %Log values used
-    fprintf('lower_limit_ktrans = %s\n',num2str(prefs.lower_limit_ktrans));
-    fprintf('upper_limit_ktrans = %s\n',num2str(prefs.upper_limit_ktrans));
-    fprintf('initial_value_ktrans = %s\n',num2str(prefs.initial_value_ktrans));
-    fprintf('lower_limit_vp = %s\n',num2str(prefs.lower_limit_vp));
-    fprintf('upper_limit_vp = %s\n',num2str(prefs.upper_limit_vp));
-    fprintf('initial_value_vp = %s\n',num2str(prefs.initial_value_vp));
-    fprintf('TolFun = %s\n',num2str(prefs.TolFun));
-    fprintf('TolX = %s\n',num2str(prefs.TolX));
-    fprintf('MaxIter = %s\n',num2str(prefs.MaxIter));
-    fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
-    fprintf('Robust = %s\n',num2str(prefs.Robust));
+    if verbose
+        fprintf('lower_limit_ktrans = %s\n',num2str(prefs.lower_limit_ktrans));
+        fprintf('upper_limit_ktrans = %s\n',num2str(prefs.upper_limit_ktrans));
+        fprintf('initial_value_ktrans = %s\n',num2str(prefs.initial_value_ktrans));
+        fprintf('lower_limit_vp = %s\n',num2str(prefs.lower_limit_vp));
+        fprintf('upper_limit_vp = %s\n',num2str(prefs.upper_limit_vp));
+        fprintf('initial_value_vp = %s\n',num2str(prefs.initial_value_vp));
+        fprintf('TolFun = %s\n',num2str(prefs.TolFun));
+        fprintf('TolX = %s\n',num2str(prefs.TolX));
+        fprintf('MaxIter = %s\n',num2str(prefs.MaxIter));
+        fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
+        fprintf('Robust = %s\n',num2str(prefs.Robust));
+    end
     
     % Preallocate for speed
     GG = zeros([number_voxels 7],'double');
@@ -384,7 +396,7 @@ elseif strcmp(model, 'patlak')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels);
+    p = ProgressBar(number_voxels,'verbose',verbose);
     for i = 1:number_voxels
         [GG(i,:), residuals(i,:)] = model_patlak(Ct_data(:,i),Cp_data,timer_data,prefs);
         p.progress;
