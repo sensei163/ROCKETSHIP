@@ -63,6 +63,66 @@ if strcmp(model, 'ex_tofts')
     end;
     p.stop;
     if diary_restore, diary on, end;
+elseif strcmp(model, 'tissue_uptake')
+
+    % Get values from pref file
+    prefs_str = parse_preference_file('dce_preferences.txt',0,...
+        {'voxel_lower_limit_ktrans' 'voxel_upper_limit_ktrans' 'voxel_initial_value_ktrans' ...
+        'voxel_lower_limit_fp' 'voxel_upper_limit_fp' 'voxel_initial_value_fp' ...
+        'voxel_lower_limit_tp' 'voxel_upper_limit_tp' 'voxel_initial_value_tp' ...
+        'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals' 'voxel_Robust'});
+    prefs.lower_limit_ktrans = str2num(prefs_str.voxel_lower_limit_ktrans);
+    prefs.upper_limit_ktrans = str2num(prefs_str.voxel_upper_limit_ktrans);
+    prefs.initial_value_ktrans = str2num(prefs_str.voxel_initial_value_ktrans);
+    prefs.lower_limit_fp = str2num(prefs_str.voxel_lower_limit_fp);
+    prefs.upper_limit_fp = str2num(prefs_str.voxel_upper_limit_fp);
+    prefs.initial_value_fp = str2num(prefs_str.voxel_initial_value_fp);
+    prefs.lower_limit_tp = str2num(prefs_str.voxel_lower_limit_tp);
+    prefs.upper_limit_tp = str2num(prefs_str.voxel_upper_limit_tp);
+    prefs.initial_value_tp = str2num(prefs_str.voxel_initial_value_tp);
+    prefs.TolFun = str2num(prefs_str.voxel_TolFun);
+    prefs.TolX = str2num(prefs_str.voxel_TolX);
+    prefs.MaxIter = str2num(prefs_str.voxel_MaxIter);
+    prefs.MaxFunEvals = str2num(prefs_str.voxel_MaxFunEvals);
+    prefs.Robust = prefs_str.voxel_Robust;
+    %Log values used
+    if verbose
+        fprintf('lower_limit_ktrans = %s\n',num2str(prefs.lower_limit_ktrans));
+        fprintf('upper_limit_ktrans = %s\n',num2str(prefs.upper_limit_ktrans));
+        fprintf('initial_value_ktrans = %s\n',num2str(prefs.initial_value_ktrans));
+        fprintf('lower_limit_fp = %s\n',num2str(prefs.lower_limit_fp));
+        fprintf('upper_limit_fp = %s\n',num2str(prefs.upper_limit_fp));
+        fprintf('initial_value_fp = %s\n',num2str(prefs.initial_value_fp));
+        fprintf('lower_limit_tp = %s\n',num2str(prefs.lower_limit_tp));
+        fprintf('upper_limit_tp = %s\n',num2str(prefs.upper_limit_tp));
+        fprintf('initial_value_tp = %s\n',num2str(prefs.initial_value_tp));
+        fprintf('TolFun = %s\n',num2str(prefs.TolFun));
+        fprintf('TolX = %s\n',num2str(prefs.TolX));
+        fprintf('MaxIter = %s\n',num2str(prefs.MaxIter));
+        fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
+        fprintf('Robust = %s\n',num2str(prefs.Robust));
+    end
+    
+    % Preallocate for speed
+    GG = zeros([number_voxels 10],'double');
+    residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
+    % Slice out needed variables for speed
+    Ct_data = xdata{1}.Ct;
+    Cp_data = xdata{1}.Cp;
+    timer_data = xdata{1}.timer;
+    %Turn off diary if on as it doesn't work with progress bar
+    diary_restore = 0;
+    if strcmp(get(0,'Diary'),'on')
+        diary off;
+        diary_restore = 1;
+    end
+    p = ProgressBar(number_voxels,'verbose',verbose);
+    parfor i = 1:number_voxels
+        [GG(i,:), residuals(i,:)] = model_tissue_uptake(Ct_data(:,i),Cp_data,timer_data,prefs);
+        p.progress;
+    end;
+    p.stop;
+    if diary_restore, diary on, end;
 elseif strcmp(model, 'tofts')
     
     % Get values from pref file
