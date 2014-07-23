@@ -323,7 +323,7 @@ if ~exist(results_b_path)
     disp('old path does not exist, trying new path');
     
     if ~exist(fullfile(new_cur_d_path, b_file))
-    new_cur_d_path = uigetdir(pwd,['Old path does not exist, Select path where: ]' b_file ' is please.');
+    new_cur_d_path = uigetdir(pwd,['Old path does not exist, Select path where: ' b_file ' is please.']);
 %     slash = findstr('\', results_b_path);
 %     b_file = results_b_path((slash(end)+1):end);
     results_b_path = fullfile(new_cur_d_path, b_file);
