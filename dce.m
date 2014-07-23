@@ -333,6 +333,7 @@ if ~exist(results_b_path)
     if ~exist(results_b_path)
         error('Path error');
     end
+    batch_data.results_b_path = results_b_path;
 end
 
 
