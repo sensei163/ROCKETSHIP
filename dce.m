@@ -317,18 +317,20 @@ while numel(list) > 0
 
 %Check if the path exists
 results_b_path = batch_data.results_b_path;
-[~, b_file]     = fileparts(filename);
+[~, b_file, ext]     = fileparts(filename);
 
 if ~exist(results_b_path)
     disp('old path does not exist, trying new path');
     
-    if ~exist(fullfile(new_cur_d_path, b_file))
-    new_cur_d_path = uigetdir(pwd,['Old path does not exist, Select path where: ' b_file ' is please.']);
-%     slash = findstr('\', results_b_path);
-%     b_file = results_b_path((slash(end)+1):end);
-    results_b_path = fullfile(new_cur_d_path, b_file);
+   if ~exist(fullfile(new_cur_d_path, [b_file ext]))
+        while(~exist(results_b_path))
+        new_cur_d_path = uigetdir(pwd,['Old path does not exist, Select path where: ' [b_file ext] ' is please.']);
+        %     slash = findstr('\', results_b_path);
+        %     b_file = results_b_path((slash(end)+1):end);
+        results_b_path = fullfile(new_cur_d_path, [b_file ext]);
+        end
     else
-        results_b_path = fullfile(new_cur_d_path, b_file);
+        results_b_path = fullfile(new_cur_d_path, [b_file ext]);
     end
     if ~exist(results_b_path)
         error('Path error');
