@@ -167,12 +167,14 @@ for model_index=1:numel(dce_model_list)
     disp('User selected number of CPU cores');
     
     % Setup matlabpool size
-    n = matlabpool('size');
+    
+    c = parcluster('local'); % build the 'local' cluster object
+    n = c.NumWorkers;        % get the number of workers
     if(number_cpus <= n) && number_cpus > 0
     elseif(number_cpus == 0)
         number_cpus = n;
     else
-        number_cpus = n+number_cpus;
+        number_cpus = max(n+number_cpus, 1);
     end
     disp(number_cpus);
     
