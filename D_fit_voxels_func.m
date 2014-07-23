@@ -165,7 +165,17 @@ for model_index=1:numel(dce_model_list)
     disp('User selected XY smooth size (sigma)');
     disp(xy_smooth_size);
     disp('User selected number of CPU cores');
+    
+    % Setup matlabpool size
+    n = matlabpool('size');
+    if(number_cpus <= n) && number_cpus > 0
+    elseif(number_cpus == 0)
+        number_cpus = n;
+    else
+        number_cpus = n+number_cpus;
+    end
     disp(number_cpus);
+    
     disp('User selected ROI list');
     [nrows,ncols]= size(roi_list);
     for row=1:nrows
@@ -188,7 +198,7 @@ for model_index=1:numel(dce_model_list)
     %disp(['Fitting data using the ' 'dce' ' model']);
     
     % Open pool if not open or improperly sized
-    if matlabpool('size')~= number_cpus
+    %if matlabpool('size')~= number_cpus
         % Do not launch pool with diary on, locks the log file
         diary off;
         if matlabpool('size')>0
@@ -196,7 +206,7 @@ for model_index=1:numel(dce_model_list)
         end
         matlabpool('local', number_cpus);
         diary on;
-    end
+    %end
     
     % Substitute R1 data for concentration data in curve to fit
     % FXR model fits to the R1 data directly, not concentrations
