@@ -317,7 +317,7 @@ while numel(list) > 0
 
 %Check if the path exists
 results_b_path = batch_data.results_b_path;
-[~, b_file, ext]     = fileparts(filename);
+[~, b_file, ext]     = fileparts(results_b_path);
 
 if ~exist(results_b_path)
     disp('old path does not exist, trying new path');
