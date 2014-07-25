@@ -149,7 +149,7 @@ if handles.roi_data_ready
 %     selected_roi_temp = strfind(handles.model_fit_data{handles.selected_model}.roi_name,selected_name);
 %     selected_roi = find(not(cellfun('isempty', selected_roi_temp)));
 
-    if sum(strcmp(handles.model_fit_data{handles.selected_model}.model_name,{'aif' 'aif_vp' 'fxr' 'tofts' 'ex_tofts' 'patlak' 'nested'}))
+    if sum(strcmp(handles.model_fit_data{handles.selected_model}.model_name,{'aif' 'aif_vp' 'fxr' 'tofts' 'ex_tofts' 'patlak' 'nested' 'tissue_uptake'}))
         plot_data.Ct			= handles.model_xdata{handles.selected_model}.roi_series(:,selected_roi);
         plot_data.Ct_original	= handles.model_xdata{handles.selected_model}.roi_series_original(:,selected_roi);
         plot_data.Cp			= handles.model_xdata{handles.selected_model}.Cp;

@@ -10,6 +10,22 @@ elseif strcmp(plot_data.model_name,'aif_vp') || strcmp(plot_data.model_name,'ex_
     fit_curve = model_extended_tofts_cfit(fit_parameters(1),fit_parameters(2),fit_parameters(3),plot_data.Cp,plot_data.timer);
     fit_curve_low = model_extended_tofts_cfit(fit_parameters(5),fit_parameters(7),fit_parameters(9),plot_data.Cp,plot_data.timer);
     fit_curve_high = model_extended_tofts_cfit(fit_parameters(6),fit_parameters(8),fit_parameters(10),plot_data.Cp,plot_data.timer);
+elseif strcmp(plot_data.model_name,'tissue_uptake')
+    % Convert from vp (stored parameter) to Tp (fitted parameter)
+    Ktrans = fit_parameters(1);
+    Fp = fit_parameters(2);
+    vp = fit_parameters(3);
+    vp_low_ci = fit_parameters(9);
+    vp_high_ci = fit_parameters(10);
+    
+    PS = Ktrans/(1-Ktrans/Fp);
+    Tp = vp/(Fp+PS);
+    Tp_low_ci = vp_low_ci/(Fp+PS);
+    Tp_high_ci = vp_high_ci/(Fp+PS);
+    
+    fit_curve = model_tissue_uptake_cfit(Ktrans,Fp,Tp,plot_data.Cp,plot_data.timer);
+    fit_curve_low = model_tissue_uptake_cfit(fit_parameters(5),fit_parameters(7),Tp_low_ci,plot_data.Cp,plot_data.timer);
+    fit_curve_high = model_tissue_uptake_cfit(fit_parameters(6),fit_parameters(8),Tp_high_ci,plot_data.Cp,plot_data.timer);
 elseif strcmp(plot_data.model_name,'fxr')
     fit_curve = model_fxr_cfit(fit_parameters(1),fit_parameters(2),fit_parameters(3),plot_data.Cp,plot_data.timer,plot_data.R1o,plot_data.R1i,plot_data.r1,plot_data.fw);
     fit_curve_low = model_fxr_cfit(fit_parameters(5),fit_parameters(7),fit_parameters(9),plot_data.Cp,plot_data.timer,plot_data.R1o,plot_data.R1i,plot_data.r1,plot_data.fw);
@@ -83,6 +99,14 @@ elseif strcmp(plot_data.model_name,'aif_vp') || strcmp(plot_data.model_name,'ex_
     vp_error = mean([abs(fit_parameters(3)-fit_parameters(9)) abs(fit_parameters(3)-fit_parameters(10))]);
     plot_str(1) = {[' K_{trans} = ' num2str(fit_parameters(1),2) '±' num2str(ktrans_error,2)]};
     plot_str(2) = {[' V_e = ' num2str(fit_parameters(2),2) '±' num2str(ve_error,2)]};
+    plot_str(3) = {[' V_p = ' num2str(fit_parameters(3),2) '±' num2str(vp_error,2)]};
+    plot_str(4) = {[' residual = ' num2str(fit_parameters(4))]};
+elseif strcmp(plot_data.model_name,'tissue_uptake')
+    ktrans_error = mean([abs(fit_parameters(1)-fit_parameters(5)) abs(fit_parameters(1)-fit_parameters(6))]);
+    fp_error = mean([abs(fit_parameters(2)-fit_parameters(7)) abs(fit_parameters(2)-fit_parameters(8))]);
+    vp_error = mean([abs(fit_parameters(3)-fit_parameters(9)) abs(fit_parameters(3)-fit_parameters(10))]);
+    plot_str(1) = {[' K_{trans} = ' num2str(fit_parameters(1),2) '±' num2str(ktrans_error,2)]};
+    plot_str(2) = {[' F_p = ' num2str(fit_parameters(2),2) '±' num2str(fp_error,2)]};
     plot_str(3) = {[' V_p = ' num2str(fit_parameters(3),2) '±' num2str(vp_error,2)]};
     plot_str(4) = {[' residual = ' num2str(fit_parameters(4))]};
 elseif strcmp(plot_data.model_name,'fxr')

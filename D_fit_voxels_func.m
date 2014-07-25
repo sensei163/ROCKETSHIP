@@ -16,6 +16,7 @@ function results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,tim
 %                       'auc_rr' = not implemented
 %                       'nested' = series of nested model
 %                       'patlak' = two parameter model with no backflux
+%                       'tissue_uptake' = three parameter assumes cp>>ct
 %  time_smoothing     - type of time smoothing
 %                       'none' = no smoothing
 %                       'moving' = moving average
@@ -90,6 +91,10 @@ if quant
     if dce_model.patlak
         dce_model_string{end+1} = 'Patlak';
         dce_model_list{end+1} = 'patlak';
+    end
+    if dce_model.tissue_uptake
+        dce_model_string{end+1} = 'Tissue Uptake';
+        dce_model_list{end+1} = 'tissue_uptake';
     end
 end
 if dce_model.fractal
