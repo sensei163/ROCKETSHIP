@@ -310,11 +310,37 @@ else
     disp('No prepped files for batch job');
 end
 
+new_cur_d_path = '';
 while numel(list) > 0
     filename = list{end};
     disp(['Running job on : ' filename]);
     batch_data = load(filename);
 %     results = D_fit_voxels_batch_func(Ddatabatch);
+
+%Check if the path exists
+results_b_path = batch_data.results_b_path;
+[~, b_file, ext]     = fileparts(results_b_path);
+
+if ~exist(results_b_path)
+    disp('old path does not exist, trying new path');
+    
+   if ~exist(fullfile(new_cur_d_path, [b_file ext]))
+        while(~exist(results_b_path))
+        new_cur_d_path = uigetdir(pwd,['Old path does not exist, Select path where: ' [b_file ext] ' is please.']);
+        %     slash = findstr('\', results_b_path);
+        %     b_file = results_b_path((slash(end)+1):end);
+        results_b_path = fullfile(new_cur_d_path, [b_file ext]);
+        end
+    else
+        results_b_path = fullfile(new_cur_d_path, [b_file ext]);
+    end
+    if ~exist(results_b_path)
+        error('Path error');
+    end
+    batch_data.results_b_path = results_b_path;
+end
+
+
     results = D_fit_voxels_func(batch_data.results_b_path,...
         batch_data.dce_model,batch_data.time_smoothing,batch_data.time_smoothing_window,...
         batch_data.xy_smooth_size,batch_data.number_cpus,batch_data.roi_list,...
