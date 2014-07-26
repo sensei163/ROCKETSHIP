@@ -22,7 +22,7 @@ function varargout = RUNB(varargin)
 
 % Edit the above text to modify the response to help RUNB
 
-% Last Modified by GUIDE v2.5 27-Jun-2014 15:15:21
+% Last Modified by GUIDE v2.5 25-Jul-2014 17:15:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -453,5 +453,28 @@ if get(hObject, 'Value')
 else
     set(handles.timevectpath,'Enable','off');
     set(handles.timevectyn,'Value',0);
+end
+guidata(hObject, handles);
+
+
+% --- Executes on button press in copy_from_a.
+function copy_from_a_Callback(hObject, eventdata, handles)
+guidata(hObject, handles);
+results_a_path = get(handles.results_a_path,'String');
+if exist(results_a_path, 'file')==2
+    a_import = load(results_a_path);
+    a_start_index = a_import.Adata.steady_state_time(2);
+    if isfield(a_import.Adata,'injection_duration')
+        a_end_index = a_import.Adata.injection_duration+a_start_index;
+    else
+        a_end_index = a_start_index+1;
+    end
+    % Convert to min
+    time_resolution = str2num(get(handles.time_resolution, 'String'))/60.0;
+    a_start_min = a_start_index * time_resolution;
+    a_end_min = a_end_index * time_resolution;
+    
+    set(handles.start_injection,'String',num2str(a_start_min));
+    set(handles.end_injection,'String',num2str(a_end_min));
 end
 guidata(hObject, handles);

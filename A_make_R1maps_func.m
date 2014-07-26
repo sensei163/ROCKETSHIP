@@ -791,6 +791,7 @@ Adata.steady_state_time = steady_state_time;
 Adata.tumind    = tumind;
 Adata.voxelSNR  = voxelSNR;
 Adata.voxelSNR_filtered = voxelSNR_filtered;
+Adata.injection_duration = injection_duration;
 
 %% 14. Save the file for the next Step
 
