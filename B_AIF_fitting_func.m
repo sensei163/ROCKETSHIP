@@ -287,6 +287,8 @@ else
             Cp_use(1:import_shift) = 0;
         end
         disp(['Imported AIF has been shifted by ' num2str(import_shift) ' images to match data']);
+    else
+        disp(['Imported AIF not shifted']);
     end
     
     M{2} = 'Imported Curve';
