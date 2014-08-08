@@ -296,9 +296,12 @@ end
 if(drift)
     for j = 1:slices
         figure(nn);
-%         cumatchimg = (matchimg(:,:,j));
         
-        subplot(2, slices,j), title('First left click in the rod region and then noise region, right click if no rod (twice)');
+        % Create and highlight new title
+        subplot(2, slices,j)
+        title({'Left click on drift correction region then noise region'; 
+            'To skip (will use adjacent slices) right click twice'},'Color', 'Red');
+        drawnow;
         
         % Can't use ginput as it causes a problem with the transparency
         % maps, this is a bug with the openGL drivers, other workarounds
@@ -309,20 +312,24 @@ if(drift)
         
         if(button(1) > 1)
             OUT = [];
+            subplot(2, slices, j+slices);
+            title('No drift ROI selected');
         else
             OUT = findRod(dynam(:,:,j), [x(1) y(1)],[x(2) y(2)], []);
             
-            title('Selected ROIs');
-%             cumatchimg(OUT(:,1), OUT(:,2)) = 600000;
-%             subplot(2, slices, j+slices), imagesc(cumatchimg'), axis off
             drift_mask(OUT(:,1), OUT(:,2), j)=1;
             subplot(2, slices, j+slices), hold on
+            title('Selected ROIs');
             h_mask = imagesc(cyan_mask); axis off;
             hold off
             set(h_mask, 'AlphaData',double(drift_mask(:,:,j)'));
         end
         
         ROD{j}.OUT = OUT;
+
+        % Reset title
+        subplot(2, slices,j)
+        title(['Slice number ',num2str(j)],'Color', 'Black')
     end
     
     % Now we Drift correct the image
@@ -355,7 +362,7 @@ if(drift)
             end
             time_index = time_index+1;
         end
-        % Fit time curve of rod to poly3
+        % Fit time curve of rod to poly4
         scale_fit{j} = fit((1:numel(scalefactor))',scalefactor,'poly4','Robust','on');
     end
 
