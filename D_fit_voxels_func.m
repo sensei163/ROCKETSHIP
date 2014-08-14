@@ -17,6 +17,7 @@ function results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,tim
 %                       'nested' = series of nested model
 %                       'patlak' = two parameter model with no backflux
 %                       'tissue_uptake' = three parameter assumes cp>>ct
+%                       '2cxm' = two compartment exchange model
 %  time_smoothing     - type of time smoothing
 %                       'none' = no smoothing
 %                       'moving' = moving average
@@ -56,7 +57,7 @@ function results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,tim
 % Toggle options
 %************************
 r2filter = 0;		% Filter out all fits with r2 < r2filter
-close_pool = 0;		% Close matlabpool when done with processing
+% close_pool = 0;		% Close matlabpool when done with processing
 % End options
 %************************
 
@@ -95,6 +96,10 @@ if quant
     if dce_model.tissue_uptake
         dce_model_string{end+1} = 'Tissue Uptake';
         dce_model_list{end+1} = 'tissue_uptake';
+    end
+    if dce_model.two_cxm
+        dce_model_string{end+1} = 'Two Compartment Exchange';
+        dce_model_list{end+1} = '2cxm';
     end
 end
 if dce_model.fractal
@@ -204,16 +209,23 @@ for model_index=1:numel(dce_model_list)
     xdata{1}.numvoxels = numvoxels;
     %disp(['Fitting data using the ' 'dce' ' model']);
     
-    % Open pool if not open or improperly sized
-    %if matlabpool('size')~= number_cpus
+    % Open pool if not open
+    poolobj = gcp('nocreate'); % If no pool, do not create new one
+    if isempty(poolobj)
+        poolsize = 0;
+    else
+        poolsize = poolobj.NumWorkers;
+    end
+    if poolsize ==0
         % Do not launch pool with diary on, locks the log file
         diary off;
-        if matlabpool('size')>0
-            matlabpool close;
-        end
-        matlabpool('local', number_cpus);
+%         if matlabpool('size')>0
+%             matlabpool close;
+%         end
+%         matlabpool('local', number_cpus);
+        parpool
         diary on;
-    %end
+    end
     
     % Substitute R1 data for concentration data in curve to fit
     % FXR model fits to the R1 data directly, not concentrations
@@ -520,9 +532,9 @@ for model_index=1:numel(dce_model_list)
     end
     % processing_time = toc;
     % disp(['processing completed in ' datestr(processing_time/86400, 'HH:MM:SS') ' (hr:min:sec)']);
-    if close_pool
-        matlabpool close;
-    end
+%     if close_pool
+%         matlabpool close;
+%     end
     
     % c) Save file
     %************************
@@ -629,6 +641,10 @@ for model_index=1:numel(dce_model_list)
         headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Residual', 'Ktrans 95% low', ...
             'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high'};
         paramname = {'Ktrans'; 've'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
+    elseif strcmp(cur_dce_model, '2cxm')
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Fp','Residual', 'Ktrans 95% low', ...
+            'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high','Fp 95% low','Fp 95% high'};
+        paramname = {'Ktrans'; 've'; 'vp';'fp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'; 'fp_ci_low'; 'fp_ci_high'};
     elseif strcmp(cur_dce_model, 'tissue_uptake')
         headings = {'ROI path', 'ROI', 'Ktrans', 'Fp','Vp','Residual', 'Ktrans 95% low', ...
             'Ktrans 95% high', 'Fp 95% low', 'Fp 95% high','Vp 95% low','Vp 95% high'};

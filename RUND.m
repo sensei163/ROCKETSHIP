@@ -22,7 +22,7 @@ function varargout = RUND(varargin)
 
 % Edit the above text to modify the response to help RUND
 
-% Last Modified by GUIDE v2.5 18-Jul-2014 18:47:53
+% Last Modified by GUIDE v2.5 13-Aug-2014 18:20:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -301,6 +301,7 @@ dce_model.auc    = get(handles.auc, 'Value');
 dce_model.nested = get(handles.nested, 'Value');
 dce_model.patlak = get(handles.patlak, 'Value');
 dce_model.tissue_uptake = get(handles.tissue_uptake, 'Value');
+dce_model.two_cxm = get(handles.two_cxm, 'Value');
 
 time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
 time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
@@ -333,6 +334,7 @@ dce_model.auc    = get(handles.auc, 'Value');
 dce_model.nested = get(handles.nested, 'Value');
 dce_model.patlak = get(handles.patlak, 'Value');
 dce_model.tissue_uptake = get(handles.tissue_uptake, 'Value');
+dce_model.two_cxm = get(handles.two_cxm, 'Value');
 
 time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
 time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
@@ -487,4 +489,12 @@ uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function tissue_uptake_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+% --- Executes on button press in two_cxm.
+function two_cxm_Callback(hObject, eventdata, handles)
+uiremember;
+
+% --- Executes during object creation, after setting all properties.
+function two_cxm_CreateFcn(hObject, eventdata, handles)
 uirestore;
