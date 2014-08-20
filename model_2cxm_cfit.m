@@ -32,6 +32,12 @@ for k = 1:numel(T1)
     else
         Ct(k) = trapz(T,F);
     end
+    
+    if isnan(Ct(k))
+%         disp(['NaN generated ktrans: ' num2str(Ktrans) 've: ' num2str(ve) ...
+%              'vp: ' num2str(vp)  'fp: ' num2str(fp)])
+        Ct(k) = 0;
+    end
 end
 
 Ct = Ct';
