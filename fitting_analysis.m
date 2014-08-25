@@ -864,6 +864,9 @@ elseif strcmp(handles.model_fit_data{model_index}.model_name,'patlak')
     fp = 2;
     sse_index = 3;
 else
+    sse = 0;
+    fp = 0;
+    n = 0;
     update_status(handles,'selected model not implemented','red');
     return
 end

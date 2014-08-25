@@ -4,7 +4,11 @@ function Ct = model_2cxm_cfit(Ktrans, ve, vp, fp, Cp, T1)
 Cp = Cp(:);
 T1 = T1(:);
 
-PS = Ktrans*fp/(fp-Ktrans);
+if Ktrans>= fp
+    PS = 10^8; %large value, prevents Inf and NaN errors
+else
+    PS = Ktrans*fp/(fp-Ktrans);
+end
 E = PS/(PS+fp);
 e = ve/(vp+ve);
 tau_plus  = (E-E*e+e)/(2*E)*(1+sqrt(1-(4*E*e*(1-E)*(1-e))/(E-E*e+e)^2));
