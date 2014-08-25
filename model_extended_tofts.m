@@ -52,6 +52,21 @@ ft = fittype('model_extended_tofts_cfit( Ktrans, ve, vp, Cp, T1)',...
     'coefficients',{'Ktrans', 've', 'vp'});
 [f, gof, output] = fit([timer, Cp'],Ct,ft, options);
 confidence_interval = confint(f,0.95);
+
+if output.exitflag<=0
+    % Change start point to try for better fit
+    new_options = fitoptions(options,...
+        'StartPoint', [prefs.initial_value_ktrans*100 prefs.initial_value_ve prefs.initial_value_vp]);
+    [new_f, new_gof, new_output] = fit([timer, Cp'],Ct,ft, new_options);
+    
+    if new_gof.sse < gof.sse
+        f = new_f;
+        gof = new_gof;
+        output = new_output;
+        confidence_interval = confint(f,0.95);
+    end
+end
+
 % toc
 
 %Calculate the R2 fit

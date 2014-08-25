@@ -22,6 +22,19 @@ ft = fittype('model_2cxm_cfit( Ktrans, ve, vp, fp, Cp, T1)',...
     'coefficients',{'Ktrans', 've', 'vp', 'fp'});
 [f, gof, output] = fit([timer, Cp'],Ct,ft, options);
 confidence_interval = confint(f,0.95);
+if output.exitflag<=0
+    % Change start point to try for better fit
+    new_options = fitoptions(options,...
+        'StartPoint', [prefs.initial_value_ktrans*100 prefs.initial_value_ve prefs.initial_value_vp prefs.initial_value_fp]);
+    [new_f, new_gof, new_output] = fit([timer, Cp'],Ct,ft, new_options);
+    
+    if new_gof.sse < gof.sse
+        f = new_f;
+        gof = new_gof;
+        output = new_output;
+        confidence_interval = confint(f,0.95);
+    end
+end
 
 
 x(1) = f.Ktrans;			% ktrans
