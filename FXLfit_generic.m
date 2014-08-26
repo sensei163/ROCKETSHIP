@@ -464,6 +464,29 @@ elseif strcmp(model, 'patlak')
     p.stop;
     if diary_restore, diary on, end;
 
+elseif strcmp(model, 'patlak_linear')
+
+    % Preallocate for speed
+    GG = zeros([number_voxels 7],'double');
+    residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
+    % Slice out needed variables for speed
+    Ct_data = xdata{1}.Ct;
+    Cp_data = xdata{1}.Cp;
+    timer_data = xdata{1}.timer;
+    %Turn off diary if on as it doesn't work with progress bar
+    diary_restore = 0;
+    if strcmp(get(0,'Diary'),'on')
+        diary off;
+        diary_restore = 1;
+    end
+    p = ProgressBar(number_voxels,'verbose',verbose);
+    parfor i = 1:number_voxels
+        [GG(i,:), residuals(i,:)] = model_patlak_linear(Ct_data(:,i),Cp_data,timer_data);
+        p.progress;
+    end;
+    p.stop;
+    if diary_restore, diary on, end;
+    
 elseif strcmp(model, '2cxm')
     
     % Get values from pref file
