@@ -25,7 +25,7 @@ aif_Robust = off
 %%%%%%%%%%%%%%%%%%%%%%%
 voxel_lower_limit_ktrans = 10^-7
 voxel_upper_limit_ktrans = 10
-voxel_initial_value_ktrans = 0.0001
+voxel_initial_value_ktrans = 0.0002
 
 voxel_lower_limit_ve = 0.01
 voxel_upper_limit_ve = 1

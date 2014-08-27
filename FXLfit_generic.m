@@ -118,7 +118,13 @@ elseif strcmp(model, 'tissue_uptake')
     end
     p = ProgressBar(number_voxels,'verbose',verbose);
     parfor i = 1:number_voxels
-        [GG(i,:), residuals(i,:)] = model_tissue_uptake(Ct_data(:,i),Cp_data,timer_data,prefs);
+        % Do quick linear patlak and use values as initial values
+        [estimate, ~] = model_patlak_linear(Ct_data(:,i),Cp_data,timer_data);
+        prefs_local = prefs;
+        prefs_local.initial_value_ktrans = estimate(1);
+        prefs_local.initial_value_vp = estimate(2);
+        % Do tissue uptake fit
+        [GG(i,:), residuals(i,:)] = model_tissue_uptake(Ct_data(:,i),Cp_data,timer_data,prefs_local);
         p.progress;
     end;
     p.stop;
@@ -458,7 +464,13 @@ elseif strcmp(model, 'patlak')
     end
     p = ProgressBar(number_voxels,'verbose',verbose);
     parfor i = 1:number_voxels
-        [GG(i,:), residuals(i,:)] = model_patlak(Ct_data(:,i),Cp_data,timer_data,prefs);
+        % Do quick linear patlak and use values as initial values
+        [estimate, ~] = model_patlak_linear(Ct_data(:,i),Cp_data,timer_data);
+        prefs_local = prefs;
+        prefs_local.initial_value_ktrans = estimate(1);
+        prefs_local.initial_value_vp = estimate(2);
+        % Do non-linear patlak
+        [GG(i,:), residuals(i,:)] = model_patlak(Ct_data(:,i),Cp_data,timer_data,prefs_local);
         p.progress;
     end;
     p.stop;
@@ -549,6 +561,9 @@ elseif strcmp(model, '2cxm')
     end
     p = ProgressBar(number_voxels,'verbose',verbose);
     parfor i = 1:number_voxels
+%         [estimate, ~] = model_patlak_linear(Ct_data(:,i),Cp_data,timer_data);
+%         prefs_local = prefs;
+%         prefs_local.initial_value_ktrans = estimate(1);
         [GG(i,:), residuals(i,:)] = model_2cxm(Ct_data(:,i),Cp_data,timer_data,prefs);
         p.progress;
     end;
