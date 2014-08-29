@@ -209,23 +209,25 @@ for model_index=1:numel(dce_model_list)
     xdata{1}.numvoxels = numvoxels;
     %disp(['Fitting data using the ' 'dce' ' model']);
     
-    % Open pool if not open
-    poolobj = gcp('nocreate'); % If no pool, do not create new one
-    if isempty(poolobj)
-        poolsize = 0;
-    else
-        poolsize = poolobj.NumWorkers;
-    end
-    if poolsize ==0
+    % Open pool if not open or improperly sized
+    %if matlabpool('size')~= number_cpus
         % Do not launch pool with diary on, locks the log file
         diary off;
-%         if matlabpool('size')>0
-%             matlabpool close;
-%         end
-%         matlabpool('local', number_cpus);
-        parpool
+        if matlabpool('size')>0
+            matlabpool close;
+        end
+        matlabpool('local', number_cpus);
         diary on;
-    end
+    %end
+    
+    % NEW Way to do this, but won't run on old Matlab versions
+    % Launch pool if not already running, then disable warnings
+    % diary off;
+    % poolobj = gcp;
+    % diary on;
+    
+    % Turn off warnings
+    pctRunOnAll warning 'off'
     
     % Substitute R1 data for concentration data in curve to fit
     % FXR model fits to the R1 data directly, not concentrations
