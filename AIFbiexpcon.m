@@ -22,15 +22,20 @@ OUT = find(step > 0);
 
 %B = maxer-A;
 
-
+if isfield(xdata{1}, 'raw') && xdata{1}.raw == true && isfield(xdata{1}, 'baseline')
+    baseline = xdata{1}.baseline;
+else
+    baseline = 0;
+end
 
 for j = 1:numel(T1)
-    
+    % Baseline
     if(j< OUT(1))
-        Cp(j) = 0;
+        Cp(j) = baseline;
+    % Linear upslope to max
     elseif(j<OUT(end))
-        Cp(j) = A.*((T1(j)-T1(OUT(1)))./(T1(OUT(end))-T1(OUT(1)))) + B.*((T1(j)-T1(OUT(1)))./(T1(OUT(end))-T1(OUT(1))));
-        
+        Cp(j) = baseline + (A-baseline).*((T1(j)-T1(OUT(1)))./(T1(OUT(end))-T1(OUT(1)))) + (B-baseline).*((T1(j)-T1(OUT(1)))./(T1(OUT(end))-T1(OUT(1))));
+    % Bi-Exponential Decay    
     else
         Cp(j) = A.*(exp(-c.*(T1(j) - T1(OUT(end))))) + B.*(exp(-d.*(T1(j) - T1(OUT(end)))));
     end

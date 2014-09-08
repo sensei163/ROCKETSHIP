@@ -135,6 +135,21 @@ maxer = Cp(max_index);
 xdata{1}.maxer = maxer;
 Cp = Cp.*W;
 
+if isfield(xdata{1}, 'raw') && xdata{1}.raw == true
+    end_baseline = find(xdata{1}.step > 0);
+    baseline = mean(Cp(1:end_baseline(1)));
+    xdata{1}.baseline = baseline;
+    upper_limits(1) = maxer*2;
+    upper_limits(2) = maxer*2;
+    initial_values(1) = maxer*0.5;
+    initial_values(2) = maxer*0.5;
+    if verbose>0
+        disp('Fitting raw values, limits and initial values adjusted');
+        fprintf('lower_limits = %s\n',num2str(lower_limits));
+        fprintf('upper_limits = %s\n',num2str(upper_limits));
+        fprintf('initial_values = %s\n',num2str(initial_values));
+    end
+end
 % Currently, we use AIF
 [x,resnorm,residual,exitflag,output,lambda,jacobian] = lsqcurvefit(@AIFbiexpcon, ...
     initial_values, xdata, ...
