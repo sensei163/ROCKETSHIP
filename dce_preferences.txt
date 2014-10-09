@@ -24,12 +24,12 @@ aif_Robust = off
 % Voxel fitting options
 %%%%%%%%%%%%%%%%%%%%%%%
 voxel_lower_limit_ktrans = 10^-7
-voxel_upper_limit_ktrans = 10
+voxel_upper_limit_ktrans = 2
 voxel_initial_value_ktrans = 0.0002
 
-voxel_lower_limit_ve = 0.01
+voxel_lower_limit_ve = 0.02
 voxel_upper_limit_ve = 1
-voxel_initial_value_ve = 0.03
+voxel_initial_value_ve = 0.2
 
 voxel_lower_limit_fp = 0.001
 voxel_upper_limit_fp = 100
