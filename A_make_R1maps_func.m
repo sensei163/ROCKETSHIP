@@ -213,7 +213,21 @@ if(viable)
 end
 
 %Find the number of slices each volume dataset
-slices = size(TUMOR, 3);
+% 
+[dimx, dimy, dimz, dimt] = size(dynam);
+if dimt==1
+    % Check if time is the third dimension
+    dimz_check = size(TUMOR, 3);
+    if dimz_check==1 && dimz~=1
+        %if so reshpae to be 4D matrix
+        dimt = dimz;
+        dimz = 1;
+        dynam = reshape(dynam,dimx,dimy,dimz,dimt);
+    else
+        error('Input dynamic images not 4D data, or time dimension = 1');
+    end
+    
+end
 
 % The TR is in ms
 tr = tr/1000; 
@@ -228,11 +242,11 @@ DYNAMNOISE  = [];
 DYNAMNONVIA = [];
 
 
-for i = 1:slices:size(dynam,3)
+for i = 1:dimt
     %For each time point, we collect the dynamic information into the curve
     %arrays.
     
-    currentimg       = dynam(:,:,i:i+(slices-1));
+    currentimg       = dynam(:,:,:,i);
     DYNAM(end+1,:)   = currentimg(tumind);
     DYNAMLV(end+1,:) = currentimg(lvind);
     DYNAMNOISE(end+1)= std(single(currentimg(noiseind)));
@@ -242,7 +256,7 @@ for i = 1:slices:size(dynam,3)
         % DCE MRI image.
         matchimg = currentimg;
         size_image_2d = [size(matchimg,1),size(matchimg,2)];
-        size_image_3d = [size(matchimg,1),size(matchimg,2), slices];
+        size_image_3d = [size(matchimg,1),size(matchimg,2), dimz];
 
         red_mask = cat(3, ones(size_image_2d)', zeros(size_image_2d)', zeros(size_image_2d)');
         green_mask = cat(3, zeros(size_image_2d)', ones(size_image_2d)', zeros(size_image_2d)');
@@ -264,9 +278,9 @@ for i = 1:slices:size(dynam,3)
     
         nn = figure;
         
-        for j = 1:slices
-            subplot(2,slices, j), imagesc(currentimg(:,:,j)'), axis off
-            subplot(2,slices,j+slices), imagesc(matchimg(:,:,j)'), axis off
+        for j = 1:dimz
+            subplot(2,dimz, j), imagesc(currentimg(:,:,j)'), axis off
+            subplot(2,dimz,j+dimz), imagesc(matchimg(:,:,j)'), axis off
             colormap('gray')
             hold on
             if ~(strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static'))
@@ -294,11 +308,11 @@ end
 % phantom to correct for the MR signal in the tissue of interest.
 
 if(drift)
-    for j = 1:slices
+    for j = 1:dimz
         figure(nn);
         
         % Create and highlight new title
-        subplot(2, slices,j)
+        subplot(2, dimz,j)
         title({'Left click on drift correction region then noise region'; 
             'To skip (will use adjacent slices) right click twice'},'Color', 'Red');
         drawnow;
@@ -312,13 +326,13 @@ if(drift)
         
         if(button(1) > 1)
             OUT = [];
-            subplot(2, slices, j+slices);
+            subplot(2, dimz, j+dimz);
             title('No drift ROI selected');
         else
             OUT = findRod(dynam(:,:,j), [x(1) y(1)],[x(2) y(2)], []);
             
             drift_mask(OUT(:,1), OUT(:,2), j)=1;
-            subplot(2, slices, j+slices), hold on
+            subplot(2, dimz, j+dimz), hold on
             title('Selected ROIs');
             h_mask = imagesc(cyan_mask); axis off;
             hold off
@@ -328,7 +342,7 @@ if(drift)
         ROD{j}.OUT = OUT;
 
         % Reset title
-        subplot(2, slices,j)
+        subplot(2, dimz,j)
         title(['Slice number ',num2str(j)],'Color', 'Black')
     end
     
@@ -336,21 +350,18 @@ if(drift)
     
     % First get time curve of rod and fit to poly
     %Gets all slices from the second time point
-    originalimg = dynam(:,:,(1+slices):(1+slices)+(slices-1));
-    scale_fit = cell(1,slices);
+    originalimg = dynam(:,:,(1+dimz):(1+dimz)+(dimz-1));
+    scale_fit = cell(1,dimz);
     % Slice loop
-    for j = 1:slices 
+    for j = 1:dimz 
         % Slice j from second time point
         originalimgj = originalimg(:,:,j);
-        scalefactor = ones(size(dynam,3)/slices,1);
+        scalefactor = ones(size(dynam,3)/dimz,1);
         
         % Time loop
-        time_index = 1;
-        for i = 1:slices:size(dynam,3)
-            % All slices at the time i
-            currentimg       = dynam(:,:,i:i+(slices-1));
-            % Slice j at time i
-            currentimgj  = currentimg(:,:,j);
+        for t = 1:dimt
+            % Slice j at time t
+            currentimgj  = dynam(:,:,j,t);
 
             % rod voxel locations
             OUT = ROD{j}.OUT;
@@ -358,12 +369,14 @@ if(drift)
             if(~isempty(OUT))
                 rod_index = sub2ind(size(originalimgj), OUT(:,1), OUT(:,2));
                 % signal relative to that at the second time point
-                scalefactor(time_index) = mean(originalimgj(rod_index))/mean(currentimgj(rod_index));
+                scalefactor(t) = mean(originalimgj(rod_index))/mean(currentimgj(rod_index));
             end
-            time_index = time_index+1;
         end
-        % Fit time curve of rod to poly4
-        scale_fit{j} = fit((1:numel(scalefactor))',scalefactor,'poly4','Robust','on');
+        
+        if(~isempty(ROD{j}.OUT))
+            % Fit time curve of rod to poly4
+            scale_fit{j} = fit((1:numel(scalefactor))',scalefactor','poly4','Robust','on');
+        end
     end
 
     % Second Scale images
@@ -371,16 +384,14 @@ if(drift)
     DYNAMLV     = [];
     DYNAMNOISE  = [];
     DYNAMNONVIA = [];
-    scale_index = zeros(1,slices);
+    scale_index = zeros(1,dimz);
     
     % Time loop
-    time_index = 1;
-    for i = 1:slices:size(dynam,3)
+    for time_index = 1:dimt
         % All slices at the time i
-        currentimg       = dynam(:,:,i:i+(slices-1));
+        currentimg       = dynam(:,:,:,time_index);
         % Slice loop
-        for j = 1:slices 
-%             originalimgj = originalimg(:,:,j);
+        for j = 1:dimz 
             % Slice j at time i
             currentimgj  = currentimg(:,:,j);
             
@@ -391,7 +402,7 @@ if(drift)
                 scale_index(j) = j;
             else
                 % Try to find a suitable scale factor in another slice
-                for delta = 1:slices-1
+                for delta = 1:dimz-1
                     if j-delta >= 1
                         if(~isempty(ROD{j-delta}.OUT))
                             scale_index(j) = j-delta;
@@ -400,7 +411,7 @@ if(drift)
                         end
                     end
                     
-                    if j+delta <= slices
+                    if j+delta <= dimz
                         if(~isempty(ROD{j+delta}.OUT))
                             scale_index(j) = j+delta;
                             OUT = ROD{scale_index(j)}.OUT;
@@ -427,19 +438,17 @@ if(drift)
         if(viable)
             DYNAMNONVIA(end+1,:) = currentimg(nonvia);
         end
-        
-        time_index = time_index+1;
     end
     
     
     % Plot the drift for each slice
     drift_fig = figure;
     
-    for j = 1:slices
+    for j = 1:dimz
 %         OUT = ROD{j}.OUT;
         
         if(scale_index)
-            subplot(ceil(sqrt(slices)), ceil(sqrt(slices)), j)
+            subplot(ceil(sqrt(dimz)), ceil(sqrt(dimz)), j)
             hold on
                 if scale_index(j)==j
                     % only plot rod signal if that is what was used for
@@ -463,7 +472,7 @@ if strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static')
     % Auto finding
     dimx = size(DYNAMIC,1);
     dimy = size(DYNAMIC,2);
-    dimz = slices;
+    dimz = dimz;
     [end_ss, aif_index, DYNAM_AUTO_AIF] = dce_auto_aif(DYNAMLV,lvind,dimx,dimy,dimz,injection_duration);
     if isempty(aif_index)
         saved_results = '';
@@ -490,8 +499,8 @@ if strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static')
     aif_mask = zeros(size_image_3d);
     aif_mask(lvind)  = 1;
     figure(nn);
-    for j = 1:slices
-        subplot(2, slices, j+slices), hold on
+    for j = 1:dimz
+        subplot(2, dimz, j+dimz), hold on
         h_mask = imagesc(red_mask); axis off
         set(h_mask, 'AlphaData',double(aif_mask(:,:,j)'));
         hold off;
@@ -528,7 +537,7 @@ elseif (steady_state_time == -2)
     if ~exist('end_ss','var')
         dimx = size(DYNAMIC,1);
         dimy = size(DYNAMIC,2);
-        dimz = slices;
+        dimz = dimz;
         end_ss = dce_auto_aif(DYNAMLV,lvind,dimx,dimy,dimz,injection_duration);
     end
     steady_state_time(2) = end_ss;
@@ -712,9 +721,9 @@ Ct = (R1tTOI-repmat((1./T1TUM)', [size(R1tTOI, 1) 1]))./relaxivity;
 CTFILE = zeros(size(dynam));
 
 for i = 1:size(Ct,1)
-    currentCT = zeros(size(dynam,1), size(dynam,2), slices);
+    currentCT = zeros(size(dynam,1), size(dynam,2), dimz);
     currentCT(tumind) = Ct(i,:);
-    CTFILE(:,:,(i-1)*slices+[1:slices]) = currentCT;
+    CTFILE(:,:,(i-1)*dimz+[1:dimz]) = currentCT;
 end
 
 % Save as dynamic file, with the TUMOR ROI only.
