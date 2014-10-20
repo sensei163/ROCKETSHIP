@@ -337,7 +337,7 @@ elseif strcmp(model, 'nested')
     end
     
     % Preallocate for speed
-    GG = zeros([number_voxels 10],'double');
+    GG = zeros([number_voxels 11],'double');
     residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
     % Slice out needed variables for speed
     Ct_data = xdata{1}.Ct;
@@ -363,17 +363,19 @@ elseif strcmp(model, 'nested')
         p_value = ftest(n,fp_lower,fp_higher,GG_zero,GG_one(1,2));
         if p_value>=0.05
             % Use 0 order
-            GG_local = zeros([1 10],'double');
+            GG_local = zeros([1 11],'double');
             GG_local(1,4) = GG_zero;
+            GG_local(1,11)= 0;
             GG(i,:) = GG_local;
             residuals(i,:) = residuals_b';
         else
             % Use 1st order
-            GG_local = zeros([1 10],'double');
+            GG_local = zeros([1 11],'double');
             GG_local(1,3) = GG_one(1,1);
             GG_local(1,4) = GG_one(1,2);
             GG_local(1,9) = GG_one(1,3);
             GG_local(1,10) = GG_one(1,4);
+            GG_local(1,11) = 1;
             GG(i,:) = GG_local;
             residuals(i,:) = residuals_b';
             fp_lower = 1;
@@ -385,7 +387,7 @@ elseif strcmp(model, 'nested')
             p_value = ftest(n,fp_lower,fp_higher,GG_one(1,2),GG_two(1,3));
             if p_value<0.05
                 % Use 2nd order
-                GG_local = zeros([1 10],'double');
+                GG_local = zeros([1 11],'double');
                 GG_local(1,1) = GG_two(1,1);
                 GG_local(1,3) = GG_two(1,2);
                 GG_local(1,4) = GG_two(1,3);
@@ -393,6 +395,7 @@ elseif strcmp(model, 'nested')
                 GG_local(1,6) = GG_two(1,5);
                 GG_local(1,9) = GG_two(1,6);
                 GG_local(1,10) = GG_two(1,7);
+                GG_local(1,11)= 2;
                 GG(i,:) = GG_local;
                 residuals(i,:) = residuals_b';
                 fp_lower = 2;
@@ -404,6 +407,7 @@ elseif strcmp(model, 'nested')
                 p_value = ftest(n,fp_lower,fp_higher,GG_two(1,3),GG_three(1,4));
                 if p_value<0.05
                     % Use 3rd order
+                    GG_three(1,end+1) = 3;
                     GG(i,:) = GG_three;
                     residuals(i,:) = residuals_b';
                     fp_lower = 3;

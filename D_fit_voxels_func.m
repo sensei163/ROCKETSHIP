@@ -637,10 +637,15 @@ for model_index=1:numel(dce_model_list)
         headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Residual', 'Ktrans 95% low', ...
             'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high'};
         paramname = {'Ktrans'; 've'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'};
-    elseif strcmp(cur_dce_model, 'ex_tofts') || strcmp(cur_dce_model, 'nested')
+    elseif strcmp(cur_dce_model, 'ex_tofts')
         headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Residual', 'Ktrans 95% low', ...
             'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high'};
         paramname = {'Ktrans'; 've'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
+    elseif strcmp(cur_dce_model, 'nested')
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Residual', 'Ktrans 95% low', ...
+            'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high', 'Nested model'};
+        paramname = {'Ktrans'; 've'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'; 'nested_model'};
+
     elseif strcmp(cur_dce_model, '2cxm')
         headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Fp','Residual', 'Ktrans 95% low', ...
             'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high','Fp 95% low','Fp 95% high'};
