@@ -1,11 +1,11 @@
 % Remove dir info to allow nice visualization
 function visual_list = visualize_list_dce(list)
 
-visual_list = [];
+visual_list = {};
 sizer = 0;
 
 for i = 1:numel(list)
-    curfiles = list(i).files; 
+    curfiles = list(i); 
     namer = curfiles{1};
 
     [~, namer, ext] = fileparts(namer);

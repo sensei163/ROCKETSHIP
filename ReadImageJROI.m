@@ -331,6 +331,7 @@ if (sROI.nVersion >= 218)
    sROI.nStrokeColor = nStrokeColor;
    sROI.nFillColor = nFillColor;
    sROI.bSplineFit = nOptions & 1;
+   sROI.nPosition = nPosition;
    
    if (nROISubtype == 1)
       % - This is a text ROI

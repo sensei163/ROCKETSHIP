@@ -254,12 +254,14 @@ function remove_roi_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 index_selected = get(handles.roi_box,'Value');
 list = get(handles.roi_box,'String');
-for n=size(index_selected,2):-1:1
-    % Remove from end of list first so resizing does not 
-    % change subsequent index numbers
-    %disp(['User removed ', list{index_selected(n)}]);
-    list(index_selected(n)) = [];
-    handles.roi_list(index_selected(n)) = [];
+if ~isempty(list) && ~strcmp(list,'No Files')
+    for n=size(index_selected,2):-1:1
+        % Remove from end of list first so resizing does not 
+        % change subsequent index numbers
+        %disp(['User removed ', list{index_selected(n)}]);
+        list(index_selected(n)) = [];
+        handles.roi_list(index_selected(n)) = [];
+    end
 end
 
 set(handles.roi_box,'String',list, 'Value',1)
