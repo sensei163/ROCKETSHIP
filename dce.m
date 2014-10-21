@@ -74,6 +74,8 @@ parse_preference_file('dce_preferences.txt',1,...
     'voxel_lower_limit_ktrans' 'voxel_upper_limit_ktrans' 'voxel_initial_value_ktrans' ...
     'voxel_lower_limit_ve' 'voxel_upper_limit_ve' 'voxel_initial_value_ve' ...
     'voxel_lower_limit_vp' 'voxel_upper_limit_vp' 'voxel_initial_value_vp' ...
+    'voxel_lower_limit_fp' 'voxel_upper_limit_fp' 'voxel_initial_value_fp' ...
+    'voxel_lower_limit_tp' 'voxel_upper_limit_tp' 'voxel_initial_value_tp' ...
     'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals' ...
     'voxel_lower_limit_tau' 'voxel_upper_limit_tau' 'voxel_initial_value_tau' ...
     'voxel_Robust' 'fxr_fw' 'autoaif_r_square_threshold' 'autoaif_end_signal_threshold' ...
@@ -308,11 +310,37 @@ else
     disp('No prepped files for batch job');
 end
 
+new_cur_d_path = '';
 while numel(list) > 0
     filename = list{end};
     disp(['Running job on : ' filename]);
     batch_data = load(filename);
 %     results = D_fit_voxels_batch_func(Ddatabatch);
+
+%Check if the path exists
+results_b_path = batch_data.results_b_path;
+[~, b_file, ext]     = fileparts(results_b_path);
+
+if ~exist(results_b_path)
+    disp('old path does not exist, trying new path');
+    
+   if ~exist(fullfile(new_cur_d_path, [b_file ext]))
+        while(~exist(results_b_path))
+        new_cur_d_path = uigetdir(pwd,['Old path does not exist, Select path where: ' [b_file ext] ' is please.']);
+        %     slash = findstr('\', results_b_path);
+        %     b_file = results_b_path((slash(end)+1):end);
+        results_b_path = fullfile(new_cur_d_path, [b_file ext]);
+        end
+    else
+        results_b_path = fullfile(new_cur_d_path, [b_file ext]);
+    end
+    if ~exist(results_b_path)
+        error('Path error');
+    end
+    batch_data.results_b_path = results_b_path;
+end
+
+
     results = D_fit_voxels_func(batch_data.results_b_path,...
         batch_data.dce_model,batch_data.time_smoothing,batch_data.time_smoothing_window,...
         batch_data.xy_smooth_size,batch_data.number_cpus,batch_data.roi_list,...

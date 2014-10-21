@@ -41,9 +41,10 @@ classdef ProgressBar < handle
     
     methods
         function obj = ProgressBar(N, varargin)
-            pnames = {'verbose'};
-            dflts =  { 1       };
-            obj.verbose = internal.stats.parseArgs(pnames, dflts, varargin{:});
+            p = inputParser;
+            p.addParamValue('verbose',1,@isscalar);
+            p.parse(varargin{:});
+            obj.verbose = p.Results.verbose;
     
             obj.width = 50; % Width of progress bar
 
@@ -83,8 +84,7 @@ classdef ProgressBar < handle
         end
         
         function percent = stop(obj)
-%             system(['rm ' obj.fname]); 
-            delete(obj.fname);
+            delete(obj.fname);     
             percent = 100;
 
             if obj.verbose

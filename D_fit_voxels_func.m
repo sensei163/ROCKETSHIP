@@ -16,6 +16,8 @@ function results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,tim
 %                       'auc_rr' = not implemented
 %                       'nested' = series of nested model
 %                       'patlak' = two parameter model with no backflux
+%                       'tissue_uptake' = three parameter assumes cp>>ct
+%                       '2cxm' = two compartment exchange model
 %  time_smoothing     - type of time smoothing
 %                       'none' = no smoothing
 %                       'moving' = moving average
@@ -55,7 +57,7 @@ function results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,tim
 % Toggle options
 %************************
 r2filter = 0;		% Filter out all fits with r2 < r2filter
-close_pool = 0;		% Close matlabpool when done with processing
+% close_pool = 0;		% Close matlabpool when done with processing
 % End options
 %************************
 
@@ -90,6 +92,14 @@ if quant
     if dce_model.patlak
         dce_model_string{end+1} = 'Patlak';
         dce_model_list{end+1} = 'patlak';
+    end
+    if dce_model.tissue_uptake
+        dce_model_string{end+1} = 'Tissue Uptake';
+        dce_model_list{end+1} = 'tissue_uptake';
+    end
+    if dce_model.two_cxm
+        dce_model_string{end+1} = 'Two Compartment Exchange';
+        dce_model_list{end+1} = '2cxm';
     end
 end
 if dce_model.fractal
@@ -165,7 +175,19 @@ for model_index=1:numel(dce_model_list)
     disp('User selected XY smooth size (sigma)');
     disp(xy_smooth_size);
     disp('User selected number of CPU cores');
+    
+    % Setup matlabpool size
+    
+    c = parcluster('local'); % build the 'local' cluster object
+    n = c.NumWorkers;        % get the number of workers
+    if(number_cpus <= n) && number_cpus > 0
+    elseif(number_cpus == 0)
+        number_cpus = n;
+    else
+        number_cpus = max(n+number_cpus, 1);
+    end
     disp(number_cpus);
+    
     disp('User selected ROI list');
     [nrows,ncols]= size(roi_list);
     for row=1:nrows
@@ -188,7 +210,7 @@ for model_index=1:numel(dce_model_list)
     %disp(['Fitting data using the ' 'dce' ' model']);
     
     % Open pool if not open or improperly sized
-    if matlabpool('size')~= number_cpus
+    %if matlabpool('size')~= number_cpus
         % Do not launch pool with diary on, locks the log file
         diary off;
         if matlabpool('size')>0
@@ -196,7 +218,16 @@ for model_index=1:numel(dce_model_list)
         end
         matlabpool('local', number_cpus);
         diary on;
-    end
+    %end
+    
+    % NEW Way to do this, but won't run on old Matlab versions
+    % Launch pool if not already running, then disable warnings
+    % diary off;
+    % poolobj = gcp;
+    % diary on;
+    
+    % Turn off warnings
+    pctRunOnAll warning 'off'
     
     % Substitute R1 data for concentration data in curve to fit
     % FXR model fits to the R1 data directly, not concentrations
@@ -503,9 +534,9 @@ for model_index=1:numel(dce_model_list)
     end
     % processing_time = toc;
     % disp(['processing completed in ' datestr(processing_time/86400, 'HH:MM:SS') ' (hr:min:sec)']);
-    if close_pool
-        matlabpool close;
-    end
+%     if close_pool
+%         matlabpool close;
+%     end
     
     % c) Save file
     %************************
@@ -612,6 +643,14 @@ for model_index=1:numel(dce_model_list)
         headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Residual', 'Ktrans 95% low', ...
             'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high'};
         paramname = {'Ktrans'; 've'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
+    elseif strcmp(cur_dce_model, '2cxm')
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Fp','Residual', 'Ktrans 95% low', ...
+            'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high','Fp 95% low','Fp 95% high'};
+        paramname = {'Ktrans'; 've'; 'vp';'fp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'; 'fp_ci_low'; 'fp_ci_high'};
+    elseif strcmp(cur_dce_model, 'tissue_uptake')
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Fp','Vp','Residual', 'Ktrans 95% low', ...
+            'Ktrans 95% high', 'Fp 95% low', 'Fp 95% high','Vp 95% low','Vp 95% high'};
+        paramname = {'Ktrans'; 'fp'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
     elseif strcmp(cur_dce_model, 'patlak')
         headings = {'ROI path', 'ROI', 'Ktrans','Vp','Residual', 'Ktrans 95% low', ...
             'Ktrans 95% high','Vp 95% low','Vp 95% high'};

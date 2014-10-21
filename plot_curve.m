@@ -8,19 +8,19 @@ x_max = max(plot_data.x_values);
 xdata_curve = x_min:(x_max-x_min)/100:x_max;
 
 if(strcmp(plot_data.model_name,'t2_exponential') || ...
-        strcmp(plot_data.model_name,'ADC_exponential'))
+       strcmp(plot_data.model_name,'t2_linear_weighted') || ...
+       strcmp(plot_data.model_name,'t2_linear_simple') || ...
+       strcmp(plot_data.model_name,'t2_linear_fast'))
     fit_curve = exp(-xdata_curve./fit_parameters(1)).*fit_parameters(2);
     fit_curve_low = exp(-xdata_curve./fit_parameters(4)).*fit_parameters(2);
     fit_curve_high = exp(-xdata_curve./fit_parameters(5)).*fit_parameters(2);
 elseif(strcmp(plot_data.model_name,'ADC_linear_weighted') || ...
-       strcmp(plot_data.model_name,'t2_linear_weighted') || ...
-       strcmp(plot_data.model_name,'t2_linear_simple') || ...
        strcmp(plot_data.model_name,'ADC_linear_simple') || ...
-       strcmp(plot_data.model_name,'t2_linear_fast') || ...
-       strcmp(plot_data.model_name,'ADC_linear_fast'))
-    fit_curve = exp(-xdata_curve./fit_parameters(1)).*exp(fit_parameters(2));
-    fit_curve_low = exp(-xdata_curve./fit_parameters(4)).*exp(fit_parameters(2));
-    fit_curve_high = exp(-xdata_curve./fit_parameters(5)).*exp(fit_parameters(2));
+       strcmp(plot_data.model_name,'ADC_linear_fast') || ...
+       strcmp(plot_data.model_name,'ADC_exponential'))
+    fit_curve = exp(-xdata_curve.*fit_parameters(1)).*exp(fit_parameters(2));
+    fit_curve_low = exp(-xdata_curve.*fit_parameters(4)).*exp(fit_parameters(2));
+    fit_curve_high = exp(-xdata_curve.*fit_parameters(5)).*exp(fit_parameters(2));
 elseif(strcmp(plot_data.model_name,'t1_tr_fit'))
     fit_curve = (1-exp(-xdata_curve./fit_parameters(1))).*fit_parameters(2);
     fit_curve_low = (1-exp(-xdata_curve./fit_parameters(4))).*fit_parameters(2);
@@ -60,8 +60,8 @@ set(p(2),'Color','b');
 
 if plot_data.show_ci
     hold on
-    p_ci = plot(xsorted,fit_curve_low(i_sort),...
-        xsorted,fit_curve_high(i_sort));
+    p_ci = plot(xdata_curve,fit_curve_low,...
+        xdata_curve,fit_curve_high);
     set(p_ci(1),'Color',[0.5 0.5 0.6]);
     set(p_ci(2),'Color',[0.5 0.5 0.6]);
 end

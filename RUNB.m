@@ -22,7 +22,7 @@ function varargout = RUNB(varargin)
 
 % Edit the above text to modify the response to help RUNB
 
-% Last Modified by GUIDE v2.5 21-Feb-2014 13:40:28
+% Last Modified by GUIDE v2.5 25-Jul-2014 17:15:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -363,7 +363,17 @@ else
     import_aif_path = '';
 end
 
-saved_results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_injection,end_injection,fit_aif,import_aif_path,time_resolution);
+% Manual time vector
+if get(handles.timevectyn, 'Value')
+    timevectpath = get(handles.timevectpath, 'String');
+    if isempty(timevectpath)
+        error('Time vector file is empty');
+    end
+else
+    timevectpath = '';
+end
+
+saved_results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_injection,end_injection,fit_aif,import_aif_path,time_resolution, timevectpath);
 %set(handles.results_b_path,'String',saved_results);
 handles.saved_results = saved_results;
 guidata(hObject, handles);
@@ -377,3 +387,94 @@ uiresume(handles.figure1);
 % --- Executes when user attempts to close figure1.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
 uiresume(handles.figure1);
+
+
+
+function timevectpath_Callback(hObject, eventdata, handles)
+% hObject    handle to timevectpath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of timevectpath as text
+%        str2double(get(hObject,'String')) returns contents of timevectpath as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function timevectpath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to timevectpath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in timevect.
+function timevect_Callback(hObject, eventdata, handles)
+% hObject    handle to timevect (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+guidata(hObject, handles);
+
+[filename, pathname, filterindex] = uigetfile( ...
+    {  '*.mat','Matlab Worksapce Files (*.mat)'; ...
+    '*.*',  'All Files (*.*)'}, ...
+    'Choose file containing time vector "timer"'); %#ok<NASGU>
+if isequal(filename,0)
+    %disp('User selected Cancel')
+else
+    %disp(['User selected ', fullfile(pathname, filename)])
+    
+    % Combine path and filename together
+    fullpath = strcat(pathname,filename);
+
+    set(handles.timevectpath,'String',fullpath);
+    set(handles.timevectyn,'Value',1);
+    set(handles.timevectpath,'Enable','on');
+end
+guidata(hObject, handles);
+
+
+
+% --- Executes on button press in timevectyn.
+function timevectyn_Callback(hObject, eventdata, handles)
+% hObject    handle to timevectyn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of timevectyn
+
+if get(hObject, 'Value')
+    set(handles.timevectpath,'Enable','on');
+    set(handles.timevectyn,'Value',1);
+else
+    set(handles.timevectpath,'Enable','off');
+    set(handles.timevectyn,'Value',0);
+end
+guidata(hObject, handles);
+
+
+% --- Executes on button press in copy_from_a.
+function copy_from_a_Callback(hObject, eventdata, handles)
+guidata(hObject, handles);
+results_a_path = get(handles.results_a_path,'String');
+if exist(results_a_path, 'file')==2
+    a_import = load(results_a_path);
+    a_start_index = a_import.Adata.steady_state_time(2);
+    if isfield(a_import.Adata,'injection_duration')
+        a_end_index = a_import.Adata.injection_duration+a_start_index;
+    else
+        a_end_index = a_start_index+1;
+    end
+    % Convert to min
+    time_resolution = str2num(get(handles.time_resolution, 'String'))/60.0;
+    a_start_min = a_start_index * time_resolution;
+    a_end_min = a_end_index * time_resolution;
+    
+    set(handles.start_injection,'String',num2str(a_start_min));
+    set(handles.end_injection,'String',num2str(a_end_min));
+end
+guidata(hObject, handles);

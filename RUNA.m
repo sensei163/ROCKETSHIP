@@ -346,10 +346,14 @@ end
 
 % image parameters
 quant     = get(handles.quant, 'Value');
-if get(handles.aiforrr, 'Value')==2
-    aif_rr_type = 'rr';
+if quant
+    if get(handles.aiforrr, 'Value')==2
+        aif_rr_type = 'rr';
+    else
+        aif_rr_type = get(get(handles.aif_type,'SelectedObject'),'Tag');
+    end
 else
-    aif_rr_type = get(get(handles.aif_type,'SelectedObject'),'Tag');
+    aif_rr_type = 'none';
 end
 tr = str2num(get(handles.tr, 'String')); %#ok<ST2NM>
 fa = str2num(get(handles.fa, 'String')); %#ok<ST2NM>
@@ -919,8 +923,7 @@ function update_disable_options(handles)
 if get(handles.quant, 'Value')
 %     set(handles.aifRRtxt, 'Enable', 'on');
     set(handles.aiforrr, 'Enable', 'on');
-%     set(handles.t1_roi_path, 'Enable', 'on');
-%     set(handles.t1mappath, 'Enable', 'on');
+%     set(handles.aifmaskroi, 'Enable', 'on');
     if get(handles.aiforrr, 'Value') == 1
         % AIF
         set(handles.aif_roi, 'Enable', 'on');
@@ -951,20 +954,22 @@ if get(handles.quant, 'Value')
         set(handles.injection_duration, 'Enable', 'off');
     end
 else
-%     set(handles.aifRRtxt, 'Enable', 'on');
+%     set(handles.aifRRtxt, 'Enable', 'off');
     set(handles.aiforrr, 'Enable', 'off');
-%     set(handles.t1_roi_path, 'Enable', 'on');
-%     set(handles.t1mappath, 'Enable', 'off');
+%     set(handles.aifmaskroi, 'Enable', 'off');
     set(handles.aif_roi, 'Enable', 'off');
     set(handles.aif_auto, 'Enable', 'off');
     set(handles.aif_auto_static, 'Enable', 'off');
     set(handles.blood_t1, 'Enable', 'off');
-    set(handles.aifmaskroi, 'Enable', 'on');
+%     set(handles.aifmaskroi, 'Enable', 'on');
     set(handles.injection_duration, 'Enable', 'off');
 end
 if (get(handles.roimaskroi, 'Value') == 2 && get(handles.aifmaskroi, 'Value') == 2) || ...
-        ~get(handles.quant, 'Value') || ...
         (get(handles.roimaskroi, 'Value') == 2 && get(handles.aif_auto_static, 'Value') && strcmp(get(handles.aif_auto_static, 'Enable'),'on') )
+    % The input is a T1 values, so we don't need a seperate T1 map
+    set(handles.t1mapfile, 'Enable', 'off');
+    set(handles.t1mappath, 'Enable', 'off');
+elseif ~get(handles.quant, 'Value') && get(handles.roimaskroi, 'Value') == 2
     % The input is a T1 values, so we don't need a seperate T1 map
     set(handles.t1mapfile, 'Enable', 'off');
     set(handles.t1mappath, 'Enable', 'off');

@@ -22,7 +22,7 @@ function varargout = RUND(varargin)
 
 % Edit the above text to modify the response to help RUND
 
-% Last Modified by GUIDE v2.5 21-Mar-2014 06:39:31
+% Last Modified by GUIDE v2.5 13-Aug-2014 18:20:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -80,6 +80,8 @@ parse_preference_file('dce_preferences.txt',1,...
     'voxel_lower_limit_ktrans' 'voxel_upper_limit_ktrans' 'voxel_initial_value_ktrans' ...
     'voxel_lower_limit_ve' 'voxel_upper_limit_ve' 'voxel_initial_value_ve' ...
     'voxel_lower_limit_vp' 'voxel_upper_limit_vp' 'voxel_initial_value_vp' ...
+    'voxel_lower_limit_fp' 'voxel_upper_limit_fp' 'voxel_initial_value_fp' ...
+    'voxel_lower_limit_tp' 'voxel_upper_limit_tp' 'voxel_initial_value_tp' ...
     'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals' ...
     'voxel_lower_limit_tau' 'voxel_upper_limit_tau' 'voxel_initial_value_tau' ...
     'voxel_Robust' 'fxr_fw' 'autoaif_r_square_threshold' 'autoaif_end_signal_threshold' ...
@@ -300,6 +302,8 @@ dce_model.fractal= get(handles.fractal, 'Value');
 dce_model.auc    = get(handles.auc, 'Value');
 dce_model.nested = get(handles.nested, 'Value');
 dce_model.patlak = get(handles.patlak, 'Value');
+dce_model.tissue_uptake = get(handles.tissue_uptake, 'Value');
+dce_model.two_cxm = get(handles.two_cxm, 'Value');
 
 time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
 time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
@@ -331,6 +335,8 @@ dce_model.fractal= get(handles.fractal, 'Value');
 dce_model.auc    = get(handles.auc, 'Value');
 dce_model.nested = get(handles.nested, 'Value');
 dce_model.patlak = get(handles.patlak, 'Value');
+dce_model.tissue_uptake = get(handles.tissue_uptake, 'Value');
+dce_model.two_cxm = get(handles.two_cxm, 'Value');
 
 time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
 time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
@@ -477,4 +483,20 @@ uiremember;
 
 % --- Executes during object creation, after setting all properties.
 function patlak_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+% --- Executes on button press in tissue_uptake.
+function tissue_uptake_Callback(hObject, eventdata, handles)
+uiremember;
+
+% --- Executes during object creation, after setting all properties.
+function tissue_uptake_CreateFcn(hObject, eventdata, handles)
+uirestore;
+
+% --- Executes on button press in two_cxm.
+function two_cxm_Callback(hObject, eventdata, handles)
+uiremember;
+
+% --- Executes during object creation, after setting all properties.
+function two_cxm_CreateFcn(hObject, eventdata, handles)
 uirestore;
