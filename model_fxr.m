@@ -1,4 +1,4 @@
-function [x, residuals] = model_fxr(Ct,Cp,timer,R1o,R1i,r1,fw,prefs)
+function [f, gof, output] = model_fxr(Ct,Cp,timer,R1o,R1i,r1,fw,prefs)
 
 % Use Curvefitting tool box instead of optimization toolbox (lsqcurvefit)
 % as curvefitting will easily return confidence intervals on the fit
@@ -18,7 +18,7 @@ ft = fittype('model_fxr_cfit( Ktrans, ve, tau, Cp, T1, R1o, R1i, r1, fw)',...
     'independent', {'T1', 'Cp'},...
     'coefficients',{'Ktrans', 've', 'tau'},...
     'problem',{'R1o', 'R1i','r1','fw'});
-[f, gof, output] = fit([timer, Cp'],Ct,ft, options,'problem',{R1o,R1i,r1,fw});
+[f, gof, output] = fit([(timer), (Cp')],(Ct),ft, options,'problem',{R1o,R1i,r1,fw});
 confidence_interval = confint(f,0.95);
 % toc
 

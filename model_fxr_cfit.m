@@ -40,5 +40,5 @@ ind = find(YY < 0);
 if(~isempty(ind))
     YY(ind) = 0;
 end
-R1t = (1/2).*(2.*R1i+r1.*Ct+XX-sqrt(YY));
+R1t = double((1/2).*(2.*R1i+r1.*Ct+XX-sqrt(YY)));
 % R1t = Ct;

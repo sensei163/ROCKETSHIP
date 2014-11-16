@@ -1,5 +1,5 @@
 %% Helper Function for nonlinear curvefit to FXLAIF model, vp
-function [x, residuals] = model_2cxm(Ct,Cp,timer,prefs)
+function [f, gof, output] = model_2cxm(Ct,Cp,timer,prefs)
 
 % warning off
 

@@ -1,4 +1,4 @@
-function [x, residuals] = model_tissue_uptake(Ct,Cp,timer,prefs)
+function [f, gof, output] = model_tissue_uptake(Ct,Cp,timer,prefs)
 
 % Use Curvefitting tool box instead of optimization toolbox (lsqcurvefit)
 % as curvefitting will easily return confidence intervals on the fit

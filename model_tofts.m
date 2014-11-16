@@ -1,5 +1,5 @@
 %% Helper Function for nonlinear curvefit to FXLAIF model, no vp
-function [x, residuals] = model_tofts(Ct,Cp,timer,prefs)
+function [f, gof, output] = model_tofts(Ct,Cp,timer,prefs)
 
 % Ct = xdata{1}.Ct;
 % i  = voxel;

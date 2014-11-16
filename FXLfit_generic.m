@@ -1,8 +1,12 @@
-function [GG, residuals] = FXLfit_generic(xdata, number_voxels, model, verbose)
+function [cfit_fit, cfit_gof, cfit_output] = FXLfit_generic(xdata, number_voxels, model, verbose)
 if nargin < 4
     verbose = 1;
 end
-residuals = [];
+
+%Cast input as double (to make nice for fit)
+xdata{1}.Ct = double(xdata{1}.Ct);
+xdata{1}.Cp = double(xdata{1}.Cp);
+
 if strcmp(model, 'ex_tofts')
     
     % Get values from pref file
@@ -44,11 +48,13 @@ if strcmp(model, 'ex_tofts')
     end
     
     % Preallocate for speed
-    GG = zeros([number_voxels 10],'double');
-    residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
+    cfit_fit   = cell(number_voxels, 1);
+    cfit_gof    = cell(number_voxels, 1);
+    cfit_output = cell(number_voxels, 1);
+    
     % Slice out needed variables for speed
-    Ct_data = xdata{1}.Ct;
-    Cp_data = xdata{1}.Cp;
+    Ct_data = (xdata{1}.Ct);
+    Cp_data = (xdata{1}.Cp);
     timer_data = xdata{1}.timer;
     %Turn off diary if on as it doesn't work with progress bar
     diary_restore = 0;
@@ -58,13 +64,14 @@ if strcmp(model, 'ex_tofts')
     end
     p = ProgressBar(number_voxels,'verbose',verbose);
     parfor i = 1:number_voxels
-        [GG(i,:), residuals(i,:)] = model_extended_tofts(Ct_data(:,i),Cp_data,timer_data,prefs);
+        [cfit_fit{i}, cfit_gof{i}, cfit_output{i}] = model_extended_tofts(Ct_data(:,i),Cp_data,timer_data,prefs);
+        %[GG(i,:), residuals(i,:)] = model_extended_tofts(Ct_data(:,i),Cp_data,timer_data,prefs);
         p.progress;
     end;
     p.stop;
     if diary_restore, diary on, end;
 elseif strcmp(model, 'tissue_uptake')
-
+    
     % Get values from pref file
     prefs_str = parse_preference_file('dce_preferences.txt',0,...
         {'voxel_lower_limit_ktrans' 'voxel_upper_limit_ktrans' 'voxel_initial_value_ktrans' ...
@@ -104,11 +111,12 @@ elseif strcmp(model, 'tissue_uptake')
     end
     
     % Preallocate for speed
-    GG = zeros([number_voxels 10],'double');
-    residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
+    cfit_fit   = cell(number_voxels, 1);
+    cfit_gof    = cell(number_voxels, 1);
+    cfit_output = cell(number_voxels, 1);
     % Slice out needed variables for speed
-    Ct_data = xdata{1}.Ct;
-    Cp_data = xdata{1}.Cp;
+    Ct_data = (xdata{1}.Ct);
+    Cp_data = (xdata{1}.Cp);
     timer_data = xdata{1}.timer;
     %Turn off diary if on as it doesn't work with progress bar
     diary_restore = 0;
@@ -124,7 +132,7 @@ elseif strcmp(model, 'tissue_uptake')
         prefs_local.initial_value_ktrans = estimate(1);
         prefs_local.initial_value_vp = estimate(2);
         % Do tissue uptake fit
-        [GG(i,:), residuals(i,:)] = model_tissue_uptake(Ct_data(:,i),Cp_data,timer_data,prefs_local);
+        [cfit_fit{i}, cfit_gof{i}, cfit_output{i}] = model_tissue_uptake(Ct_data(:,i),Cp_data,timer_data,prefs_local);
         p.progress;
     end;
     p.stop;
@@ -163,11 +171,12 @@ elseif strcmp(model, 'tofts')
     end
     
     % Preallocate for speed
-    GG = zeros([number_voxels 7],'double');
-    residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
+    cfit_fit   = cell(number_voxels, 1);
+    cfit_gof    = cell(number_voxels, 1);
+    cfit_output = cell(number_voxels, 1);
     % Slice out needed variables for speed
-    Ct_data = xdata{1}.Ct;
-    Cp_data = xdata{1}.Cp;
+    Ct_data = (xdata{1}.Ct);
+    Cp_data = (xdata{1}.Cp);
     timer_data = xdata{1}.timer;
     %Turn off diary if on as it doesn't work with progress bar
     diary_restore = 0;
@@ -177,7 +186,7 @@ elseif strcmp(model, 'tofts')
     end
     p = ProgressBar(number_voxels,'verbose',verbose);
     parfor i = 1:number_voxels
-        [GG(i,:), residuals(i,:)] = model_tofts(Ct_data(:,i),Cp_data,timer_data,prefs);
+        [cfit_fit{i}, cfit_gof{i}, cfit_output{i}] = model_tofts(Ct_data(:,i),Cp_data,timer_data,prefs);
         p.progress;
     end;
     p.stop;
@@ -225,14 +234,15 @@ elseif strcmp(model, 'fxr')
     end
     
     % Preallocate for speed
-    GG = zeros([number_voxels 10],'double');
-    residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
+    cfit_fit   = cell(number_voxels, 1);
+    cfit_gof    = cell(number_voxels, 1);
+    cfit_output = cell(number_voxels, 1);
     % Slice out needed variables for speed
-    Ct_data = xdata{1}.Ct;
-    Cp_data = xdata{1}.Cp;
+    Ct_data = (xdata{1}.Ct);
+    Cp_data = (xdata{1}.Cp);
     timer_data = xdata{1}.timer;
-    R1o= xdata{1}.R1o;
-    R1i= xdata{1}.R1i;
+    R1o= (xdata{1}.R1o);
+    R1i= (xdata{1}.R1i);
     r1 = xdata{1}.relaxivity;
     fw = prefs.fxr_fw;
     %Turn off diary if on as it doesn't work with progress bar
@@ -243,7 +253,7 @@ elseif strcmp(model, 'fxr')
     end
     p = ProgressBar(number_voxels,'verbose',verbose);
     parfor i = 1:number_voxels
-        [GG(i,:), residuals(i,:)] = model_fxr(Ct_data(:,i),Cp_data,timer_data,R1o(i),R1i(i),r1,fw,prefs);
+        [cfit_fit{i}, cfit_gof{i}, cfit_output{i}] = model_fxr(Ct_data(:,i),Cp_data,timer_data,R1o(i),R1i(i),r1,fw,prefs);
         p.progress;
     end;
     p.stop;
@@ -252,14 +262,17 @@ elseif strcmp(model, 'auc')
     % Area under curve using Raw data signal
     
     % Preallocate for speed
-    GG = zeros([number_voxels 4],'double');
+    cfit_fit   = cell(number_voxels, 1);
+    cfit_gof    = cell(number_voxels, 1);
+    cfit_output = cell(number_voxels, 1);
+    
     % Slice out needed variables for speed
-    Sss    = xdata{1}.Sss;
-    Ssstum = xdata{1}.Ssstum;
-    Stlv   = xdata{1}.Stlv;
-    Sttum  = xdata{1}.Sttum;
-    Ct_data = xdata{1}.Ct;
-    Cp_data = xdata{1}.Cp;
+    Sss    = (xdata{1}.Sss);
+    Ssstum = (xdata{1}.Ssstum);
+    Stlv   = (xdata{1}.Stlv);
+    Sttum  = (xdata{1}.Sttum);
+    Ct_data = (xdata{1}.Ct);
+    Cp_data = (xdata{1}.Cp);
     
     % Substract steady state signal from time curves
     Sttum = Sttum - repmat(Ssstum, [size(Sttum,1) 1]);
@@ -288,7 +301,7 @@ elseif strcmp(model, 'auc')
     end
     p = ProgressBar(number_voxels,'verbose',verbose);
     parfor i = 1:number_voxels
-        GG(i,:) = auc_helper(Sttum(:,i),Stlv, Ct_data(:,i), Cp_data, timer_data);
+        cfit_fit{i} = auc_helper(Sttum(:,i),Stlv, Ct_data(:,i), Cp_data, timer_data);
         p.progress;
     end;
     p.stop;
@@ -337,11 +350,12 @@ elseif strcmp(model, 'nested')
     end
     
     % Preallocate for speed
-    GG = zeros([number_voxels 10],'double');
-    residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
+    cfit_fit   = cell(number_voxels, 1);
+    cfit_gof    = cell(number_voxels, 1);
+    cfit_output = cell(number_voxels, 1);
     % Slice out needed variables for speed
-    Ct_data = xdata{1}.Ct;
-    Cp_data = xdata{1}.Cp;
+    Ct_data = (xdata{1}.Ct);
+    Cp_data = (xdata{1}.Cp);
     timer_data = xdata{1}.timer;
     %Turn off diary if on as it doesn't work with progress bar
     diary_restore = 0;
@@ -352,65 +366,7 @@ elseif strcmp(model, 'nested')
     p = ProgressBar(number_voxels,'verbose',verbose);
     
     parfor i = 1:number_voxels
-        % Fit 0 order model
-        [GG_zero, residuals(i,:)] = model_0(Ct_data(:,i));
-        fp_lower = 0;
-        % Fit 1st order model
-        [GG_one, residuals_b] = model_vp(Ct_data(:,i),Cp_data,timer_data,prefs);
-        fp_higher = 1;
-        % Compare
-        n = numel(timer_data);
-        p_value = ftest(n,fp_lower,fp_higher,GG_zero,GG_one(1,2));
-        if p_value>=0.05
-            % Use 0 order
-            GG_local = zeros([1 10],'double');
-            GG_local(1,4) = GG_zero;
-            GG(i,:) = GG_local;
-            residuals(i,:) = residuals_b';
-        else
-            % Use 1st order
-            GG_local = zeros([1 10],'double');
-            GG_local(1,3) = GG_one(1,1);
-            GG_local(1,4) = GG_one(1,2);
-            GG_local(1,9) = GG_one(1,3);
-            GG_local(1,10) = GG_one(1,4);
-            GG(i,:) = GG_local;
-            residuals(i,:) = residuals_b';
-            fp_lower = 1;
-            
-            % Continue, Fit 2nd order model
-            [GG_two, residuals_b] = model_patlak(Ct_data(:,i),Cp_data,timer_data,prefs);
-            fp_higher = 2;
-            % Compare
-            p_value = ftest(n,fp_lower,fp_higher,GG_one(1,2),GG_two(1,3));
-            if p_value<0.05
-                % Use 2nd order
-                GG_local = zeros([1 10],'double');
-                GG_local(1,1) = GG_two(1,1);
-                GG_local(1,3) = GG_two(1,2);
-                GG_local(1,4) = GG_two(1,3);
-                GG_local(1,5) = GG_two(1,4);
-                GG_local(1,6) = GG_two(1,5);
-                GG_local(1,9) = GG_two(1,6);
-                GG_local(1,10) = GG_two(1,7);
-                GG(i,:) = GG_local;
-                residuals(i,:) = residuals_b';
-                fp_lower = 2;
-                
-                % Continue, Fit 3rd order model
-                [GG_three, residuals_b] = model_extended_tofts(Ct_data(:,i),Cp_data,timer_data,prefs);
-                fp_higher = 3;
-                % Compare
-                p_value = ftest(n,fp_lower,fp_higher,GG_two(1,3),GG_three(1,4));
-                if p_value<0.05
-                    % Use 3rd order
-                    GG(i,:) = GG_three;
-                    residuals(i,:) = residuals_b';
-                    fp_lower = 3;
-                end
-            end
-        end
-        
+        [cfit_fit{i}, cfit_gof{i}, cfit_output{i}] = nested_fit_helper(Ct_data(:,i), Cp_data, timer_data, prefs);
         p.progress;
     end;
     p.stop;
@@ -450,11 +406,12 @@ elseif strcmp(model, 'patlak')
     end
     
     % Preallocate for speed
-    GG = zeros([number_voxels 7],'double');
-    residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
+    cfit_fit   = cell(number_voxels, 1);
+    cfit_gof    = cell(number_voxels, 1);
+    cfit_output = cell(number_voxels, 1);
     % Slice out needed variables for speed
-    Ct_data = xdata{1}.Ct;
-    Cp_data = xdata{1}.Cp;
+    Ct_data = (xdata{1}.Ct);
+    Cp_data = (xdata{1}.Cp);
     timer_data = xdata{1}.timer;
     %Turn off diary if on as it doesn't work with progress bar
     diary_restore = 0;
@@ -470,17 +427,18 @@ elseif strcmp(model, 'patlak')
         prefs_local.initial_value_ktrans = estimate(1);
         prefs_local.initial_value_vp = estimate(2);
         % Do non-linear patlak
-        [GG(i,:), residuals(i,:)] = model_patlak(Ct_data(:,i),Cp_data,timer_data,prefs_local);
+        [cfit_fit{i}, cfit_gof{i}, cfit_output{i}] = model_patlak(Ct_data(:,i),Cp_data,timer_data,prefs_local);
         p.progress;
     end;
     p.stop;
     if diary_restore, diary on, end;
-
+    
 elseif strcmp(model, 'patlak_linear')
-
+    
     % Preallocate for speed
-    GG = zeros([number_voxels 7],'double');
-    residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
+    cfit_fit   = cell(number_voxels, 1);
+    cfit_gof    = cell(number_voxels, 1);
+    cfit_output = cell(number_voxels, 1);
     % Slice out needed variables for speed
     Ct_data = xdata{1}.Ct;
     Cp_data = xdata{1}.Cp;
@@ -493,7 +451,7 @@ elseif strcmp(model, 'patlak_linear')
     end
     p = ProgressBar(number_voxels,'verbose',verbose);
     parfor i = 1:number_voxels
-        [GG(i,:), residuals(i,:)] = model_patlak_linear(Ct_data(:,i),Cp_data,timer_data);
+        [cfit_fit{i}, cfit_gof{i}, cfit_output{i}] = model_patlak_linear_fit(Ct_data(:,i),Cp_data,timer_data);
         p.progress;
     end;
     p.stop;
@@ -547,11 +505,12 @@ elseif strcmp(model, '2cxm')
     end
     
     % Preallocate for speed
-    GG = zeros([number_voxels 13],'double');
-    residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
+    cfit_fit   = cell(number_voxels, 1);
+    cfit_gof    = cell(number_voxels, 1);
+    cfit_output = cell(number_voxels, 1);
     % Slice out needed variables for speed
-    Ct_data = xdata{1}.Ct;
-    Cp_data = xdata{1}.Cp;
+    Ct_data = (xdata{1}.Ct);
+    Cp_data = (xdata{1}.Cp);
     timer_data = xdata{1}.timer;
     %Turn off diary if on as it doesn't work with progress bar
     diary_restore = 0;
@@ -561,10 +520,10 @@ elseif strcmp(model, '2cxm')
     end
     p = ProgressBar(number_voxels,'verbose',verbose);
     parfor i = 1:number_voxels
-%         [estimate, ~] = model_patlak_linear(Ct_data(:,i),Cp_data,timer_data);
-%         prefs_local = prefs;
-%         prefs_local.initial_value_ktrans = estimate(1);
-        [GG(i,:), residuals(i,:)] = model_2cxm(Ct_data(:,i),Cp_data,timer_data,prefs);
+        %         [estimate, ~] = model_patlak_linear(Ct_data(:,i),Cp_data,timer_data);
+        %         prefs_local = prefs;
+        %         prefs_local.initial_value_ktrans = estimate(1);
+        [cfit_fit{i}, cfit_gof{i}, cfit_output{i}] = model_2cxm(Ct_data(:,i),Cp_data,timer_data,prefs);
         p.progress;
     end;
     p.stop;

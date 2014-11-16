@@ -47,11 +47,13 @@ function results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,tim
 % fxr_helper.m
 % parse_preference_file.m
 % niftitools
+% parse_cfit.m
+% parse_cfit_helper.m
 %
 % Samuel Barnes
 % Caltech
 % December 2013
-% Updated Thomas Ng Jan 2014
+% Updated Thomas Ng Jan 2014, November 2014
 
 
 % Toggle options
@@ -219,10 +221,10 @@ for model_index=1:numel(dce_model_list)
     if poolsize ==0
         % Do not launch pool with diary on, locks the log file
         diary off;
-%         if matlabpool('size')>0
-%             matlabpool close;
-%         end
-%         matlabpool('local', number_cpus);
+        %         if matlabpool('size')>0
+        %             matlabpool close;
+        %         end
+        %         matlabpool('local', number_cpus);
         parpool
         diary on;
     end
@@ -511,7 +513,8 @@ for model_index=1:numel(dce_model_list)
                 roi_data{1}.end_injection   = Bdata.end_injection;
             end
             
-            [roi_results, roi_residuals] = FXLfit_generic(roi_data, number_rois, cur_dce_model);
+            %[roi_results, roi_residuals] = FXLfit_generic(roi_data, number_rois, cur_dce_model);
+            [roi_cfit_fit, roi_cfit_gof, roi_cfit_output] = FXLfit_generic(roi_data, number_rois, cur_dce_model);
             
             disp('ROI fitting done')
             disp(' ')
@@ -524,18 +527,66 @@ for model_index=1:numel(dce_model_list)
                 xdata{1}.R1i = 1./T1TUM;
                 xdata{1}.relaxivity = relaxivity;
             end
-
-            [fitting_results, voxel_residuals] = FXLfit_generic(xdata, numvoxels, cur_dce_model);
+            
+            %[fitting_results, voxel_residuals] = FXLfit_generic(xdata, numvoxels, cur_dce_model);
+            [voxel_cfit_fit, voxel_cfit_gof, voxel_cfit_output] = FXLfit_generic(xdata, numvoxels, cur_dce_model);
             
             disp('Voxel fitting done')
         end
     end
     % processing_time = toc;
     % disp(['processing completed in ' datestr(processing_time/86400, 'HH:MM:SS') ' (hr:min:sec)']);
-%     if close_pool
-%         matlabpool close;
-%     end
+    %     if close_pool
+    %         matlabpool close;
+    %     end
     
+    % Define output parameter names
+    
+    if strcmp(cur_dce_model, 'tofts')
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Residual', 'Ktrans 95% low', ...
+            'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high'};
+        paramname = {'Ktrans'; 've'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'};
+    elseif strcmp(cur_dce_model, 'ex_tofts')
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Residual', 'Ktrans 95% low', ...
+            'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high'};
+        paramname = {'Ktrans'; 've'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
+    elseif  strcmp(cur_dce_model, 'nested')
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Residual', 'Ktrans 95% low', ...
+            'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high', 'Model'};
+        paramname = {'Ktrans'; 've'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high';'model'};
+    elseif strcmp(cur_dce_model, '2cxm')
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Fp','Residual', 'Ktrans 95% low', ...
+            'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high','Fp 95% low','Fp 95% high'};
+        paramname = {'Ktrans'; 've'; 'vp';'fp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'; 'fp_ci_low'; 'fp_ci_high'};
+    elseif strcmp(cur_dce_model, 'tissue_uptake')
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Fp','Vp','Residual', 'Ktrans 95% low', ...
+            'Ktrans 95% high', 'Fp 95% low', 'Fp 95% high','Vp 95% low','Vp 95% high'};
+        paramname = {'Ktrans'; 'fp'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
+    elseif strcmp(cur_dce_model, 'patlak')
+        headings = {'ROI path', 'ROI', 'Ktrans','Vp','Residual', 'Ktrans 95% low', ...
+            'Ktrans 95% high','Vp 95% low','Vp 95% high'};
+        paramname = {'Ktrans'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
+    elseif strcmp(cur_dce_model, 'fxr')
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Tau','Residual', 'Ktrans 95% low', ...
+            'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Tau 95% low','Tau 95% high'};
+        paramname = {'Ktrans'; 've'; 'tau'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'tau_ci_low'; 'tau_ci_high'};
+    elseif strcmp(cur_dce_model, 'auc')
+        if quant
+            headings = {'ROI path', 'ROI', 'AUC conc', 'AUC sig','NAUC conc', 'NAUC sig'};
+            paramname = {'AUCc'; 'AUCs'; 'NAUCc'; 'NAUCs'};
+        else
+            %             fitting_results(:,3) = [];
+            %             fitting_results(:,1) = [];
+            
+            headings = {'ROI path', 'ROI', 'AUC sig', 'NAUC sig'};
+            paramname = {'AUCs'; 'NAUCs'};
+        end
+        
+    else
+        % Error
+        error('Model not supported');
+    end
+
     % c) Save file
     %************************
     fit_data.fit_voxels = fit_voxels;
@@ -549,10 +600,20 @@ for model_index=1:numel(dce_model_list)
     xdata{1}.dimensions = size(currentimg);
     
     if number_rois~=0
+        % We parse out the cfit object to individual values
+        [roi_results, roi_residuals] = parse_cfit(roi_cfit_fit, roi_cfit_gof, roi_cfit_output, cur_dce_model, numel(paramname), numel(xdata{1}.timer), quant);
+        
         xdata{1}.roi_series = roi_series;
         xdata{1}.roi_series_original = roi_series_original;
         fit_data.roi_results = roi_results;
         fit_data.roi_residuals = roi_residuals;
+        fit_data.roi_cfit_fit = roi_cfit_fit;
+        fit_data.roi_cfit_gof = roi_cfit_gof;
+        fit_data.roi_cfit_output = roi_cfit_output;
+        
+        disp('ROI fitting done')
+        disp(' ')
+        
         fit_data.roi_name = roi_name;
         
         if strcmp(cur_dce_model, 'fxr')
@@ -566,8 +627,16 @@ for model_index=1:numel(dce_model_list)
         
     end
     if fit_voxels
+        % We parse out the cfit object to individual values
+        
+        [fitting_results, voxel_residuals] = parse_cfit(voxel_cfit_fit, voxel_cfit_gof, voxel_cfit_output, cur_dce_model, numel(paramname), numel(xdata{1}.timer), quant);
+        
         fit_data.fitting_results  = fitting_results;
         fit_data.voxel_residuals = voxel_residuals;
+        fit_data.voxel_cfit_fit = voxel_cfit_fit;
+        fit_data.voxel_cfit_gof = voxel_cfit_gof;
+        fit_data.voxel_cfit_output = voxel_cfit_output;
+        
     end
     
     %     Ddata.xdata = xdata;
@@ -633,46 +702,7 @@ for model_index=1:numel(dce_model_list)
     %fit_voxels = 0; %% DEBUG
     %[discard, actual] = fileparts(strrep(dynam_name, '\', '/'));
     
-    if strcmp(cur_dce_model, 'tofts')
-        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Residual', 'Ktrans 95% low', ...
-            'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high'};
-        paramname = {'Ktrans'; 've'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'};
-    elseif strcmp(cur_dce_model, 'ex_tofts') || strcmp(cur_dce_model, 'nested')
-        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Residual', 'Ktrans 95% low', ...
-            'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high'};
-        paramname = {'Ktrans'; 've'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
-    elseif strcmp(cur_dce_model, '2cxm')
-        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Fp','Residual', 'Ktrans 95% low', ...
-            'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high','Fp 95% low','Fp 95% high'};
-        paramname = {'Ktrans'; 've'; 'vp';'fp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'; 'fp_ci_low'; 'fp_ci_high'};
-    elseif strcmp(cur_dce_model, 'tissue_uptake')
-        headings = {'ROI path', 'ROI', 'Ktrans', 'Fp','Vp','Residual', 'Ktrans 95% low', ...
-            'Ktrans 95% high', 'Fp 95% low', 'Fp 95% high','Vp 95% low','Vp 95% high'};
-        paramname = {'Ktrans'; 'fp'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
-    elseif strcmp(cur_dce_model, 'patlak')
-        headings = {'ROI path', 'ROI', 'Ktrans','Vp','Residual', 'Ktrans 95% low', ...
-            'Ktrans 95% high','Vp 95% low','Vp 95% high'};
-        paramname = {'Ktrans'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
-    elseif strcmp(cur_dce_model, 'fxr')
-        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Tau','Residual', 'Ktrans 95% low', ...
-            'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Tau 95% low','Tau 95% high'};
-        paramname = {'Ktrans'; 've'; 'tau'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'tau_ci_low'; 'tau_ci_high'};
-    elseif strcmp(cur_dce_model, 'auc')
-        if quant
-            headings = {'ROI path', 'ROI', 'AUC conc', 'AUC sig','NAUC conc', 'NAUC sig'};
-            paramname = {'AUCc'; 'AUCs'; 'NAUCc'; 'NAUCs'};
-        else
-            fitting_results(:,3) = [];
-            fitting_results(:,1) = [];
-            
-            headings = {'ROI path', 'ROI', 'AUC sig', 'NAUC sig'};
-            paramname = {'AUCs'; 'NAUCs'};
-        end
-        
-    else
-        % Error
-        error('Model not supported');
-    end
+    
     
     
     % Write ROI results

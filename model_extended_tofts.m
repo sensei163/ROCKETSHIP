@@ -1,4 +1,6 @@
-function [x, residuals] = model_extended_tofts(Ct,Cp,timer,prefs)
+function [f, gof, output] = model_extended_tofts(Ct,Cp,timer,prefs)
+
+%[x, residuals] = model_extended_tofts(Ct,Cp,timer,prefs)
 
 % Ct = xdata{1}.Ct;
 % i  = voxel;
