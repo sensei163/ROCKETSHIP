@@ -157,9 +157,6 @@ if handles.roi_data_ready
         plot_data.x_units       = 'Time (minutes)';
         plot_data.y_units       = 'Concentration (mmol)';
         plot_data.fit_parameters= handles.model_fit_data{handles.selected_model}.roi_results(selected_roi,:);
-        plot_data.cfit_fit      = handles.model_fit_data{handles.selected_model}.roi_cfit_fit{selected_roi};
-        plot_data.cfit_gof      = handles.model_fit_data{handles.selected_model}.roi_cfit_gof{selected_roi};
-        plot_data.cfit_output   = handles.model_fit_data{handles.selected_model}.roi_cfit_output{selected_roi};
         plot_data.model_name	= handles.model_fit_data{handles.selected_model}.model_name;
         plot_data.show_original = get(handles.show_original,'Value');
         plot_data.show_ci		= get(handles.show_ci,'Value');
@@ -181,9 +178,6 @@ if handles.roi_data_ready
         plot_data.x_units       = handles.model_xdata{handles.selected_model}.x_units;
         plot_data.y_units       = handles.model_xdata{handles.selected_model}.y_units;
         plot_data.fit_parameters= handles.model_fit_data{handles.selected_model}.roi_results(selected_roi,:);
-        plot_data.cfit_fit      = handles.model_fit_data{handles.selected_model}.roi_cfit_fit{selected_roi};
-        plot_data.cfit_gof      = handles.model_fit_data{handles.selected_model}.roi_cfit_gof{selected_roi};
-        plot_data.cfit_output   = handles.model_fit_data{handles.selected_model}.roi_cfit_output{selected_roi};
         plot_data.model_name	= handles.model_fit_data{handles.selected_model}.model_name;
         plot_data.show_original = get(handles.show_original,'Value');
         plot_data.show_ci		= get(handles.show_ci,'Value');
