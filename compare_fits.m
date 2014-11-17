@@ -27,6 +27,7 @@ function compare_fits(fitting_results,background_image_path,show_original,show_c
 % Samuel Barnes
 % Caltech
 % December 2013
+% Updated by Thomas Ng November 2014
 
 
 % Load data
@@ -71,6 +72,9 @@ set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
                 plot_data.x_units = 'Time (minutes)';
                 plot_data.y_units =  'Concentration (mmol)';
                 plot_data.fit_parameters = fit_data.fitting_results(voi,:);
+                plot_data.cfit_fit       = fit_data.voxel_cfit_fit{voi};
+                plot_data.cfit_gof       = fit_data.voxel_cfit_gof{voi};
+                plot_data.cfit_output    = fit_data.voxel_cfit_output{voi};
                 plot_data.model_name = fit_data.model_name;
                 plot_data.show_original = show_original;
                 plot_data.show_ci = show_ci;
@@ -94,6 +98,9 @@ set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
                 plot_data.x_units = xdata{1}.x_units;
                 plot_data.y_units =  xdata{1}.y_units;
                 plot_data.fit_parameters = fit_data.fitting_results(image_id,:);
+                plot_data.cfit_fit       = fit_data.voxel_cfit_fit{image_id};
+                plot_data.cfit_gof       = fit_data.voxel_cfit_gof{image_id};
+                plot_data.cfit_output    = fit_data.voxel_cfit_output{image_id};
                 plot_data.model_name = fit_data.model_name;
                 plot_data.show_original = show_original;
                 plot_data.show_ci = show_ci;
