@@ -152,6 +152,13 @@ for model_index=1:numel(dce_model_list)
         xdata{1}.Sss                = Bdata.Sss;
     end
     
+    if strcmp(cur_dce_model, 'patlak')
+        % Add the end injection time to xdata so linearisaton fit is only
+        % performed on the contrast present part
+        xdata{1}.start_injection    = Bdata.start_injection;
+        xdata{1}.end_injection      = Bdata.end_injection;
+    end
+    
     % update output path to be same as location of input
     [PathName,~,~] = fileparts(results_b_path);
     

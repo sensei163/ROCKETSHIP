@@ -48,7 +48,7 @@ if strcmp(model, 'ex_tofts')
     end
     
     % Preallocate for speed
-    cfit_fit   = cell(number_voxels, 1);
+    cfit_fit    = cell(number_voxels, 1);
     cfit_gof    = cell(number_voxels, 1);
     cfit_output = cell(number_voxels, 1);
     
@@ -409,10 +409,24 @@ elseif strcmp(model, 'patlak')
     cfit_fit   = cell(number_voxels, 1);
     cfit_gof    = cell(number_voxels, 1);
     cfit_output = cell(number_voxels, 1);
+    
     % Slice out needed variables for speed
     Ct_data = (xdata{1}.Ct);
     Cp_data = (xdata{1}.Cp);
     timer_data = xdata{1}.timer;
+    
+    % Slice out data for linear part of the fit
+    
+    start_injection = xdata{1}.start_injection;
+    %end_injection   = xdata{1}.end_injection;
+    
+    % Extract signal only after injection has started
+    ind = find(timer_data >= start_injection);
+    
+    Ct_data_lin    = Ct_data(ind(1):end,:);
+    Cp_data_lin    = Cp_data(ind(1):end);
+    timer_data_lin = timer_data(ind(1):end);
+    
     %Turn off diary if on as it doesn't work with progress bar
     diary_restore = 0;
     if strcmp(get(0,'Diary'),'on')
@@ -422,7 +436,7 @@ elseif strcmp(model, 'patlak')
     p = ProgressBar(number_voxels,'verbose',verbose);
     parfor i = 1:number_voxels
         % Do quick linear patlak and use values as initial values
-        [estimate, ~] = model_patlak_linear(Ct_data(:,i),Cp_data,timer_data);
+        [estimate, ~] = model_patlak_linear(Ct_data_lin(:,i),Cp_data_lin,timer_data_lin);
         prefs_local = prefs;
         prefs_local.initial_value_ktrans = estimate(1);
         prefs_local.initial_value_vp = estimate(2);

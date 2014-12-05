@@ -1,0 +1,195 @@
+<deployment-project plugin="plugin.apptool" plugin-version="1.0">
+  <configuration build-checksum="244841665" file="C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\dce\ROCKETSHIP DCE analysis.prj" location="C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\dce" name="ROCKETSHIP DCE analysis" target="target.mlapps" target-name="Package App">
+    <param.appname>ROCKETSHIP DCE analysis</param.appname>
+    <param.authnamewatermark>Samuel Barnes, Thomas Ng</param.authnamewatermark>
+    <param.email>immune.caltech@gmail.com</param.email>
+    <param.company>Jacobs Lab, Caltech</param.company>
+    <param.icon />
+    <param.icons />
+    <param.summary>A DCE MRI software suite for processing and analysis</param.summary>
+    <param.description />
+    <param.screenshot />
+    <param.version>1.1</param.version>
+    <param.products.name>
+      <item>MATLAB</item>
+      <item>Curve Fitting Toolbox</item>
+      <item>Image Processing Toolbox</item>
+      <item>Parallel Computing Toolbox</item>
+      <item>Statistics Toolbox</item>
+    </param.products.name>
+    <param.products.id>
+      <item>'1'</item>
+      <item>'60'</item>
+      <item>'17'</item>
+      <item>'80'</item>
+      <item>'19'</item>
+    </param.products.id>
+    <param.products.version>
+      <item>8.4</item>
+      <item>3.5</item>
+      <item>9.1</item>
+      <item>6.5</item>
+      <item>9.1</item>
+    </param.products.version>
+    <param.platforms />
+    <param.output>${PROJECT_ROOT}\ROCKETSHIP DCE analysis.mlappinstall</param.output>
+    <param.guid>04e7adc8-6097-44e5-afea-74e6beabf0de</param.guid>
+    <unset>
+      <param.icon />
+      <param.icons />
+      <param.description />
+      <param.screenshot />
+      <param.platforms />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}\dce.m</file>
+    </fileset.main>
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}\A_make_R1maps_func.m</file>
+      <file>${PROJECT_ROOT}\ADDLUT.m</file>
+      <file>${PROJECT_ROOT}\AIFbiexpcon.m</file>
+      <file>${PROJECT_ROOT}\AIFbiexpfithelp.m</file>
+      <file>${PROJECT_ROOT}\appendLISTS.m</file>
+      <file>${PROJECT_ROOT}\auc_helper.m</file>
+      <file>${PROJECT_ROOT}\average_aifs.fig</file>
+      <file>${PROJECT_ROOT}\average_aifs.m</file>
+      <file>${PROJECT_ROOT}\B_AIF_fitting_func.m</file>
+      <file>${PROJECT_ROOT}\cleanAB.m</file>
+      <file>${PROJECT_ROOT}\cleanR1t.m</file>
+      <file>${PROJECT_ROOT}\compare_fits.m</file>
+      <file>${PROJECT_ROOT}\consistencyCHECKRUNA.m</file>
+      <file>${PROJECT_ROOT}\D_fit_voxels_func.m</file>
+      <file>${PROJECT_ROOT}\DataHash.m</file>
+      <file>${PROJECT_ROOT}\dce.fig</file>
+      <file>${PROJECT_ROOT}\dce_auto_aif.m</file>
+      <file>${PROJECT_ROOT}\disp_error.m</file>
+      <file>${PROJECT_ROOT}\double2uint16Scale.m</file>
+      <file>${PROJECT_ROOT}\findLUTPLACE.m</file>
+      <file>${PROJECT_ROOT}\findRod.m</file>
+      <file>${PROJECT_ROOT}\findrootname.m</file>
+      <file>${PROJECT_ROOT}\finduniqueID.m</file>
+      <file>${PROJECT_ROOT}\finduniqueIDhelper.m</file>
+      <file>${PROJECT_ROOT}\finduniqueIDhelperB.m</file>
+      <file>${PROJECT_ROOT}\fitting_analysis.fig</file>
+      <file>${PROJECT_ROOT}\fitting_analysis.m</file>
+      <file>${PROJECT_ROOT}\ftest.m</file>
+      <file>${PROJECT_ROOT}\FXLfit_generic.m</file>
+      <file>${PROJECT_ROOT}\generatefullpath.m</file>
+      <file>${PROJECT_ROOT}\imshow3D.m</file>
+      <file>${PROJECT_ROOT}\isDICOM.m</file>
+      <file>${PROJECT_ROOT}\isDICOMhdr.m</file>
+      <file>${PROJECT_ROOT}\isNIFTI.m</file>
+      <file>${PROJECT_ROOT}\loadIMGVOL.m</file>
+      <file>${PROJECT_ROOT}\longestfilename.m</file>
+      <file>${PROJECT_ROOT}\matchindex.m</file>
+      <file>${PROJECT_ROOT}\model_0.m</file>
+      <file>${PROJECT_ROOT}\model_2cxm.m</file>
+      <file>${PROJECT_ROOT}\model_2cxm_cfit.m</file>
+      <file>${PROJECT_ROOT}\model_extended_tofts.m</file>
+      <file>${PROJECT_ROOT}\model_extended_tofts_cfit.m</file>
+      <file>${PROJECT_ROOT}\model_fxr.m</file>
+      <file>${PROJECT_ROOT}\model_fxr_cfit.m</file>
+      <file>${PROJECT_ROOT}\model_patlak.m</file>
+      <file>${PROJECT_ROOT}\model_patlak_cfit.m</file>
+      <file>${PROJECT_ROOT}\model_patlak_linear.m</file>
+      <file>${PROJECT_ROOT}\model_patlak_linear_fit.m</file>
+      <file>${PROJECT_ROOT}\model_tissue_uptake.m</file>
+      <file>${PROJECT_ROOT}\model_tissue_uptake_cfit.m</file>
+      <file>${PROJECT_ROOT}\model_tofts.m</file>
+      <file>${PROJECT_ROOT}\model_tofts_cfit.m</file>
+      <file>${PROJECT_ROOT}\model_vp.m</file>
+      <file>${PROJECT_ROOT}\model_vp_cfit.m</file>
+      <file>${PROJECT_ROOT}\myginput.m</file>
+      <file>${PROJECT_ROOT}\natORDER.m</file>
+      <file>${PROJECT_ROOT}\natORDERhelper.m</file>
+      <file>${PROJECT_ROOT}\nested_fit_helper.m</file>
+      <file>${PROJECT_ROOT}\niftipathfind.m</file>
+      <file>${PROJECT_ROOT}\parse_cfit.m</file>
+      <file>${PROJECT_ROOT}\parse_cfit_helper.m</file>
+      <file>${PROJECT_ROOT}\parse_preference_file.m</file>
+      <file>${PROJECT_ROOT}\plot_curve.m</file>
+      <file>${PROJECT_ROOT}\plot_dce_curve.m</file>
+      <file>${PROJECT_ROOT}\ProgressBar.m</file>
+      <file>${PROJECT_ROOT}\ReadImageJROI.m</file>
+      <file>${PROJECT_ROOT}\REMOVELUT.m</file>
+      <file>${PROJECT_ROOT}\reorderLUT.m</file>
+      <file>${PROJECT_ROOT}\rescaleDICOM.m</file>
+      <file>${PROJECT_ROOT}\run_neuroecon_job.m</file>
+      <file>${PROJECT_ROOT}\RUNA.fig</file>
+      <file>${PROJECT_ROOT}\RUNA.m</file>
+      <file>${PROJECT_ROOT}\RUNB.fig</file>
+      <file>${PROJECT_ROOT}\RUNB.m</file>
+      <file>${PROJECT_ROOT}\RUND.fig</file>
+      <file>${PROJECT_ROOT}\RUND.m</file>
+      <file>${PROJECT_ROOT}\sort_parse_2Dvol.m</file>
+      <file>${PROJECT_ROOT}\sort_parse_3Dvol.m</file>
+      <file>${PROJECT_ROOT}\sort_parse_3Dvol_helper.m</file>
+      <file>${PROJECT_ROOT}\sort_parse_INPUTS.m</file>
+      <file>${PROJECT_ROOT}\sortIMGVOL.m</file>
+      <file>${PROJECT_ROOT}\split2subsets.m</file>
+      <file>${PROJECT_ROOT}\uiremember.m</file>
+      <file>${PROJECT_ROOT}\uirestore.m</file>
+      <file>${PROJECT_ROOT}\update_segmentlist.m</file>
+      <file>${PROJECT_ROOT}\updateLUT.m</file>
+      <file>${PROJECT_ROOT}\visualize_list_dce.m</file>
+      <file>${PROJECT_ROOT}\visualize_runD.m</file>
+      <file>C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\niftitools\load_nii.m</file>
+      <file>C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\niftitools\load_nii_ext.m</file>
+      <file>C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\niftitools\load_nii_hdr.m</file>
+      <file>C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\niftitools\load_nii_img.m</file>
+      <file>C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\niftitools\load_untouch0_nii_hdr.m</file>
+      <file>C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\niftitools\load_untouch_nii.m</file>
+      <file>C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\niftitools\load_untouch_nii_hdr.m</file>
+      <file>C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\niftitools\make_nii.m</file>
+      <file>C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\niftitools\save_nii.m</file>
+      <file>C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\niftitools\save_nii_ext.m</file>
+      <file>C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\niftitools\save_nii_hdr.m</file>
+      <file>C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\niftitools\verify_nii_ext.m</file>
+      <file>C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\niftitools\xform_nii.m</file>
+    </fileset.depfun>
+    <fileset.resources />
+    <fileset.package />
+    <build-deliverables>
+      <file location="C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\dce" name="ROCKETSHIP DCE analysis.mlappinstall" optional="false">C:\Users\flomato\Google Drive\Caltech\scripts\git_projects\dce\ROCKETSHIP DCE analysis.mlappinstall</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>C:\Program Files\MATLAB\R2014b</root>
+      <toolboxes>
+        <toolbox name="fixedpoint" />
+        <toolbox name="embeddedcoder" />
+        <toolbox name="matlabcoder" />
+      </toolboxes>
+      <toolbox>
+        <fixedpoint>
+          <enabled>true</enabled>
+        </fixedpoint>
+      </toolbox>
+      <toolbox>
+        <embeddedcoder>
+          <enabled>true</enabled>
+        </embeddedcoder>
+      </toolbox>
+      <toolbox>
+        <matlabcoder>
+          <enabled>true</enabled>
+        </matlabcoder>
+      </toolbox>
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>6.2</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>
