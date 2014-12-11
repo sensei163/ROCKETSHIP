@@ -1,7 +1,9 @@
 function [GG, residuals] = FXLfit_generic(xdata, number_voxels, model, verbose)
+
 if nargin < 4
     verbose = 1;
 end
+p = 0;
 residuals = [];
 if strcmp(model, 'ex_tofts')
     
@@ -56,12 +58,12 @@ if strcmp(model, 'ex_tofts')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels,'verbose',verbose);
+    if verbose; p = ProgressBar(number_voxels,'verbose',verbose); end;
     parfor i = 1:number_voxels
         [GG(i,:), residuals(i,:)] = model_extended_tofts(Ct_data(:,i),Cp_data,timer_data,prefs);
-        p.progress;
+        if verbose; p.progress; end;
     end;
-    p.stop;
+    if verbose; p.stop; end;
     if diary_restore, diary on, end;
 elseif strcmp(model, 'tissue_uptake')
 
@@ -116,7 +118,7 @@ elseif strcmp(model, 'tissue_uptake')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels,'verbose',verbose);
+    if verbose; p = ProgressBar(number_voxels,'verbose',verbose); end;
     parfor i = 1:number_voxels
         % Do quick linear patlak and use values as initial values
         [estimate, ~] = model_patlak_linear(Ct_data(:,i),Cp_data,timer_data);
@@ -125,9 +127,9 @@ elseif strcmp(model, 'tissue_uptake')
         prefs_local.initial_value_vp = estimate(2);
         % Do tissue uptake fit
         [GG(i,:), residuals(i,:)] = model_tissue_uptake(Ct_data(:,i),Cp_data,timer_data,prefs_local);
-        p.progress;
+        if verbose; p.progress; end;
     end;
-    p.stop;
+    if verbose; p.stop; end;
     if diary_restore, diary on, end;
 elseif strcmp(model, 'tofts')
     
@@ -175,12 +177,12 @@ elseif strcmp(model, 'tofts')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels,'verbose',verbose);
+    if verbose; p = ProgressBar(number_voxels,'verbose',verbose); end;
     parfor i = 1:number_voxels
         [GG(i,:), residuals(i,:)] = model_tofts(Ct_data(:,i),Cp_data,timer_data,prefs);
-        p.progress;
+        if verbose; p.progress; end;
     end;
-    p.stop;
+    if verbose; p.stop; end;
     if diary_restore, diary on, end;
 elseif strcmp(model, 'fxr')
     % Get values from pref file
@@ -241,12 +243,12 @@ elseif strcmp(model, 'fxr')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels,'verbose',verbose);
+    if verbose; p = ProgressBar(number_voxels,'verbose',verbose); end;
     parfor i = 1:number_voxels
         [GG(i,:), residuals(i,:)] = model_fxr(Ct_data(:,i),Cp_data,timer_data,R1o(i),R1i(i),r1,fw,prefs);
-        p.progress;
+        if verbose; p.progress; end;
     end;
-    p.stop;
+    if verbose; p.stop; end;
     if diary_restore, diary on, end;
 elseif strcmp(model, 'auc')
     % Area under curve using Raw data signal
@@ -286,12 +288,12 @@ elseif strcmp(model, 'auc')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels,'verbose',verbose);
+    if verbose; p = ProgressBar(number_voxels,'verbose',verbose); end;
     parfor i = 1:number_voxels
         GG(i,:) = auc_helper(Sttum(:,i),Stlv, Ct_data(:,i), Cp_data, timer_data);
-        p.progress;
+        if verbose; p.progress; end;
     end;
-    p.stop;
+    if verbose; p.stop; end;
     if diary_restore, diary on, end;
     
 elseif strcmp(model, 'fractal')
@@ -349,7 +351,7 @@ elseif strcmp(model, 'nested')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels,'verbose',verbose);
+    if verbose; p = ProgressBar(number_voxels,'verbose',verbose); end;
     
     parfor i = 1:number_voxels
         % Fit 0 order model
@@ -411,9 +413,9 @@ elseif strcmp(model, 'nested')
             end
         end
         
-        p.progress;
+        if verbose; p.progress; end;
     end;
-    p.stop;
+    if verbose; p.stop; end;
     if diary_restore, diary on, end;
     
 elseif strcmp(model, 'patlak')
@@ -462,7 +464,7 @@ elseif strcmp(model, 'patlak')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels,'verbose',verbose);
+    if verbose; p = ProgressBar(number_voxels,'verbose',verbose); end;
     parfor i = 1:number_voxels
         % Do quick linear patlak and use values as initial values
         [estimate, ~] = model_patlak_linear(Ct_data(:,i),Cp_data,timer_data);
@@ -471,9 +473,9 @@ elseif strcmp(model, 'patlak')
         prefs_local.initial_value_vp = estimate(2);
         % Do non-linear patlak
         [GG(i,:), residuals(i,:)] = model_patlak(Ct_data(:,i),Cp_data,timer_data,prefs_local);
-        p.progress;
+        if verbose; p.progress; end;
     end;
-    p.stop;
+    if verbose; p.stop; end;
     if diary_restore, diary on, end;
 
 elseif strcmp(model, 'patlak_linear')
@@ -491,12 +493,12 @@ elseif strcmp(model, 'patlak_linear')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels,'verbose',verbose);
+    if verbose; p = ProgressBar(number_voxels,'verbose',verbose); end;
     parfor i = 1:number_voxels
         [GG(i,:), residuals(i,:)] = model_patlak_linear(Ct_data(:,i),Cp_data,timer_data);
-        p.progress;
+        if verbose; p.progress; end;
     end;
-    p.stop;
+    if verbose; p.stop; end;
     if diary_restore, diary on, end;
     
 elseif strcmp(model, '2cxm')
@@ -559,18 +561,18 @@ elseif strcmp(model, '2cxm')
         diary off;
         diary_restore = 1;
     end
-    p = ProgressBar(number_voxels,'verbose',verbose);
+    if verbose; p = ProgressBar(number_voxels,'verbose',verbose); end;
     parfor i = 1:number_voxels
 %         [estimate, ~] = model_patlak_linear(Ct_data(:,i),Cp_data,timer_data);
 %         prefs_local = prefs;
 %         prefs_local.initial_value_ktrans = estimate(1);
         [GG(i,:), residuals(i,:)] = model_2cxm(Ct_data(:,i),Cp_data,timer_data,prefs);
-        p.progress;
+        if verbose; p.progress; end;
     end;
-    p.stop;
+    if verbose; p.stop; end;
     if diary_restore, diary on, end;
     
 else
-    warning(['Error, model ' model ' not yet implemented']);
+    error(['Error, model ' model ' not yet implemented']);
     return
 end
