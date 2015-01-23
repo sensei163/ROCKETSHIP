@@ -20,6 +20,7 @@ ft = fittype('model_patlak_cfit( Ktrans, vp, Cp, time)',...
 [f, gof, output] = fit([timer, Cp'],Ct,ft, options);
 confidence_interval = confint(f,0.95);
 
+
 x(1) = f.Ktrans;			% ktrans
 x(2) = f.vp;				% vp
 x(3) = gof.sse;				% residual

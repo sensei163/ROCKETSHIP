@@ -703,6 +703,8 @@ Cp = (R1tLV-repmat((1./T1LV)', [size(R1tLV, 1) 1]))./(relaxivity*(1-hematocrit))
 %end
 % f.2 Tumor
 Ct = (R1tTOI-repmat((1./T1TUM)', [size(R1tTOI, 1) 1]))./relaxivity;
+% Ct = (R1tTOI-repmat((1./T1TUM)', [size(R1tTOI, 1) 1]))./4.0;
+
 
 %% 9.1 Filter Cp more, to include voxels whose max is within the 25-75% of
 %% the mean, this was used for further filtering.
