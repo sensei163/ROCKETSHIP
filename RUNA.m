@@ -77,6 +77,7 @@ uirestore(handles.xytz);
 uirestore(handles.aif_auto);
 uirestore(handles.aif_auto_static);
 uirestore(handles.aif_roi);
+uirestore(handles.aif_roi_static);
 update_disable_options(handles);
 
 % Update handles structure
@@ -927,9 +928,10 @@ if get(handles.quant, 'Value')
     if get(handles.aiforrr, 'Value') == 1
         % AIF
         set(handles.aif_roi, 'Enable', 'on');
+        set(handles.aif_roi_static, 'Enable', 'on');
         set(handles.aif_auto, 'Enable', 'on');
         set(handles.aif_auto_static, 'Enable', 'on');
-        if get(handles.aif_auto_static, 'Value')
+        if get(handles.aif_auto_static, 'Value') || get(handles.aif_roi_static, 'Value')
             set(handles.blood_t1, 'Enable', 'on');
         else
             set(handles.blood_t1, 'Enable', 'off');
@@ -937,6 +939,10 @@ if get(handles.quant, 'Value')
         if get(handles.aif_roi, 'Value')
             set(handles.aifmaskroi, 'Enable', 'on');
             set(handles.injection_duration, 'Enable', 'off');
+        elseif get(handles.aif_roi_static, 'Value')
+            set(handles.injection_duration, 'Enable', 'off');
+            set(handles.aifmaskroi, 'Value',1);
+            set(handles.aifmaskroi, 'Enable', 'off');
         else
             % Auto so cannot use T1 map of small AIF ROI
             % Can only use a mask
@@ -947,6 +953,7 @@ if get(handles.quant, 'Value')
     else
         % RR, no AIF
         set(handles.aif_roi, 'Enable', 'off');
+        set(handles.aif_roi_static, 'Enable', 'off');
         set(handles.aif_auto, 'Enable', 'off');
         set(handles.aif_auto_static, 'Enable', 'off');
         set(handles.blood_t1, 'Enable', 'off');
@@ -958,6 +965,7 @@ else
     set(handles.aiforrr, 'Enable', 'off');
 %     set(handles.aifmaskroi, 'Enable', 'off');
     set(handles.aif_roi, 'Enable', 'off');
+    set(handles.aif_roi_static, 'Enable', 'off');
     set(handles.aif_auto, 'Enable', 'off');
     set(handles.aif_auto_static, 'Enable', 'off');
     set(handles.blood_t1, 'Enable', 'off');
@@ -965,7 +973,8 @@ else
     set(handles.injection_duration, 'Enable', 'off');
 end
 if (get(handles.roimaskroi, 'Value') == 2 && get(handles.aifmaskroi, 'Value') == 2) || ...
-        (get(handles.roimaskroi, 'Value') == 2 && get(handles.aif_auto_static, 'Value') && strcmp(get(handles.aif_auto_static, 'Enable'),'on') )
+        (get(handles.roimaskroi, 'Value') == 2 && get(handles.aif_auto_static, 'Value') && strcmp(get(handles.aif_auto_static, 'Enable'),'on')) || ... 
+        (get(handles.roimaskroi, 'Value') == 2 && get(handles.aif_roi_static, 'Value') && strcmp(get(handles.aif_roi_static, 'Enable'),'on'))
     % The input is a T1 values, so we don't need a seperate T1 map
     set(handles.t1mapfile, 'Enable', 'off');
     set(handles.t1mappath, 'Enable', 'off');
@@ -1047,6 +1056,7 @@ function aif_type_SelectionChangeFcn(hObject, eventdata, handles)
 uiremember(handles.aif_auto);
 uiremember(handles.aif_auto_static);
 uiremember(handles.aif_roi);
+uiremember(handles.aif_roi_static);
 update_disable_options(handles);
 
 

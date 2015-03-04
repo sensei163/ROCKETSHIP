@@ -183,8 +183,12 @@ end
 
 %Load AIF dataset, convert T1 from ms to sec
 lvind = find(LV > 0);
+%If static blood T1, insert static value now
+if strcmp(aif_rr_type,'aif_roi_static')
+    LV(lvind) = blood_t1;
+end
+%Check units convert to sec if required
 testt1 = mean(LV(lvind));
-
 if quant
     if testt1 > 50
         disp('T1 maps of AIF likely in ms, converting to s...');
@@ -692,8 +696,8 @@ end
 
 n = figure; 
 if quant
-subplot(421),plot(mean(R1tTOI,2), 'r.'), title('R1 maps pre-filtering ROI'), ylabel('sec^-1')
-subplot(422), plot(mean(R1tLV,2), 'b.'), title('R1 maps pre-filtering AIF'), ylabel('sec^-1')
+    subplot(423),plot(mean(R1tTOI,2), 'r.'), title('R1 maps pre-filtering ROI'), ylabel('sec^-1')
+    subplot(424), plot(mean(R1tLV,2), 'b.'), title('R1 maps pre-filtering AIF'), ylabel('sec^-1')
 end
 %% 9. Convert to concentrations
 
@@ -745,14 +749,14 @@ deltaR1TOI= R1tTOI-repmat(mean(R1tTOI(round(steady_state_time(1)):round(steady_s
 
 figure(n), 
 if quant
-    subplot(423),plot(mean(Ct,2), 'r'), title('Ct maps pre-filtering ROI'), ylabel('mmol')
-    subplot(424), plot(mean(Cp,2), 'b'), title('Cp maps pre-filtering AIF'), ylabel('mmol')
+    subplot(427),plot(mean(Ct,2), 'r'), title('Ct maps pre-filtering ROI'), ylabel('mM')
+    subplot(428), plot(mean(Cp,2), 'b'), title('Cp maps pre-filtering AIF'), ylabel('mM')
     
-    subplot(427), plot(mean(deltaR1TOI,2), 'r.'), title('Delta R1 ROI'), ylabel('sec^-1')
-    subplot(428), plot(mean(deltaR1LV,2), 'b.'), title('Delta R1 AIF') , ylabel('sec^-1')
+    subplot(425), plot(mean(deltaR1TOI,2), 'r.'), title('Delta R1 ROI'), ylabel('sec^-1')
+    subplot(426), plot(mean(deltaR1LV,2), 'b.'), title('Delta R1 AIF') , ylabel('sec^-1')
 end
-subplot(425), plot(RawTUM, 'r'), title('T1-weighted ROI'), ylabel('a.u.')
-subplot(426), plot(RawLV, 'b'), title('T1-weighted AIF'), ylabel('a.u.')
+subplot(421), plot(RawTUM, 'r'), title('T1-weighted ROI'), ylabel('a.u.')
+subplot(422), plot(RawLV, 'b'), title('T1-weighted AIF'), ylabel('a.u.')
 
 saveas(n,fullfile(PathName1, [rootname '_timecurves.fig']));
 

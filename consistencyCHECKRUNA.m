@@ -28,7 +28,7 @@ if isempty(tr) || isempty(fa) || isempty(hematocrit) || isempty(snr_filter) || .
 end
 
 % If the ROI or AIF files are masks, then we need to make sure that the T1 map is defined and vice versa.
-if quant && (mask_roi || (mask_aif && ~get(handles.aif_auto_static, 'Value')))
+if quant && (mask_roi || (mask_aif && (~get(handles.aif_auto_static, 'Value')&&~get(handles.aif_roi_static, 'Value'))))
     if ~exist(get(handles.t1mappath, 'String'), 'file')
         errormsg = 'T1 map needed';
         return;
