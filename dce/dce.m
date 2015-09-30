@@ -365,8 +365,8 @@ if started
     % Now we email to user
     % Email the person on completion
     % Define these variables appropriately:
-    mail = 'immune.caltech@gmail.com'; %Your GMail email address
-    password = 'antibody'; %Your GMail password
+    mail = ''; %Your GMail email address
+    password = ''; %Your GMail password
     % Then this code will set up the preferences properly:
     setpref('Internet','E_mail',mail);
     setpref('Internet','SMTP_Server','smtp.gmail.com');
