@@ -1,6 +1,1 @@
-[submodule "external_programs/niftitools"]
-	path = external_programs/niftitools
-	url = C:/Users/PETMR/code/niftitools
-[submodule "parametric_scripts"]
-	path = parametric_scripts
-	url = C:/Users/PETMR/code/t2_scripts
+
