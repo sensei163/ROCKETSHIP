@@ -2,3 +2,4 @@
 [submodule "parametric_scripts"]
 	path = parametric_scripts
 	url = https://github.com/petmri/parametric_scripts.git
+	branch = master
