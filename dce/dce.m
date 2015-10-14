@@ -362,27 +362,32 @@ if started
     disp(datestr(now))
     toc
 
-    % Now we email to user
-    % Email the person on completion
-    % Define these variables appropriately:
-    mail = ''; %Your GMail email address
-    password = ''; %Your GMail password
-    % Then this code will set up the preferences properly:
-    setpref('Internet','E_mail',mail);
-    setpref('Internet','SMTP_Server','smtp.gmail.com');
-    setpref('Internet','SMTP_Username',mail);
-    setpref('Internet','SMTP_Password',password);
-    props = java.lang.System.getProperties;
-    props.setProperty('mail.smtp.auth','true');
-    props.setProperty('mail.smtp.socketFactory.class', 'javax.net.ssl.SSLSocketFactory');
-    props.setProperty('mail.smtp.socketFactory.port','465');
-    
-    hostname = char( getHostName( java.net.InetAddress.getLocalHost ) );
-    
-    
-    sendmail(get(handles.email, 'String'),'ROCKETSHIP map derivation completed',['Hello! Your Map Calc job on '...
+    % Get preferences
+    if exist('email_preferences.txt', 'file') == 2
+        email_prefs = parse_preference_file('email_preferences.txt',0,...
+            {'gmail_from_username' 'gmail_from_password'});
+        
+        % Now we email to user
+        % Email the person on completion
+        % from username and password set in email_preferences.txt
+        setpref('Internet','E_mail',email_prefs.gmail_from_username);
+        setpref('Internet','SMTP_Server','smtp.gmail.com');
+        setpref('Internet','SMTP_Username',email_prefs.gmail_from_username);
+        setpref('Internet','SMTP_Password',email_prefs.gmail_from_password);
+        props = java.lang.System.getProperties;
+        props.setProperty('mail.smtp.auth','true');
+        props.setProperty('mail.smtp.socketFactory.class', 'javax.net.ssl.SSLSocketFactory');
+        props.setProperty('mail.smtp.socketFactory.port','465');
+
+        hostname = char( getHostName( java.net.InetAddress.getLocalHost ) );
+
+        sendmail(get(handles.email, 'String'),'ROCKETSHIP map derivation completed',['Hello! Your Map Calc job on '...
         ,hostname,' is done!']);
-    
+    else
+        warning('No email user/password specified in email_preferences.txt, unable to send email');
+        %In case warnings are disabled
+        disp('No email user/password specified in email_preferences.txt, unable to send email');
+    end   
 end
 
 handles.batch_d_listfullpath = list;
