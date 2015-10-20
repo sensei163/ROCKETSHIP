@@ -168,9 +168,12 @@ if numel(t1mapfiles)>0
     
     % Assign the LV and TUMOR to have T1 values
     if mask_aif
+        LV = single(LV);
         LV(lvroi) = T1MAP(lvroi);
         disp('Applying AIF/RR mask to T1 map...');
-    elseif mask_roi
+    end
+    if mask_roi
+        TUMOR = single(TUMOR);
         TUMOR(tumorroi) = T1MAP(tumorroi);
         disp('Applying ROI mask to T1 map...');
     end
@@ -255,6 +258,8 @@ if filevolume == 1
 elseif filevolume == 2
     %3D
     if size(LUT,1) == 1
+        %Preallocate for speed
+        DYNAMIC = zeros([size(TUMOR),size(LUT,2)]);
         for i = 1:size(LUT,2)
             id = LUT(1,i);
             if id ~=0
@@ -274,19 +279,16 @@ elseif filevolume == 2
                 end
                 
                 if ~isequal(size(img), size(TUMOR))
-                    errormsg = 'Unknown file type - DYNAMIC';
+                    errormsg = 'Dynamic image is not the same matrix size as ROI file';
                     return;
                 end
                 
-                if i == 1
-                    
-                    DYNAMIC = img;
-                else
-                    DYNAMIC(:,:,end+1:end+size(img,3)) = img;
-                end
+                DYNAMIC(:,:,:,i) = img;
             end
         end
     else
+        %Preallocate for speed
+        DYNAMIC = zeros([size(TUMOR),size(LUT,1)]);
         for i = 1:size(LUT,1)
             id = LUT(i,1);
             if isDICOM(filelist{id})
@@ -304,20 +306,17 @@ elseif filevolume == 2
             end
             
             if ~isequal(size(img), size(TUMOR))
-                errormsg = 'Unknown file type - DYNAMIC';
+                errormsg = 'Dynamic image is not the same matrix size as ROI file';
                 return;
             end
-            
-            if i == 1
-                
-                DYNAMIC = img;
-            else
-                DYNAMIC(:,:,end+1:end+size(img,3)) = img;
-            end
+
+            DYNAMIC(:,:,:,i) = img;
         end
     end
 elseif filevolume == 3
     % 2D slices
+    % Preallocate for speed
+    DYNAMIC = zeros([size(TUMOR),size(LUT,2),size(LUT,1)]);
     for i = 1:size(LUT,1)
         for j = 1:size(LUT,2)
             id = LUT(i,j);
@@ -329,30 +328,23 @@ elseif filevolume == 3
                 elseif isNIFTI(filelist{id})
                     nii = load_untouch_nii(filelist{id});
                     img = nii.img;
-                    
                 else
                     errormsg = 'Unknown file type - DYNAMIC';
                     return;
                 end
                 
                 if ~isequal(size(img), size(TUMOR))
-                    errormsg = 'Unknown file type - DYNAMIC';
+                    errormsg = 'Dynamic image is not the same matrix size as ROI file';
                     return;
                 end
                 
-                if i == 1 && j == 1
-                    
-                    DYNAMIC = img;
-                else
-                    DYNAMIC(:,:,end+1:end+size(img,3)) = img;
-                end
+                DYNAMIC(:,:,j,i) = img;
             end
         end
     end
-    
 end
 %% Resort DYNAMIC if fileorder is xytz
-
+DYNAMIC = single(DYNAMIC);
 if ~strcmp(fileorder, 'xyzt')
     % reorder needed
     

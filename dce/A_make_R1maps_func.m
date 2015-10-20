@@ -87,7 +87,12 @@ function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,
 % Toggle to re-calculate the average values only in the regions that the
 % voxel curvefit was able to give good fitting; ie. the viable regions.
 viable= 0;
-opengl('software');
+if ispc
+    opengl('software');
+else
+    disp('Non PC unable to run OpenGL software mode, there may be some graphics issues')
+end
+
 
 %% DO NOT ALTER LINES BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
 % Log input results
@@ -245,6 +250,13 @@ DYNAMLV     = [];
 DYNAMNOISE  = [];
 DYNAMNONVIA = [];
 
+if dimz>10
+    mod_dimz = ceil(dimz/10);
+    plot_dimz = floor(dimz/mod_dimz);
+else
+    plot_dimz = dimz;
+    mod_dimz = 1;
+end
 
 for i = 1:dimt
     %For each time point, we collect the dynamic information into the curve
@@ -282,22 +294,23 @@ for i = 1:dimt
     
         nn = figure;
         
-        for j = 1:dimz
-            subplot(2,dimz, j), imagesc(currentimg(:,:,j)'), axis off
-            subplot(2,dimz,j+dimz), imagesc(matchimg(:,:,j)'), axis off
+        for j = 1:plot_dimz
+            img_j = j*mod_dimz;
+            subplot(2,plot_dimz, j), imagesc(currentimg(:,:,img_j)'), axis off
+            subplot(2,plot_dimz,j+plot_dimz), imagesc(matchimg(:,:,img_j)'), axis off
             colormap('gray')
             hold on
             if ~(strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static'))
                 h_mask = imagesc(red_mask); axis off
-                set(h_mask, 'AlphaData',double(aif_mask(:,:,j)'));
+                set(h_mask, 'AlphaData',double(aif_mask(:,:,img_j)'));
             end
             h_mask = imagesc(green_mask); axis off
-            set(h_mask, 'AlphaData',double(region_mask(:,:,j)'));
+            set(h_mask, 'AlphaData',double(region_mask(:,:,img_j)'));
             h_mask = imagesc(blue_mask); axis off
-            set(h_mask, 'AlphaData',double(noise_mask(:,:,j)'));
+            set(h_mask, 'AlphaData',double(noise_mask(:,:,img_j)'));
             if(viable)
                 h_mask = imagesc(yellow_mask); axis off
-                set(h_mask, 'AlphaData',double(nonviable_mask(:,:,j)'));
+                set(h_mask, 'AlphaData',double(nonviable_mask(:,:,img_j)'));
             end
             hold off;
         end
@@ -503,10 +516,11 @@ if strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static')
     aif_mask = zeros(size_image_3d);
     aif_mask(lvind)  = 1;
     figure(nn);
-    for j = 1:dimz
-        subplot(2, dimz, j+dimz), hold on
+    for j = 1:plot_dimz
+        img_j = j*mod_dimz;
+        subplot(2, plot_dimz, j+plot_dimz), hold on
         h_mask = imagesc(red_mask); axis off
-        set(h_mask, 'AlphaData',double(aif_mask(:,:,j)'));
+        set(h_mask, 'AlphaData',double(aif_mask(:,:,img_j)'));
         hold off;
     end
 end
