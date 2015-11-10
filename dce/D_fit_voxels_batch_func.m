@@ -123,7 +123,12 @@ for i = 1:numel(cur_dce_model_list)
     % processing_time = toc;
     % disp(['processing completed in ' datestr(processing_time/86400, 'HH:MM:SS') ' (hr:min:sec)']);
     if close_pool
-        matlabpool close;
+        r_prefs = parse_preference_file('dce_preferences.txt',0,{'use_matlabpool'},{0});
+        if str2num(r_prefs.use_matlabpool)
+           matlabpool close;
+        else
+            delete(gcp('nocreate'))
+        end
     end
     
     % c) Save file

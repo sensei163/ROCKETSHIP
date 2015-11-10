@@ -548,13 +548,16 @@ if compare_voxels
     stat2_voxels = 2.*ones(number_voxels,number_models);
     
     if strcmp(test_name,'fmi')
-        % Find the maximum cluster
-%         myCluster = parcluster('local');
-        if matlabpool('size')<=0
-%             matlabpool('local', myCluster.NumWorkers);
-            matlabpool OPEN;
+        r_prefs = parse_preference_file('dce_preferences.txt',0,{'use_matlabpool'},{0});
+        if str2num(r_prefs.use_matlabpool)
+            if matlabpool('size')<=0
+                matlabpool OPEN;
+            end
+        else
+            % Launch pool if not already running
+            gcp;   
         end
-    end     
+    end
 end
 if compare_rois
     number_rois = numel(handles.model_fit_data{model_index}.roi_results(:,4));
