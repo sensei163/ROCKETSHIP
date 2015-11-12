@@ -81,7 +81,12 @@ fprintf('************** User Input **************\n\n');
 disp('User selected part A results: ');
 disp(results_a_path);
 Opt.Input = 'file';
-a_md5 = DataHash(results_a_path, Opt);
+try
+    a_md5 = DataHash(results_a_path, Opt);
+catch
+    print('Problem using md5 hashing. Will continue');
+    a_md5 = 'error';
+end
 fprintf('File MD5 hash: %s\n\n', a_md5)
 disp('User selected start time (min): ');
 disp(start_time);
@@ -378,7 +383,12 @@ results = fullfile(PathName1, ['B_' rootname aif_name '_R1info.mat']);
 save(results, 'Bdata');
 
 Opt.Input = 'file';
-mat_md5 = DataHash(results, Opt);
+try
+    mat_md5 = DataHash(results, Opt);
+catch
+    print('Problem using md5 hashing. Will continue');
+    mat_md5 = 'error';
+end
 disp(' ')
 disp('MAT results saved to: ')
 disp(results)

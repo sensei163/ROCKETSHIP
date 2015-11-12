@@ -164,7 +164,12 @@ for model_index=1:numel(dce_model_list)
     disp('User selected part B results: ');
     disp(results_b_path);
     Opt.Input = 'file';
-    b_md5 = DataHash(results_b_path, Opt);
+    try
+        b_md5 = DataHash(results_b_path, Opt);
+    catch
+        print('Problem using md5 hashing. Will continue');
+        b_md5 = 'error';
+    end
     fprintf('File MD5 hash: %s\n\n', b_md5)
     disp('User selected dce model: ');
     fprintf('%s\n\n',dce_model_string{model_index});
@@ -591,7 +596,12 @@ for model_index=1:numel(dce_model_list)
     save(results{model_index},  'xdata','fit_data','results_b_path')
     %     results = fullfile(PathName, ['D_' rootname cur_dce_model '_fit_voxels.mat']);
     Opt.Input = 'file';
-    mat_md5 = DataHash(results{model_index}, Opt);
+    try
+        mat_md5 = DataHash(results{model_index}, Opt);
+    catch
+        print('Problem using md5 hashing. Will continue');
+        mat_md5 = 'error';
+    end
     disp(' ')
     disp('MAT results saved to: ')
     disp(results{model_index})
@@ -749,7 +759,12 @@ for model_index=1:numel(dce_model_list)
     % Calculate file hashes and log them
     Opt.Input = 'file';
     if number_rois~=0
-        xls_md5 = DataHash(xls_path, Opt);
+        try
+            xls_md5 = DataHash(xls_path, Opt);
+        catch
+            print('Problem using md5 hashing. Will continue');
+            xls_md5 = 'error';
+        end
         disp(' ')
         disp('ROI results saved to: ')
         disp(xls_path)
@@ -759,7 +774,12 @@ for model_index=1:numel(dce_model_list)
         disp(' ')
         disp('Voxel results saved to: ')
         for i=1:numel(nii_path)
-            nii_md5 = DataHash(nii_path{i}, Opt);
+            try
+                nii_md5 = DataHash(nii_path{i}, Opt);
+            catch
+                print('Problem using md5 hashing. Will continue');
+                nii_md5 = 'error';
+            end
             disp(nii_path{i})
             disp(['File MD5 hash: ' nii_md5])
         end

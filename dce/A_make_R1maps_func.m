@@ -835,7 +835,12 @@ Adata.injection_duration = injection_duration;
 saved_results = fullfile(PathName1, ['A_' rootname 'R1info.mat']);
 save(saved_results, 'Adata');
 Opt.Input = 'file';
-mat_md5 = DataHash(saved_results, Opt);
+try
+    mat_md5 = DataHash(saved_results, Opt);
+catch
+    print('Problem using md5 hashing. Will continue');
+    mat_md5 = 'error';
+end
 disp(' ')
 disp('MAT results saved to: ')
 disp(saved_results)
