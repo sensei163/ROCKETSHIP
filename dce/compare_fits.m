@@ -69,7 +69,7 @@ set(get(gca,'Children'),'ButtonDownFcn', @mouseClick);
                 plot_data.Cp = xdata{1}.Cp;
                 plot_data.timer =  xdata{1}.timer;
                 plot_data.x_units = 'Time (minutes)';
-                plot_data.y_units =  'Concentration (mmol)';
+                plot_data.y_units =  'Concentration (mM)';
                 plot_data.fit_parameters = fit_data.fitting_results(voi,:);
                 plot_data.model_name = fit_data.model_name;
                 plot_data.show_original = show_original;

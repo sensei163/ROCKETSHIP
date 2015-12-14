@@ -155,7 +155,7 @@ if handles.roi_data_ready
         plot_data.Cp			= handles.model_xdata{handles.selected_model}.Cp;
         plot_data.timer			= handles.model_xdata{handles.selected_model}.timer;
         plot_data.x_units       = 'Time (minutes)';
-        plot_data.y_units       = 'Concentration (mmol)';
+        plot_data.y_units       = 'Concentration (mM)';
         plot_data.fit_parameters= handles.model_fit_data{handles.selected_model}.roi_results(selected_roi,:);
         plot_data.model_name	= handles.model_fit_data{handles.selected_model}.model_name;
         plot_data.show_original = get(handles.show_original,'Value');

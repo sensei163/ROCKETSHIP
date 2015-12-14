@@ -37,7 +37,7 @@ function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,
 %  hematocrit         - hematocrit percent (0 - 1.00) of subject
 %  snr_filter         - snr required for AIF voxels, snr must exceed this
 %                       value averaged over all time points
-%  relaxivity         - r1 relaxivity (in mmol^-1*sec^-1) of contrast agent
+%  relaxivity         - r1 relaxivity (in mM^-1*sec^-1) of contrast agent
 %  steady_state_time  - in image number, defines the end of the steady
 %                       state period before contrast injection. -1
 %                       indicates users will be prompted to select it
@@ -120,7 +120,7 @@ disp('User selected hematocit (0 to 1.0): ');
 disp(hematocrit);
 disp('User selected SNR threshold for AIF: ');
 disp(snr_filter);
-disp('User selected contrast agent R1 relaxivity (/mmol/sec): ');
+disp('User selected contrast agent R1 relaxivity (/mM/sec): ');
 disp(relaxivity);
 disp('User selected end of steady state time (image number): ');
 disp(steady_state_time);
@@ -500,7 +500,7 @@ if strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static')
     if strcmp(aif_rr_type,'aif_auto_static')
         LV = zeros(size(TUMOR));
         LV(lvind) = blood_t1/1000; %covert from ms to sec
-        % If using a static T1 value, average curve before mmol fitting to
+        % If using a static T1 value, average curve before mM fitting to
         % reduce noise
         mean_aif = mean(DYNAMLV,2);
         for n=1:size(DYNAMLV,2)
