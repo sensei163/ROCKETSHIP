@@ -247,7 +247,7 @@ if filevolume == 1
         DYNAMIC = rescaleDICOM(hdr, DYNAMIC);
   
     elseif isNIFTI(filelist{id})
-        nii = load_untouch_nii(filelist{id});
+        nii = load_nii(filelist{id});
         img = nii.img;
         
         DYNAMIC = img;
@@ -270,7 +270,7 @@ elseif filevolume == 2
                     
                     
                 elseif isNIFTI(filelist{id})
-                    nii = load_untouch_nii(filelist{id});
+                    nii = load_nii(filelist{id});
                     img = nii.img;
                     
                 else
@@ -297,7 +297,7 @@ elseif filevolume == 2
                 img = rescaleDICOM(hdr, img);
                 
             elseif isNIFTI(filelist{id})
-                nii = load_untouch_nii(filelist{id});
+                nii = load_nii(filelist{id});
                 img = nii.img;
                 
             else
@@ -326,7 +326,7 @@ elseif filevolume == 3
                     img = dicomread(hdr);
                     img = rescaleDICOM(hdr, img);
                 elseif isNIFTI(filelist{id})
-                    nii = load_untouch_nii(filelist{id});
+                    nii = load_nii(filelist{id});
                     img = nii.img;
                 else
                     errormsg = 'Unknown file type - DYNAMIC';
