@@ -274,46 +274,35 @@ for i = 1:dimt
         size_image_2d = [size(matchimg,1),size(matchimg,2)];
         size_image_3d = [size(matchimg,1),size(matchimg,2), dimz];
 
-        red_mask = cat(3, ones(size_image_2d)', zeros(size_image_2d)', zeros(size_image_2d)');
-        green_mask = cat(3, zeros(size_image_2d)', ones(size_image_2d)', zeros(size_image_2d)');
-        blue_mask = cat(3, zeros(size_image_2d)', zeros(size_image_2d)', ones(size_image_2d)');
-        yellow_mask = cat(3, zeros(size_image_2d)', ones(size_image_2d)', ones(size_image_2d)');
-        cyan_mask = cat(3, zeros(size_image_2d)', ones(size_image_2d)', ones(size_image_2d)');
+%         red_mask = cat(3, ones(size_image_2d)', zeros(size_image_2d)', zeros(size_image_2d)');
+%         green_mask = cat(3, zeros(size_image_2d)', ones(size_image_2d)', zeros(size_image_2d)');
+%         blue_mask = cat(3, zeros(size_image_2d)', zeros(size_image_2d)', ones(size_image_2d)');
+%         yellow_mask = cat(3, zeros(size_image_2d)', ones(size_image_2d)', ones(size_image_2d)');
+%         cyan_mask = cat(3, zeros(size_image_2d)', ones(size_image_2d)', ones(size_image_2d)');
         region_mask = zeros(size_image_3d);
         aif_mask = zeros(size_image_3d);
         noise_mask = zeros(size_image_3d);
         drift_mask = zeros(size_image_3d);
+        nonviable_mask = zeros(size_image_3d);
         region_mask(tumind) = 1;
-        aif_mask(lvind)  = 1;
         noise_mask(noiseind)=1;
-
+        if ~(strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static'))
+            aif_mask(lvind)  = 1;
+        end
         if(viable)
-            nonviable_mask = zeros(size_image_3d);
             nonviable_mask(nonvia)=1;
         end
-    
+
         nn = figure;
-        
-        for j = 1:plot_dimz
-            img_j = j*mod_dimz;
-            subplot(2,plot_dimz, j), imagesc(currentimg(:,:,img_j)'), axis off
-            subplot(2,plot_dimz,j+plot_dimz), imagesc(matchimg(:,:,img_j)'), axis off
-            colormap('gray')
-            hold on
-            if ~(strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static'))
-                h_mask = imagesc(red_mask); axis off
-                set(h_mask, 'AlphaData',double(aif_mask(:,:,img_j)'));
-            end
-            h_mask = imagesc(green_mask); axis off
-            set(h_mask, 'AlphaData',double(region_mask(:,:,img_j)'));
-            h_mask = imagesc(blue_mask); axis off
-            set(h_mask, 'AlphaData',double(noise_mask(:,:,img_j)'));
-            if(viable)
-                h_mask = imagesc(yellow_mask); axis off
-                set(h_mask, 'AlphaData',double(nonviable_mask(:,:,img_j)'));
-            end
-            hold off;
-        end
+        % Put in radiology space, flip x, flip y and permute x and y
+        imshow3D_overlays(flip(flip(permute(matchimg,[2 1 3]),1),2),...
+            [prctile(reshape(matchimg,1,[]),5) prctile(reshape(matchimg,1,[]),95)],...
+            flip(flip(permute(region_mask,[2 1 3]),1),2),...
+            flip(flip(permute(noise_mask,[2 1 3]),1),2),...
+            flip(flip(permute(aif_mask,[2 1 3]),1),2),...
+            flip(flip(permute(nonviable_mask,[2 1 3]),1),2),...
+            flip(flip(permute(drift_mask,[2 1 3]),1),2)...
+            );
     end
     
 end
@@ -325,11 +314,13 @@ end
 % phantom to correct for the MR signal in the tissue of interest.
 
 if(drift)
+    drift_fig=figure;
     for j = 1:dimz
-        figure(nn);
-        
-        % Create and highlight new title
-        subplot(2, dimz,j)
+        figure(drift_fig);
+        % TODO: flip x and y so it is in radiology space
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        imagesc(matchimg(:,:,j)'); axis off;
+        % Create and highlight title
         title({'Left click on drift correction region then noise region'; 
             'To skip (will use adjacent slices) right click twice'},'Color', 'Red');
         drawnow;
@@ -343,25 +334,24 @@ if(drift)
         
         if(button(1) > 1)
             OUT = [];
-            subplot(2, dimz, j+dimz);
-            title('No drift ROI selected');
         else
             OUT = findRod(dynam(:,:,j), [x(1) y(1)],[x(2) y(2)], []);
-            
             drift_mask(OUT(:,1), OUT(:,2), j)=1;
-            subplot(2, dimz, j+dimz), hold on
-            title('Selected ROIs');
-            h_mask = imagesc(cyan_mask); axis off;
-            hold off
-            set(h_mask, 'AlphaData',double(drift_mask(:,:,j)'));
         end
         
         ROD{j}.OUT = OUT;
-
-        % Reset title
-        subplot(2, dimz,j)
-        title(['Slice number ',num2str(j)],'Color', 'Black')
     end
+    % Update ROI figure
+    figure(nn);
+    % Put in radiology space, flip x, flip y and permute x and y
+    imshow3D_overlays(flip(flip(permute(matchimg,[2 1 3]),1),2),...
+        [prctile(reshape(matchimg,1,[]),5) prctile(reshape(matchimg,1,[]),95)],...
+        flip(flip(permute(region_mask,[2 1 3]),1),2),...
+        flip(flip(permute(noise_mask,[2 1 3]),1),2),...
+        flip(flip(permute(aif_mask,[2 1 3]),1),2),...
+        flip(flip(permute(nonviable_mask,[2 1 3]),1),2),...
+        flip(flip(permute(drift_mask,[2 1 3]),1),2)...
+        );
     
     % Now we Drift correct the image
     
@@ -516,13 +506,15 @@ if strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static')
     aif_mask = zeros(size_image_3d);
     aif_mask(lvind)  = 1;
     figure(nn);
-    for j = 1:plot_dimz
-        img_j = j*mod_dimz;
-        subplot(2, plot_dimz, j+plot_dimz), hold on
-        h_mask = imagesc(red_mask); axis off
-        set(h_mask, 'AlphaData',double(aif_mask(:,:,img_j)'));
-        hold off;
-    end
+    % Put in radiology space, flip x, flip y and permute x and y
+    imshow3D_overlays(flip(flip(permute(matchimg,[2 1 3]),1),2),...
+        [prctile(reshape(matchimg,1,[]),5) prctile(reshape(matchimg,1,[]),95)],...
+        flip(flip(permute(region_mask,[2 1 3]),1),2),...
+        flip(flip(permute(noise_mask,[2 1 3]),1),2),...
+        flip(flip(permute(aif_mask,[2 1 3]),1),2),...
+        flip(flip(permute(nonviable_mask,[2 1 3]),1),2),...
+        flip(flip(permute(drift_mask,[2 1 3]),1),2)...
+        );
 end
 
 

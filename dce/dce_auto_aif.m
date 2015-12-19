@@ -192,24 +192,19 @@ fprintf('End signal < %.2f of max: %d\n',end_signal_threshold, good_fit_edges);
 % figure(2)
 % imshow(reshape(edge_detected,size(DYNAMIC,1),size(DYNAMIC,2))');
 
-% Plot found AIF voxels on image
-figure;
-dynamic_slice = zeros(dimx,dimy,dimz);
-dynamic_slice(mask_index) = dynamic_input(end_inject,:);
-red_mask = cat(3, ones([dimy dimx]), zeros([dimy dimx]), zeros([dimy dimx]));
 aif_mask = zeros(dimx,dimy,dimz);
 aif_mask(mask_index) = edge_detected;
-    
-for j = 1:dimz
-    subplot(ceil(sqrt(dimz)), ceil(sqrt(dimz)), j)
-    imagesc(dynamic_slice(:,:,j)'), axis off;
-    colormap('gray');
-    hold on;
-    h_mask = imagesc(red_mask);
-    hold off;
-    set(h_mask, 'AlphaData',double(aif_mask(:,:,j)'));
-    title(['Slice: ' num2str(j)]);
-end
+
+% Plot redundant, removed
+% Plot found AIF voxels on image
+% figure;
+% dynamic_slice = zeros(dimx,dimy,dimz);
+% dynamic_slice(mask_index) = dynamic_input(end_inject,:);
+% % red_mask = cat(3, ones([dimy dimx]), zeros([dimy dimx]), zeros([dimy dimx]));
+% zero_mask = zeros(dimx,dimy,dimz);
+% imshow3D(flip(flip(permute(dynamic_slice,[2 1 3]),1),2),...
+%             [prctile(reshape(dynamic_slice,1,[]),5) prctile(reshape(dynamic_slice,1,[]),95)],...
+%             zero_mask,zero_mask,flip(flip(permute(aif_mask,[2 1 3]),1),2),zero_mask);
 
 
 % Generate output, list of aif voxels and associated time curves
