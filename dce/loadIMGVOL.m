@@ -64,7 +64,7 @@ for i = 1:numel(t1roifiles)
         end
         
     elseif isNIFTI(t1roifiles{i})
-        nii = load_nii(t1roifiles{i});
+        nii = load_untouch_nii(t1roifiles{i});
         hdr = nii.hdr;
         res = nii.hdr.dime.pixdim;
         res = res(2:4);
@@ -105,7 +105,7 @@ if numel(t1aiffiles)>0
 
 
         elseif isNIFTI(t1aiffiles{i})
-            nii = load_nii(t1aiffiles{i});
+            nii = load_untouch_nii(t1aiffiles{i});
             img = nii.img;
             if i == 1
                 LV = img;
@@ -150,7 +150,7 @@ if numel(t1mapfiles)>0
             
             
         elseif isNIFTI(t1mapfiles{i})
-            nii = load_nii(t1mapfiles{i});
+            nii = load_untouch_nii(t1mapfiles{i});
             img = nii.img;
             if i == 1
                 T1MAP = img;
@@ -198,7 +198,7 @@ if noise_pathpick
             
             
         elseif isNIFTI(noisefiles{i})
-            nii = load_nii(noisefiles{i});
+            nii = load_untouch_nii(noisefiles{i});
             img = nii.img;
             if i == 1
                 NOISE = img;
@@ -247,7 +247,7 @@ if filevolume == 1
         DYNAMIC = rescaleDICOM(hdr, DYNAMIC);
   
     elseif isNIFTI(filelist{id})
-        nii = load_nii(filelist{id});
+        nii = load_untouch_nii(filelist{id});
         img = nii.img;
         
         DYNAMIC = img;
@@ -270,7 +270,7 @@ elseif filevolume == 2
                     
                     
                 elseif isNIFTI(filelist{id})
-                    nii = load_nii(filelist{id});
+                    nii = load_untouch_nii(filelist{id});
                     img = nii.img;
                     
                 else
@@ -297,7 +297,7 @@ elseif filevolume == 2
                 img = rescaleDICOM(hdr, img);
                 
             elseif isNIFTI(filelist{id})
-                nii = load_nii(filelist{id});
+                nii = load_untouch_nii(filelist{id});
                 img = nii.img;
                 
             else
@@ -326,7 +326,7 @@ elseif filevolume == 3
                     img = dicomread(hdr);
                     img = rescaleDICOM(hdr, img);
                 elseif isNIFTI(filelist{id})
-                    nii = load_nii(filelist{id});
+                    nii = load_untouch_nii(filelist{id});
                     img = nii.img;
                 else
                     errormsg = 'Unknown file type - DYNAMIC';

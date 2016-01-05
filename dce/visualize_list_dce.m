@@ -9,7 +9,7 @@ visual_listB = [];
 visual_listC = [];
 
 
-LUT = handles.LUT
+LUT = handles.LUT;
 %subjectID = handles.subjectID;
 filelist  = handles.filelist;
 %sortlist  = handles.sortlist;

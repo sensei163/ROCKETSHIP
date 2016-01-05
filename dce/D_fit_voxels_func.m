@@ -286,7 +286,7 @@ for model_index=1:numel(dce_model_list)
                 single_file=cell2mat(roi_list(r));
                 
                 if strcmp(roi_ext(r),'.nii') || strcmp(roi_ext(r),'.hdr') || strcmp(roi_ext(r),'.img')
-                    single_roi = load_nii(single_file);
+                    single_roi = load_untouch_nii(single_file);
                     single_roi = double(single_roi.img);
                     roi_index{r}= find(single_roi > 0);
                 elseif strcmp(roi_ext(r),'.roi')

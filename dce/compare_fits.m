@@ -33,7 +33,7 @@ function compare_fits(fitting_results,background_image_path,show_original,show_c
 load(fitting_results,'fit_data','xdata');
 
 % Display Image
-background_image = load_nii(background_image_path);
+background_image = load_untouch_nii(background_image_path);
 background_image = double(background_image.img);
 figure(1);
 % Note image transpose here
