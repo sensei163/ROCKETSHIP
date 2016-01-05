@@ -1,9 +1,9 @@
 %  Collapse multiple single-scan NIFTI files into a multiple-scan NIFTI file
 %
-%  Usage: collapse_nii_scan(scan_file_pattern, [collapsed_filename], [scan_file_folder])
+%  Usage: collapse_nii_scan(scan_file_pattern, [collapsed_fileprefix], [scan_file_folder])
 %
 %  Here, scan_file_pattern should look like: 'myscan_0*.img'
-%  If collapsed_filename is omit, 'multi_scan.nii' will be used
+%  If collapsed_fileprefix is omit, 'multi_scan' will be used
 %  If scan_file_folder is omit, current file folder will be used
 %
 %  The order of volumes in the collapsed file will be the order of 
@@ -15,33 +15,48 @@
 %
 function collapse_nii_scan(scan_pattern, fileprefix, scan_path)
 
-   if ~exist('fileprefix','var'), fileprefix = 'multi_scan.nii'; end
+   if ~exist('fileprefix','var')
+      fileprefix = 'multi_scan';
+   else
+      [tmp fileprefix] = fileparts(fileprefix);
+   end
+
    if ~exist('scan_path','var'), scan_path = pwd; end
-
-   filetype = 1;
-
-   %  Note: fileprefix is actually the filename you want to save
-   %   
-   if findstr('.nii',fileprefix)
-      filetype = 2;
-      fileprefix = strrep(fileprefix,'.nii','');
-   end
-   
-   if findstr('.hdr',fileprefix)
-      fileprefix = strrep(fileprefix,'.hdr','');
-   end
-   
-   if findstr('.img',fileprefix)
-      fileprefix = strrep(fileprefix,'.img','');
-   end
-
    pnfn = fullfile(scan_path, scan_pattern);
 
    file_lst = dir(pnfn);
    flist = {file_lst.name};
    flist = flist(:);
+   filename = flist{1};
 
-   nii = load_untouch_nii(flist{1});
+   v = version;
+
+   %  Check file extension. If .gz, unpack it into temp folder
+   %
+   if length(filename) > 2 & strcmp(filename(end-2:end), '.gz')
+
+      if ~strcmp(filename(end-6:end), '.img.gz') & ...
+	 ~strcmp(filename(end-6:end), '.hdr.gz') & ...
+	 ~strcmp(filename(end-6:end), '.nii.gz')
+
+         error('Please check filename.');
+      end
+
+      if str2num(v(1:3)) < 7.1 | ~usejava('jvm')
+         error('Please use MATLAB 7.1 (with java) and above, or run gunzip outside MATLAB.');
+      else
+         gzFile = 1;
+      end
+   else
+      if ~strcmp(filename(end-3:end), '.img') & ...
+	 ~strcmp(filename(end-3:end), '.hdr') & ...
+	 ~strcmp(filename(end-3:end), '.nii')
+
+         error('Please check filename.');
+      end
+   end
+
+   nii = load_untouch_nii(fullfile(scan_path,filename));
    nii.hdr.dime.dim(5) = length(flist);
 
    if nii.hdr.dime.dim(1) < 4
@@ -49,6 +64,7 @@ function collapse_nii_scan(scan_pattern, fileprefix, scan_path)
    end
 
    hdr = nii.hdr;
+   filetype = nii.filetype;
 
    if isfield(nii,'ext') & ~isempty(nii.ext)
       ext = nii.ext;
@@ -110,7 +126,7 @@ function collapse_nii_scan(scan_pattern, fileprefix, scan_path)
       if ~isempty(ext)
          save_nii_ext(ext, fid);
       end
-   else
+   elseif filetype == 1
       fid = fopen(sprintf('%s.hdr',fileprefix),'w');
       
       if fid < 0,
@@ -128,6 +144,18 @@ function collapse_nii_scan(scan_pattern, fileprefix, scan_path)
       
       fclose(fid);
       fid = fopen(sprintf('%s.img',fileprefix),'w');
+   else
+      fid = fopen(sprintf('%s.hdr',fileprefix),'w');
+      
+      if fid < 0,
+         msg = sprintf('Cannot open file %s.hdr.',fileprefix);
+         error(msg);
+      end
+      
+      save_untouch0_nii_hdr(hdr, fid);
+      
+      fclose(fid);
+      fid = fopen(sprintf('%s.img',fileprefix),'w');
    end
 
    if filetype == 2 & isempty(ext)
@@ -137,14 +165,14 @@ function collapse_nii_scan(scan_pattern, fileprefix, scan_path)
    end
 
    if skip_bytes
-      fwrite(fid, ones(1,skip_bytes), 'uint8');
+      fwrite(fid, zeros(1,skip_bytes), 'uint8');
    end
 
    glmax = -inf;
    glmin = inf;
 
    for i = 1:length(flist)
-      nii = load_untouch_nii(flist{i});
+      nii = load_untouch_nii(fullfile(scan_path,flist{i}));
 
       if double(hdr.dime.datatype) == 128
 
@@ -184,7 +212,7 @@ function collapse_nii_scan(scan_pattern, fileprefix, scan_path)
       fseek(fid, 140, 'bof');
       fwrite(fid, hdr.dime.glmax, 'int32');
       fwrite(fid, hdr.dime.glmin, 'int32');
-   else
+   elseif filetype == 1
       fid2 = fopen(sprintf('%s.hdr',fileprefix),'w');
 
       if fid2 < 0,
@@ -199,9 +227,34 @@ function collapse_nii_scan(scan_pattern, fileprefix, scan_path)
       end
 
       fclose(fid2);
+   else
+      fid2 = fopen(sprintf('%s.hdr',fileprefix),'w');
+
+      if fid2 < 0,
+         msg = sprintf('Cannot open file %s.hdr.',fileprefix);
+         error(msg);
+      end
+
+      save_untouch0_nii_hdr(hdr, fid2);
+
+      fclose(fid2);
    end
 
    fclose(fid);
+
+   %  gzip output file if requested
+   %
+   if exist('gzFile', 'var')
+      if filetype == 1
+         gzip([fileprefix, '.img']);
+         delete([fileprefix, '.img']);
+         gzip([fileprefix, '.hdr']);
+         delete([fileprefix, '.hdr']);
+      elseif filetype == 2
+         gzip([fileprefix, '.nii']);
+         delete([fileprefix, '.nii']);
+      end;
+   end;
 
    return;					% collapse_nii_scan
 
