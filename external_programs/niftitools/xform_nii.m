@@ -324,13 +324,15 @@ function [hdr, orient] = change_hdr(hdr, tolerance, preferredForm)
            hdr.hist.srow_y(4)
            hdr.hist.srow_z(4)];
 
-      if det(R) == 0 | ~isequal(R(find(R)), sum(R)')
+      if det(R) == 0 || ~isequal(R(find(R)), sum(R)')
          hdr.hist.old_affine = [ [R;[0 0 0]] [T;1] ];
-         R_sort = sort(abs(R(:)));
-         R( find( abs(R) < tolerance*min(R_sort(end-2:end)) ) ) = 0;
+         resolution_matrix=diag(hdr.dime.pixdim(2:4));
+         R_prime = R/resolution_matrix;
+         R_prime=R_prime.^2;
+         R( find( R_prime < tolerance ) ) = 0;
          hdr.hist.new_affine = [ [R;[0 0 0]] [T;1] ];
 
-         if det(R) == 0 | ~isequal(R(find(R)), sum(R)')
+         if det(R) == 0 || ~isequal(R(find(R)), sum(R)')
             msg = [char(10) char(10) '   Non-orthogonal rotation or shearing '];
             msg = [msg 'found inside the affine matrix' char(10)];
             msg = [msg '   in this NIfTI file. You have 3 options:' char(10) char(10)];
@@ -391,7 +393,7 @@ function [hdr, orient] = change_hdr(hdr, tolerance, preferredForm)
       %
       %  This part is modified by Jeff Gunter.
       %
-      if det(R) == 0 | ~isequal(R(find(R)), sum(R)')
+      if det(R) == 0 || ~isequal(R(find(R)), sum(R)')
 
          %  det(R) == 0 is not a common trigger for this ---
          %  R(find(R)) is a list of non-zero elements in R; if that
@@ -405,7 +407,7 @@ function [hdr, orient] = change_hdr(hdr, tolerance, preferredForm)
          R = R * diag([i j k]);
          hdr.hist.new_affine = [ [R;[0 0 0]] [T;1] ];
 
-         if det(R) == 0 | ~isequal(R(find(R)), sum(R)')
+         if det(R) == 0 || ~isequal(R(find(R)), sum(R)')
             msg = [char(10) char(10) '   Non-orthogonal rotation or shearing '];
             msg = [msg 'found inside the affine matrix' char(10)];
             msg = [msg '   in this NIfTI file. You have 3 options:' char(10) char(10)];
