@@ -593,7 +593,7 @@ for model_index=1:numel(dce_model_list)
     %     Ddata.results_b_path = results_b_path;
     
     results{model_index} = [results_base,'.mat'];
-    save(results{model_index},  'xdata','fit_data','results_b_path')
+    save(results{model_index},  'xdata','fit_data','results_b_path','hdr')
     %     results = fullfile(PathName, ['D_' rootname cur_dce_model '_fit_voxels.mat']);
     Opt.Input = 'file';
     try
@@ -715,7 +715,7 @@ for model_index=1:numel(dce_model_list)
             if outputft == 1
                 % NIFTI
                 nii_path{k} = [results_base '_' paramname{k} '.nii'];
-                save_nii(make_nii(curimg, res, [1 1 1]), nii_path{k});
+                save_nii(make_nii(curimg, res, [1 1 1], [], [], hdr), nii_path{k});
             elseif outputft == 2
                 % 3D DICOM
                 nii_path{k} = [results_base '_' paramname{k} '.dcm'];

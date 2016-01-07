@@ -83,7 +83,6 @@ varargout{1} =handles.saved_results;
 delete(handles.figure1);
 
 
-
 function results_a_path_Callback(hObject, eventdata, handles)
 % hObject    handle to results_a_path (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB

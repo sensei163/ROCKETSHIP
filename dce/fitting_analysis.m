@@ -449,7 +449,15 @@ if compare_voxels
     
     stat_matrix     = zeros(handles.model_xdata{1}.dimensions)-1;
     stat_matrix(handles.model_fit_data{higher_model}.tumind) = stat_voxels;
-    save_nii(make_nii(stat_matrix, [1 1 1], [1 1 1]), save_path);
+    hdr_struct=load(handles.model_list{1},'hdr');
+    if isfield(hdr_struct,'hdr') && isfield(hdr_struct.hdr,'dime')
+        hdr = hdr_struct.hdr;
+        res = hdr.dime.pixdim(2:4);
+    else
+        hdr=[];
+        res=[1 1 1];
+    end    
+    save_nii(make_nii(stat_matrix, res, [1 1 1],[],[],hdr), save_path);
     disp(['Completed ' test_name_long ' on voxels']);
 end
 if compare_rois
@@ -727,13 +735,21 @@ if strcmp(test_name,'akaike')
         save_path = fullfile(base_path,[base_name '_min_aic.nii']);
         image_matrix = zeros(handles.model_xdata{1}.dimensions)-1;
         image_matrix(handles.model_fit_data{1}.tumind) = min_aic;
-        save_nii(make_nii(image_matrix, [1 1 1], [1 1 1]), save_path);
-
+        hdr_struct=load(handles.model_list{1},'hdr');
+        if isfield(hdr_struct,'hdr') && isfield(hdr_struct.hdr,'dime')
+            hdr = hdr_struct.hdr;
+            res = hdr.dime.pixdim(2:4);
+        else
+            hdr=[];
+            res=[1 1 1];
+        end    
+        save_nii(make_nii(image_matrix, res, [1 1 1],[],[],hdr), save_path);
+        
         %relative_likelihood_main
         save_path = fullfile(base_path,[base_name '_like_2nd.nii']);
         image_matrix     = zeros(handles.model_xdata{1}.dimensions)-1;
         image_matrix(handles.model_fit_data{1}.tumind) = relative_likelihood_main;
-        save_nii(make_nii(image_matrix, [1 1 1], [1 1 1]), save_path);
+        save_nii(make_nii(image_matrix, res, [1 1 1],[],[],hdr), save_path);
         
         %relative_likelihood_n
         if exhaustive_output
@@ -741,7 +757,7 @@ if strcmp(test_name,'akaike')
                 save_path = fullfile(base_path,[base_name '_like_' handles.model_fit_data{model_index}.model_name '.nii']);
                 image_matrix = zeros(handles.model_xdata{1}.dimensions)-1;
                 image_matrix(handles.model_fit_data{1}.tumind) = relative_likelihood_extra(:,model_index);
-                save_nii(make_nii(image_matrix, [1 1 1], [1 1 1]), save_path);
+                save_nii(make_nii(image_matrix, res, [1 1 1],[],[],hdr), save_path);
             end
         end
         
@@ -808,14 +824,22 @@ if strcmp(test_name,'fmi')
                 handles.model_fit_data{model_index}.model_name path_suffix '.nii']);
             image_matrix = zeros(handles.model_xdata{1}.dimensions)-1;
             image_matrix(handles.model_fit_data{model_index}.tumind) = stat_voxels(:,model_index);
-            save_nii(make_nii(image_matrix, [1 1 1], [1 1 1]), save_path);
+            hdr_struct=load(handles.model_list{1},'hdr');
+            if isfield(hdr_struct,'hdr') && isfield(hdr_struct.hdr,'dime')
+                hdr = hdr_struct.hdr;
+                res = hdr.dime.pixdim(2:4);
+            else
+                hdr=[];
+                res=[1 1 1];
+            end    
+            save_nii(make_nii(image_matrix, res, [1 1 1],[],[],hdr), save_path);
 
             %FRI
             save_path = fullfile(base_path,[base_name '_' ...
                 handles.model_fit_data{model_index}.model_name '_fri.nii']);
             image_matrix     = zeros(handles.model_xdata{1}.dimensions)-1;
             image_matrix(handles.model_fit_data{model_index}.tumind) = stat2_voxels(:,model_index);
-            save_nii(make_nii(image_matrix, [1 1 1], [1 1 1]), save_path);
+            save_nii(make_nii(image_matrix, res, [1 1 1],[],[],hdr), save_path);
         end
         disp(['Completed ' test_name_long ' on voxels']);
     end

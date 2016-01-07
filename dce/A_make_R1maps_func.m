@@ -159,7 +159,7 @@ place = '';
 % rootname = strrep(dynam,'.nii','_');
 
 % %Load DCE dataset
-% dynam = load_nii(fullfile(PathName1, place, dynam));
+% dynam = load_untouch_nii(fullfile(PathName1, place, dynam));
 % 
 % %image resolution
 % res  = dynam.hdr.dime.pixdim;
@@ -170,7 +170,7 @@ dynam = DYNAMIC; %double(dynam.img);
 
 %Load TUMOR T1 map, find the voxels that encompass tumor ROI
 %convert T1 from ms to sec
-% TUMOR = load_nii(fullfile(PathName3, place, tumor));
+% TUMOR = load_untouch_nii(fullfile(PathName3, place, tumor));
 % TUMOR = 1/1000.*double(TUMOR.img);
 tumind= find(TUMOR > 0);
 
@@ -204,7 +204,7 @@ if quant
 end
 
 %Load noise ROI files
-% NOISE = load_nii(fullfile(PathName4, place, noise));
+% NOISE = load_untouch_nii(fullfile(PathName4, place, noise));
 % NOISE = double(NOISE.img);
 noiseind = find(NOISE > 0);
 
@@ -212,7 +212,7 @@ noiseind = find(NOISE > 0);
 % viable tumor region.
 if(viable)
     [VIA,PathName1,FilterIndex] = uigetfile([PathName1 '/*.nii'],'Choose Ktrans file Region file');
-    VIA = load_nii(fullfile(PathName1, place, VIA));
+    VIA = load_untouch_nii(fullfile(PathName1, place, VIA));
     VIA = VIA.img;
     viaind = find(VIA ~=0);
     nonvia = setdiff(tumind, viaind);
@@ -740,9 +740,9 @@ end
 
 % Save as dynamic file, with the TUMOR ROI only.
 
-CC = make_nii(CTFILE, res, [1 1 1]);
+CC = make_nii(CTFILE, res, [1 1 1],[],[],hdr);
 if quant
-save_nii(CC, fullfile(PathName1, [rootname 'dynamicCt.nii']));
+    save_nii(CC, fullfile(PathName1, [rootname 'dynamicCt.nii']));
 end
 %% 11. Save as delta R1 values (May be useful if the Contrast agent has longer correlation time).
 

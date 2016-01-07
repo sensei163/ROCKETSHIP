@@ -6,7 +6,7 @@
 %  Once the NIfTI structure is made, it can be saved into NIfTI file 
 %  using "save_nii" command (for more detail, type: help save_nii). 
 %  
-%  Usage: nii = make_nii(img, [voxel_size], [origin], [datatype], [description])
+%  Usage: nii = make_nii(img, [voxel_size], [origin], [datatype], [description], [orientation])
 %
 %  Where:
 %
@@ -34,6 +34,12 @@
 %
 %	description (optional):	Description of data. Default is ''.
 %
+%   orientation (optional): hdr stucture from a NIFTI file, orientation 
+%   information will be copied, specifically fields hdr.dime.pixdim[0], and
+%   the following fields from hdr.hist: qform_code, sform_code, quatern_b,
+%   quatern_c, quatern_d, qoffset_x, qoffset_y, qoffset_z, srow_x, srow_y,
+%   srow_z
+%
 %  e.g.:
 %     origin = [33 44 13]; datatype = 64;
 %     nii = make_nii(img, [], origin, datatype);    % default voxel_size
@@ -52,6 +58,7 @@ function nii = make_nii(varargin)
    voxel_size = [0 ones(1,7)];
    origin = zeros(1,5);
    descrip = '';
+   orientation_hdr = [];
 
    switch class(nii.img)
       case 'uint8'
@@ -103,6 +110,10 @@ function nii = make_nii(varargin)
    if nargin > 4 & ~isempty(varargin{5})
       descrip = varargin{5};
    end
+   
+   if nargin > 5 & ~isempty(varargin{6})
+      orientation_hdr = varargin{6};
+   end
 
    if ndims(nii.img) > 7
       error('NIfTI only allows a maximum of 7 Dimension matrix.');
@@ -113,6 +124,22 @@ function nii = make_nii(varargin)
 
    nii.hdr = make_header(dims, voxel_size, origin, datatype, ...
 	descrip, maxval, minval);
+
+   if ~isempty(orientation_hdr) && isfield(orientation_hdr,'dime') && isfield(orientation_hdr,'hist')
+       nii.hdr.dime.pixdim(1) = orientation_hdr.dime.pixdim(1);
+       nii.hdr.hist.qform_code = orientation_hdr.hist.qform_code;
+       nii.hdr.hist.sform_code = orientation_hdr.hist.sform_code;
+       nii.hdr.hist.quatern_b = orientation_hdr.hist.quatern_b;
+       nii.hdr.hist.quatern_c = orientation_hdr.hist.quatern_c;
+       nii.hdr.hist.quatern_d = orientation_hdr.hist.quatern_d;
+       nii.hdr.hist.qoffset_x = orientation_hdr.hist.qoffset_x;
+       nii.hdr.hist.qoffset_y = orientation_hdr.hist.qoffset_y;
+       nii.hdr.hist.qoffset_z = orientation_hdr.hist.qoffset_z;
+       nii.hdr.hist.srow_x = orientation_hdr.hist.srow_x;
+       nii.hdr.hist.srow_y = orientation_hdr.hist.srow_y;
+       nii.hdr.hist.srow_z = orientation_hdr.hist.srow_z; 
+   end
+       
 
    switch nii.hdr.dime.datatype
    case 2

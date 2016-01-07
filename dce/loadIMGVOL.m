@@ -65,9 +65,6 @@ for i = 1:numel(t1roifiles)
         
     elseif isNIFTI(t1roifiles{i})
         nii = load_untouch_nii(t1roifiles{i});
-        hdr = nii.hdr;
-        res = nii.hdr.dime.pixdim;
-        res = res(2:4);
         img = nii.img;
         if i == 1
             TUMOR = img;
@@ -249,7 +246,8 @@ if filevolume == 1
     elseif isNIFTI(filelist{id})
         nii = load_untouch_nii(filelist{id});
         img = nii.img;
-        
+        hdr = nii.hdr;
+        res = nii.hdr.dime.pixdim(2:4);
         DYNAMIC = img;
     else
         errormsg = 'Unknown file type - DYNAMIC';
@@ -267,12 +265,11 @@ elseif filevolume == 2
                     hdr = dicominfo(filelist{id});
                     img = dicomread(hdr);
                     img = rescaleDICOM(hdr, img);
-                    
-                    
                 elseif isNIFTI(filelist{id})
                     nii = load_untouch_nii(filelist{id});
                     img = nii.img;
-                    
+                    hdr = nii.hdr;
+                    res = nii.hdr.dime.pixdim(2:4);
                 else
                     errormsg = 'Unknown file type - DYNAMIC';
                     return;
@@ -299,7 +296,8 @@ elseif filevolume == 2
             elseif isNIFTI(filelist{id})
                 nii = load_untouch_nii(filelist{id});
                 img = nii.img;
-                
+                hdr = nii.hdr;
+                res = nii.hdr.dime.pixdim(2:4);
             else
                 errormsg = 'Unknown file type - DYNAMIC';
                 return;
@@ -328,6 +326,8 @@ elseif filevolume == 3
                 elseif isNIFTI(filelist{id})
                     nii = load_untouch_nii(filelist{id});
                     img = nii.img;
+                    hdr = nii.hdr;
+                    res = nii.hdr.dime.pixdim(2:4);
                 else
                     errormsg = 'Unknown file type - DYNAMIC';
                     return;

@@ -1,7 +1,7 @@
 function out = isNIFTI(imagefile)
 
 try
-    info = load_nii(imagefile);
+    info = load_untouch_nii(imagefile);
     out  = 1;
 catch
     out = 0;
