@@ -84,7 +84,7 @@ Opt.Input = 'file';
 try
     a_md5 = DataHash(results_a_path, Opt);
 catch
-    print('Problem using md5 hashing. Will continue');
+    disp('Problem using md5 hashing. Will continue');
     a_md5 = 'error';
 end
 fprintf('File MD5 hash: %s\n\n', a_md5)
@@ -386,7 +386,7 @@ Opt.Input = 'file';
 try
     mat_md5 = DataHash(results, Opt);
 catch
-    print('Problem using md5 hashing. Will continue');
+    disp('Problem using md5 hashing. Will continue');
     mat_md5 = 'error';
 end
 disp(' ')

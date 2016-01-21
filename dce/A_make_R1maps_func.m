@@ -830,7 +830,7 @@ Opt.Input = 'file';
 try
     mat_md5 = DataHash(saved_results, Opt);
 catch
-    print('Problem using md5 hashing. Will continue');
+    disp('Problem using md5 hashing. Will continue');
     mat_md5 = 'error';
 end
 disp(' ')

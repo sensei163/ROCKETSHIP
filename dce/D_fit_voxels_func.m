@@ -167,7 +167,7 @@ for model_index=1:numel(dce_model_list)
     try
         b_md5 = DataHash(results_b_path, Opt);
     catch
-        print('Problem using md5 hashing. Will continue');
+        disp('Problem using md5 hashing. Will continue');
         b_md5 = 'error';
     end
     fprintf('File MD5 hash: %s\n\n', b_md5)
@@ -599,7 +599,7 @@ for model_index=1:numel(dce_model_list)
     try
         mat_md5 = DataHash(results{model_index}, Opt);
     catch
-        print('Problem using md5 hashing. Will continue');
+        disp('Problem using md5 hashing. Will continue');
         mat_md5 = 'error';
     end
     disp(' ')
@@ -762,7 +762,7 @@ for model_index=1:numel(dce_model_list)
         try
             xls_md5 = DataHash(xls_path, Opt);
         catch
-            print('Problem using md5 hashing. Will continue');
+            disp('Problem using md5 hashing. Will continue');
             xls_md5 = 'error';
         end
         disp(' ')
@@ -777,7 +777,7 @@ for model_index=1:numel(dce_model_list)
             try
                 nii_md5 = DataHash(nii_path{i}, Opt);
             catch
-                print('Problem using md5 hashing. Will continue');
+                disp('Problem using md5 hashing. Will continue');
                 nii_md5 = 'error';
             end
             disp(nii_path{i})
