@@ -825,7 +825,7 @@ Adata.injection_duration = injection_duration;
 
 
 saved_results = fullfile(PathName1, ['A_' rootname 'R1info.mat']);
-save(saved_results, 'Adata');
+save(saved_results, 'Adata','-v7.3');
 Opt.Input = 'file';
 try
     mat_md5 = DataHash(saved_results, Opt);

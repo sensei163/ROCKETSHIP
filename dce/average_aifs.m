@@ -219,7 +219,7 @@ xlabel('Time (image number)');
     
 
 save_name = fullfile(handles.save_path, ['average_' num2str(number_aif) '_aifs.mat']);
-save(save_name,'Cp_use');
+save(save_name,'Cp_use','-v7.3');
 
 disp(['Average of ' num2str(number_aif) ' AIFs saved to: ' save_name]);
 delete(handles.figure1);

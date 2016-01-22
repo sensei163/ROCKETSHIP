@@ -380,7 +380,7 @@ Bdata.Ssstum      = Adata.Ssstum;
 
 results = fullfile(PathName1, ['B_' rootname aif_name '_R1info.mat']);
 
-save(results, 'Bdata');
+save(results, 'Bdata','-v7.3');
 
 Opt.Input = 'file';
 try

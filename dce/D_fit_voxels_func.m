@@ -593,7 +593,7 @@ for model_index=1:numel(dce_model_list)
     %     Ddata.results_b_path = results_b_path;
     
     results{model_index} = [results_base,'.mat'];
-    save(results{model_index},  'xdata','fit_data','results_b_path','hdr')
+    save(results{model_index},  'xdata','fit_data','results_b_path','hdr','-v7.3')
     %     results = fullfile(PathName, ['D_' rootname cur_dce_model '_fit_voxels.mat']);
     Opt.Input = 'file';
     try
