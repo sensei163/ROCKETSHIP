@@ -491,7 +491,7 @@ for model_index=1:numel(dce_model_list)
         end
     end
     
-    % b) voxel by voxel fitting
+    % b) curve fitting
     %************************
     disp('  ');
     disp(['Begin making maps for ' cur_dce_model '...']);
@@ -702,7 +702,11 @@ for model_index=1:numel(dce_model_list)
         xls_results = [roi_list roi_name mat2cell(roi_results,ones(1,size(roi_results,1)),ones(1,size(roi_results,2)))];
         xls_results = [headings; xls_results];
         xls_path = [results_base '_rois.xls'];
-        xlswrite(xls_path,xls_results);
+        try
+            xlswrite(xls_path,xls_results);
+        catch
+            disp('Problem writing XLS file. Will continue');
+        end
     end
     % Write voxel results
     if fit_voxels
