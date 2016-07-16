@@ -1,7 +1,6 @@
-ROCKETSHIP v1.1,  2014
-Last updated 12/20/2014
+ROCKETSHIP v1.2,  2016
 
-Copyright (c) 2014, Thomas Ng, Samuel Barnes
+Copyright (c) 2016, Thomas Ng, Samuel Barnes
 All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
@@ -16,29 +15,66 @@ GNU General Public License for more details.
 
 Contains program and associated files to process and analyze parametric MRI and DCE-MRI files. Developed at the Biological Imaging Center at the California Institute of Technology. 
 
+SEE GITHUB WIKI FOR HELP:
+https://github.com/petmri/ROCKETSHIP/wiki
+
 Please see Barnes, Ng et al BMC Bioinformatics (2015) for more information.
 
 Thomas Ng 	thomasn@caltech.edu
 Samuel Barnes 	srbarnes@caltech.edu
 
-1. Installation:
-- Copy or unzip all the files form github package, keeping the directory tree intact
-- There should be three directories
-i) 	dce 			contains ROCKETSHIP DCE module and associated files
-ii) 	parametric_scripts 	contains the ROCKETSHIP fitting module to generate T2/T2*, T1, ADC and other parametric maps
-iii) 	external_programs 	contains external files, partially modified, and used under the respective BSD licenses as part of the 				ROCKETSHIP software suite.
 
-- Files can be run in MATLAB (tested for R2014a and above). Please add all the directories and their subdirectories to the path prior to running the programs.
-- dce and parametric_scripts can be run independently, but requires files from external_programs to varying extents
 
-2. Running the program
-i) dce
-The DCE module is initiated by running "dce.m"
+ROCKETSHIP Papers
 
-ii) parametric_scripts
-The fitting module is initiated by running "fitting_gui.m"
+If you use ROCKETSHIP in your project please reference
 
-3. Listing of files and brief descriptor
+Ng et al. ROCKETSHIP: a flexible and modular software tool for the planning, processing and analysis of dynamic MRI studies. BMC Med Img 2015
+
+in any papers. This reference also has detailed information about the various DCE models used in this project. If you are pursing BBB applications please consider these papers for parameter suggestions
+
+Barnes et al. Optimal acquisition and modeling parameters for accurate assessment of low Ktrans blood-brain barrier permeability using dynamic contrast-enhanced MRI. MRM 2015
+
+Montagne et al. Blood-brain barrier breakdown in the aging human hippocampus. Neuron 2015
+
+Other Publications using ROCKETSHIP
+
+Sta Maria et al. Low Dose Focused Ultrasound Induces Enhanced Tumor Accumulation of Natural Killer Cells. PLOS One 2015
+
+ROCKETSHIP Requirements:
+
+Matlab Version
+Verified Working: Matlab 2014a, 2014b
+Should Work: Matlab 2015a, 2015b (please let me know if you have tried this)
+Will Not Work: Matlab 2011
+Toolboxes:
+Curve fitting
+Parallel
+Statistics
+Image processing
+Optimization (currently required for some functions, working to remove this requirement)
+Computer:
+Some of the processing is very CPU intensive, a modern multi-core (≥4) processor, while not required, helps keep the processing time reasonable (heavily dependent on image matrix size).
+
+File formats
+
+ROCKETSHIP prefers all images to be input in the NIFTI format. DCE fitting does have some limited support for directly processing DICOM images, but it is recommended to convert from DICOM to NIFTI first, then use the NIFTI images for all processing. Additionally the parametric fitting (T1, T2, ADC) requires NIFTI files. To convert from DICOM to NIFTI we recommend using the dcm2nii tool that comes with MRIcron, it is available for Windows, Linux, and Mac and is easy to use (although any converter can be used). For dcm2nii select the FSL 4D NIFTI format. Compressed NIFTI images (.nii.gz) can be read by ROCKETSHIP, but not written.
+
+Quick Start
+
+Clone ROCKETSHIP git clone --recursive https://github.com/petmri/ROCKETSHIP.git
+Add ROCKETSHIP folder to Matlab path
+Calculate T1 maps with script run_parametric.m
+Check T1 maps with script run_analysis.m
+Calculate DCE maps with script run_dce.m
+
+Additional Help
+
+If you need help and can't find it here please contact Sam Barnes sabarnes@llu.edu.
+
+
+
+Listing of files and brief descriptor
 
 README.txt				- This file
 
@@ -175,7 +211,7 @@ ROCKETSHIP fitting module to generate T2/T2*, T1, ADC and other parametric maps 
 
 iii) external_programs
 
-Listing of various programs incoporated under BSD license as part of ROCKETSHIP. Please go to the relevant page on MATLABCentral for details for each particular app.
+Listing of various programs incorporated under BSD license as part of ROCKETSHIP. Please go to the relevant page on MATLABCentral for details for each particular app.
 
 'DataHash'
 'ProgressBar'
