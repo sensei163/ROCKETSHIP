@@ -325,6 +325,17 @@ for model_index=1:numel(dce_model_list)
                         disp(single_roi.strType);
                         return;
                     end
+                    % If slice number is present, shift 2D position to
+                    % proper z position
+                    if isfield(single_roi,'nPosition')
+                        if single_roi.nPosition==0
+                            single_roi.nPosition = 1;
+                        end
+                        z_pos = single_roi.nPosition-1;
+                        roi_index{r} = roi_index{r} + z_pos*size(currentimg,1)*size(currentimg,2);
+                    else
+                        error( 'Could not find Z position in ROI file, use latest ImageJ verion' );
+                    end
                 else
                     warning( 'File type for ROI not supported' );
                     disp(roi_ext(r));
