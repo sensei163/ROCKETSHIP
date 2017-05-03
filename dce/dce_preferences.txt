@@ -51,6 +51,13 @@ voxel_lower_limit_tau = 0
 voxel_upper_limit_tau = 100
 voxel_initial_value_tau = 0.01
 
+% Reference Model Options
+voxel_lower_limit_ktrans_RR = 10^-7
+voxel_upper_limit_ktrans_RR = 2
+voxel_initial_value_ktrans_RR = 0.1
+
+voxel_value_ve_RR = 0.08
+
 % Advanced Options
 voxel_TolFun = 10^(-12)
 voxel_TolX = 10^(-6)

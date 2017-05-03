@@ -18,6 +18,8 @@ function results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,tim
 %                       'patlak' = two parameter model with no backflux
 %                       'tissue_uptake' = three parameter assumes cp>>ct
 %                       '2cxm' = two compartment exchange model
+%                       'fxl_RR' = Fast exchange limit tofts with Reference
+%                       region'
 %  time_smoothing     - type of time smoothing
 %                       'none' = no smoothing
 %                       'moving' = moving average
@@ -100,6 +102,10 @@ if quant
     if dce_model.two_cxm
         dce_model_string{end+1} = 'Two Compartment Exchange';
         dce_model_list{end+1} = '2cxm';
+    end
+    if dce_model.FXL_rr
+        dce_model_string{end+1} = 'FXL Reference Region';
+        dce_model_list{end+1} = 'FXL_rr';
     end
 end
 if dce_model.fractal
@@ -674,6 +680,11 @@ for model_index=1:numel(dce_model_list)
         headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Residual', 'Ktrans 95% low', ...
             'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high'};
         paramname = {'Ktrans'; 've'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
+        
+    elseif strcmp(cur_dce_model, 'FXL_rr')
+        headings = {'ROI path', 'ROI', 'Ktrans_TOI', 'Ve','Ktrans_RR','Residual', 'Ktrans_TOI 95% low', ...
+            'Ktrans_TOI 95% high', 'Ve 95% low', 'Ve 95% high','Ktrans_RR 95% low','Ktrans_RR 95% high'};
+        paramname = {'Ktrans_TOI'; 've'; 'Ktrans_RR'; 'residual'; 'ktransTOI_ci_low'; 'ktransTOI_ci_high'; 've_ci_low';'ve_ci_high'; 'ktransRR_ci_low'; 'ktransRR_ci_high'};
     elseif strcmp(cur_dce_model, '2cxm')
         headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Fp','Residual', 'Ktrans 95% low', ...
             'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high','Fp 95% low','Fp 95% high'};

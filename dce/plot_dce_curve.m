@@ -6,7 +6,7 @@ if strcmp(plot_data.model_name,'aif') || strcmp(plot_data.model_name,'tofts')
     fit_curve = model_tofts_cfit(fit_parameters(1),fit_parameters(2),plot_data.Cp,plot_data.timer);
     fit_curve_low = model_tofts_cfit(fit_parameters(4),fit_parameters(6),plot_data.Cp,plot_data.timer);
     fit_curve_high = model_tofts_cfit(fit_parameters(5),fit_parameters(7),plot_data.Cp,plot_data.timer);
-elseif strcmp(plot_data.model_name,'aif_vp') || strcmp(plot_data.model_name,'ex_tofts')
+elseif strcmp(plot_data.model_name,'aif_vp') || strcmp(plot_data.model_name,'ex_tofts') || strcmp(plot_data.model_name,'FXL_rr')
     fit_curve = model_extended_tofts_cfit(fit_parameters(1),fit_parameters(2),fit_parameters(3),plot_data.Cp,plot_data.timer);
     fit_curve_low = model_extended_tofts_cfit(fit_parameters(5),fit_parameters(7),fit_parameters(9),plot_data.Cp,plot_data.timer);
     fit_curve_high = model_extended_tofts_cfit(fit_parameters(6),fit_parameters(8),fit_parameters(10),plot_data.Cp,plot_data.timer);

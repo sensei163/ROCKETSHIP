@@ -85,6 +85,7 @@ parse_preference_file('dce_preferences.txt',1,...
     'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals' ...
     'voxel_lower_limit_tau' 'voxel_upper_limit_tau' 'voxel_initial_value_tau' ...
     'voxel_Robust' 'fxr_fw' 'autoaif_r_square_threshold' 'autoaif_end_signal_threshold' ...
+    'voxel_lower_limit_ktrans_RR' 'voxel_upper_limit_ktrans_RR' 'voxel_initial_value_ktrans_RR' 'voxel_value_ve_RR' ...
     'autoaif_sobel_threshold' 'use_matlabpool' });
 % Create structure to hold roi list
 handles.roi_list = {};
@@ -304,6 +305,7 @@ dce_model.nested = get(handles.nested, 'Value');
 dce_model.patlak = get(handles.patlak, 'Value');
 dce_model.tissue_uptake = get(handles.tissue_uptake, 'Value');
 dce_model.two_cxm = get(handles.two_cxm, 'Value');
+dce_model.FXL_rr = get(handles.FXL_rr, 'Value');
 
 time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
 time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
@@ -337,6 +339,7 @@ dce_model.nested = get(handles.nested, 'Value');
 dce_model.patlak = get(handles.patlak, 'Value');
 dce_model.tissue_uptake = get(handles.tissue_uptake, 'Value');
 dce_model.two_cxm = get(handles.two_cxm, 'Value');
+dce_model.FXL_rr = get(handles.FXL_rr, 'Value');
 
 time_smoothing = get(get(handles.time_smoothing,'SelectedObject'),'Tag');
 time_smoothing_window = str2num(get(handles.time_smoothing_window, 'String')); %#ok<ST2NM>
