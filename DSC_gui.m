@@ -22,7 +22,7 @@ function varargout = DSC_gui(varargin)
 
 % Edit the above text to modify the response to help DSC_gui
 
-% Last Modified by GUIDE v2.5 15-Feb-2018 12:17:31
+% Last Modified by GUIDE v2.5 27-Feb-2018 14:17:30
 
 % REVISION HISTORY: 
 % 04/26/2015:AIF and NOISE handling optins have been added.  
@@ -74,6 +74,8 @@ handles.output = hObject;
 %ADDITIONAL BOXES IN THE OUTPUT STRUCTURE: 
 handles.dsc_image = []; 
 handles.AIF_roi = [];
+handles.import_aif = [];
+handles.import_store = [];
 handles.noise_roi = []; 
 handles.TE = [];
 handles.TR = []; 
@@ -301,11 +303,7 @@ function AIF_path_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
  
-
-
-
 % --- Executes on button press in add_AIF_roi.
 function add_AIF_roi_Callback(hObject, eventdata, handles)
 % hObject    handle to add_AIF_roi (see GCBO)
@@ -347,6 +345,77 @@ end
 guidata(hObject, handles);
 
 
+function import_path_Callback(hObject, eventdata, handles)
+% hObject    handle to import_path (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of import_path as text
+%        str2double(get(hObject,'String')) returns contents of import_path as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function import_path_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to import_path (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in add_import_aif.
+function add_import_aif_Callback(hObject, eventdata, handles)
+% hObject    handle to add_import_aif (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+[filename, pathname, filterspec] = uigetfile('*.nii','Nifti Files (*.nii)'); 
+
+if isequal(filename,0)
+    %disp('User selected Cancel')
+    fullpath = '';
+else
+    %disp(['User selected ', fullfile(pathname, filename)])
+    
+    % Combine path and filename together
+    fullpath = strcat(pathname,filename);
+    path_out = fullpath; 
+    
+    if ischar(fullpath)
+        fullpath = {fullpath};
+    end
+    % if isempty(list)
+    %     list = {''};
+    % end
+    
+    %filename = filename';
+    fullpath = fullpath';
+    
+    if numel(fullpath) > 1
+        visualpath = [fullpath{1} ' -> ' num2str(numel(fullpath)) ' files'];
+    else
+        visualpath = fullpath{1};
+    end
+    
+    set(handles.import_path,'String',visualpath);
+    handles.AIF_roi = path_out; 
+   
+end
+guidata(hObject, handles);
+
+% --- Executes on button press in Import_stored.
+function Import_stored_Callback(hObject, eventdata, handles)
+% hObject    handle to Import_stored (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of Import_stored
+[filename, pathname, filterspec] = uigetfile('*.nii','Nifti Files (*.nii)'); 
+guidata(hObject, handles);
+
 function dsc_image_path_Callback(hObject, eventdata, handles)
 % hObject    handle to dsc_image_path (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -367,10 +436,6 @@ function dsc_image_path_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
-
-
 
 % --- Executes when selected object is changed in species_selection.
 function species_selection_SelectionChangeFcn(hObject, eventdata, handles)
@@ -456,7 +521,7 @@ end
 %getting the path from the image file: 
 [ ~ , image_path] = fileparts(handles.dsc_image); 
 
-[concentration_array, base_concentration_array, time_vect, base_time_vect, bolus_time] = DSC_signal2concentration(image_array,TE,TR,r2_star,species,image_path,noise_type, ...
+[concentration_array, base_concentration_array, time_vect, base_time_vect] = DSC_signal2concentration(image_array,TE,TR,r2_star,species,image_path,noise_type, ...
    roi_array ); 
 if AIF_type == 0 
     [meanAIF, meanSignal] = AIF_auto_cluster(concentration_array, image_array, time_vect, TR,species); 
@@ -464,30 +529,15 @@ elseif AIF_type ==1
     AIF_mask = load_nii(handles.AIF_roi); 
     AIF_mask = AIF_mask.img; 
     [meanAIF, meanSignal] = AIF_manual(image_array,concentration_array,AIF_mask);
-elseif AIF_type ==2 %AIF_import file saved as a handles.import_AIF
-    load('previous_meanAIF_signalIntensity_bolusTime.mat');
-    [meanAIF_adjusted, time_vect, concentration_array] = previous_AIF(meanAIF,meanSignal,bolus_time, time_vect,concentration_array);
-    meanAIF = meanAIF_adjusted;
-    
-    display('time_vect_num')
-    numel(time_vect)
-    display('meanAIF_num')
-    numel(meanAIF)
-    
-    %adjust lenth of concentration array to reflect the period for which
-    %we have an AIF 
-    
-    %{
-    AIF_mask = load_nii(handles.AIF_roi);
+elseif AIF_type==2
+    [meanAIF, meanSignal] = AIF_import(image_array,concentration_array,AIF_mask);
+    AIF_mask = load_nii(handles.import_aif1); 
+    AIF_mask = AIF_mask.img; 
+else AIF_type==3
+    [meanAIF, meanSignal] = import_store(image_array,concentration_array,AIF_mask);
+    AIF_mask = load_nii(handles.import_stored); 
     AIF_mask = AIF_mask.img;
-    [meanAIF, meanSignal] = AIF_import(AIF_mask);
-    %}
-end 
-
-%save this runs meanAIF, bolus time, and importedAIF
-
-save('previous_meanAIF_signalIntensity_bolusTime.mat', 'meanAIF','meanSignal','bolus_time');
-
+end
 % Now we fit the AIF with a SCR model: 
 
 %assigning the gamma variate function, gfun, to be our desired fitting
@@ -534,8 +584,7 @@ options = fitoptions('Method', 'NonlinearLeastSquares',...
     'StartPoint', prefs.aif_initial_values);
 
 %Performing the fit: 
-time = time_vect;
-
+time = time_vect;   
 clear fit; 
 %[fit_out] = fit(time,meanAIF,ft,'Lower', [3 1.5 0 0.01 ],'Upper', [ 100 10 0.05 0.1 ], 'StartPoint', [ 5 1.8 0.01 0.05]); 
 [fit_out] = fit(time,meanAIF,ft,options);
@@ -555,25 +604,22 @@ kappa = 0.04;   % a constant.
 %Plug them into the modeling equation: 
 gt = gfun(t0,tmax,ymax,alpha,time);
 Ct = zeros(numel(gt),1); 
-
 for i = 1 : numel(gt) 
     Ct(i) = gt(i) + kappa * trapz(time(1:i), gt(1:i),1); 
 end 
 
 figure; 
 time_vect_sec = time_vect * 60; %get time in seconds to plot
-time_vect_sec = time_vect_sec + (bolus_time);
-%base_time_vect_sec = base_time_vect * 60;
+base_time_vect_sec = base_time_vect * 60;
 plot(time_vect_sec,Ct,'g'); 
 hold on; 
 plot(time_vect_sec,meanAIF, 'm');
-title('AIF and Fitted AIF Over time');
+title('AIF and Ct Over time');
 xlabel('Time (s)');                                                                             
 ylabel('Concentration (mM)');
-legend('AIF', 'Fitted AIF');
 hold off; 
 
-%plot the mean AIF signal
+%Now we are going to perform the deconvolution and quantify CBF,CBV, and MTT
 figure; 
 time_vect_sec2 = 0 : length(meanSignal) -1; 
 time_vect_sec2 = time_vect_sec2 * TR;
@@ -718,8 +764,14 @@ function user_aif_CreateFcn(hObject, eventdata, handles)
 
 
 % --- Executes during object creation, after setting all properties.
-function import_aif_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to import_aif (see GCBO)
+function import_aif1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to import_aif1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% --- Executes during object creation, after setting all properties.
+function Import_stored_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Import_stored (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -734,31 +786,80 @@ function aif_selection_SelectionChangeFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.auto_cluster,'Value',1); 
 set(handles.user_aif,'Value',0); 
-set(handles.import_aif,'Value',0); 
+set(handles.import_aif1,'Value',0); 
 set(handles.add_AIF_roi,'enable', 'off'); 
+set(handles.add_import_aif,'enable', 'off');
 set(handles.AIF_path,'enable', 'off'); 
+set(handles.import_path,'enable', 'off');
+set(handles.import_store,'Value',0);
 
 switch get(eventdata.NewValue,'Tag') % Get Tag of selected object.
     case 'auto_cluster'
         handles.AIF_type =  0; 
         set(handles.add_AIF_roi,'enable', 'off'); 
         set(handles.AIF_path,'enable', 'off'); 
+        set(handles.import_store,'enable', 'off');
         set(handles.auto_cluster,'Value',1); 
         set(handles.user_aif,'Value',0);
-        set(handles.import_aif,'Value',0); 
+        set(handles.import_aif1,'Value',0); 
+        set(handles.add_import_aif,'enable', 'off');
+        set(handles.import_path,'enable', 'off');
+        set(handles.import_store,'Value',0);
     case 'user_aif'
        handles.AIF_type = 1; 
        set(handles.add_AIF_roi,'enable', 'on'); 
        set(handles.AIF_path,'enable', 'on');
        set(handles.auto_cluster,'Value',0); 
        set(handles.user_aif,'Value',1);
-       set(handles.import_aif,'Value',0); 
-    case 'import_aif'
+       set(handles.import_aif1,'Value',0);
+       set(handles.add_import_aif,'enable', 'off');
+       set(handles.import_path,'enable', 'off');
+       set(handles.import_store,'Value',0);
+       set(handles.import_store,'enable', 'off');
+    case 'import_aif1'
        handles.AIF_type = 2; 
        set(handles.add_AIF_roi,'enable', 'off'); 
        set(handles.AIF_path,'enable', 'off');
-       set(handles.import_aif,'Value',1); 
+       set(handles.import_store,'enable', 'off');
+       set(handles.import_aif1,'Value',1);
+       set(handles.import_path,'enable', 'on');
+       set(handles.add_import_aif,'enable', 'on');
+       set(handles.auto_cluster,'Value',0); 
+       set(handles.user_aif,'Value',0);
+        set(handles.import_store,'Value',0);
+    case 'import_stored'
+       handles.AIF_type = 3; 
+       set(handles.add_AIF_roi,'enable', 'off'); 
+       set(handles.AIF_path,'enable', 'off');
+       set(handles.import_store,'enable', 'on');
+       set(handles.import_aif1,'Value',0);
+       set(handles.import_store,'Value',1);
+       set(handles.import_path,'enable', 'off');
+       set(handles.add_import_aif,'enable', 'off');
        set(handles.auto_cluster,'Value',0); 
        set(handles.user_aif,'Value',0); 
 end
 guidata(hObject, handles);
+
+
+% --- Executes on button press in Drift.
+function Drift_Callback(hObject, eventdata, handles)
+% hObject    handle to Drift (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of Drift
+
+
+% --- Executes during object creation, after setting all properties.
+function Drift_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Drift (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes on button press in Restart.
+function Restart_Callback(hObject, eventdata, handles)
+% hObject    handle to Restart (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
