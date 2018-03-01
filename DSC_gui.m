@@ -625,16 +625,18 @@ end
 
 figure; 
 time_vect_sec = time_vect * 60; %get time in seconds to plot
-base_time_vect_sec = base_time_vect * 60;
+time_vect_sec = time_vect_sec + (bolus_time);
+%base_time_vect_sec = base_time_vect * 60;
 plot(time_vect_sec,Ct,'g'); 
 hold on; 
 plot(time_vect_sec,meanAIF, 'm');
-title('AIF and Ct Over time');
+title('AIF and Fitted AIF Over time');
 xlabel('Time (s)');                                                                             
 ylabel('Concentration (mM)');
+legend('AIF', 'Fitted AIF');
 hold off; 
 
-%Now we are going to perform the deconvolution and quantify CBF,CBV, and MTT
+%plot the mean AIF signal
 figure; 
 time_vect_sec2 = 0 : length(meanSignal) -1; 
 time_vect_sec2 = time_vect_sec2 * TR;
