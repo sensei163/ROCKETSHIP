@@ -521,23 +521,37 @@ end
 %getting the path from the image file: 
 [ ~ , image_path] = fileparts(handles.dsc_image); 
 
-[concentration_array, base_concentration_array, time_vect, base_time_vect] = DSC_signal2concentration(image_array,TE,TR,r2_star,species,image_path,noise_type, ...
+[concentration_array, base_concentration_array, time_vect, base_time_vect, bolus_time] = DSC_signal2concentration(image_array,TE,TR,r2_star,species,image_path,noise_type, ...
    roi_array ); 
-if AIF_type == 0 
+if AIF_type == 0 %AIF Auto
     [meanAIF, meanSignal] = AIF_auto_cluster(concentration_array, image_array, time_vect, TR,species); 
-elseif AIF_type ==1 
+elseif AIF_type ==1 %AIF User Selected
     AIF_mask = load_nii(handles.AIF_roi); 
     AIF_mask = AIF_mask.img; 
     [meanAIF, meanSignal] = AIF_manual(image_array,concentration_array,AIF_mask);
-elseif AIF_type==2
-    [meanAIF, meanSignal] = AIF_import(image_array,concentration_array,AIF_mask);
-    AIF_mask = load_nii(handles.import_aif1); 
-    AIF_mask = AIF_mask.img; 
-else AIF_type==3
-    [meanAIF, meanSignal] = import_store(image_array,concentration_array,AIF_mask);
-    AIF_mask = load_nii(handles.import_stored); 
-    AIF_mask = AIF_mask.img;
+elseif AIF_type==2 %AIF Import
+    load(handles.import_AIF)
+    [meanAIF_adjusted, time_vect, concentration_array] = import_AIF(meanAIF, meanSignal, bolus_time, time_vect, concentration_array);
+    meanAIF = meanAIF_adjusted;
+    
+    display('time_vect_num')
+    numel(time_vect)
+    display('meanAIF_num')
+    numel(meanAIF)
+else AIF_type==3 %AIF Use Previous
+    load('previous_meanAIF_signalIntensity_bolusTime.mat');
+    [meanAIF_adjusted, time_vect, concentration_array] = previous_AIF(meanAIF,meanSignal,bolus_time, time_vect,concentration_array);
+    meanAIF = meanAIF_adjusted;
+    
+    display('time_vect_num')
+    numel(time_vect)
+    display('meanAIF_num')
+    numel(meanAIF)
 end
+
+%save this runs meanAIF, bolus time, and importedAIF
+save('previous_meanAIF_signalIntensity_bolusTime.mat', 'meanAIF','meanSignal','bolus_time');
+
 % Now we fit the AIF with a SCR model: 
 
 %assigning the gamma variate function, gfun, to be our desired fitting
@@ -585,6 +599,7 @@ options = fitoptions('Method', 'NonlinearLeastSquares',...
 
 %Performing the fit: 
 time = time_vect;   
+
 clear fit; 
 %[fit_out] = fit(time,meanAIF,ft,'Lower', [3 1.5 0 0.01 ],'Upper', [ 100 10 0.05 0.1 ], 'StartPoint', [ 5 1.8 0.01 0.05]); 
 [fit_out] = fit(time,meanAIF,ft,options);
