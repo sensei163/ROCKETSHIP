@@ -521,14 +521,16 @@ end
 %getting the path from the image file: 
 [ ~ , image_path] = fileparts(handles.dsc_image); 
 
-[concentration_array, base_concentration_array, time_vect, base_time_vect, bolus_time] = DSC_signal2concentration(image_array,TE,TR,r2_star,species,image_path,noise_type, ...
+[concentration_array, base_concentration_array, time_vect, base_time_vect,whole_time_vect, bolus_time] = DSC_signal2concentration(image_array,TE,TR,r2_star,species,image_path,noise_type, ...
    roi_array ); 
 if AIF_type == 0 %AIF Auto
-    [meanAIF, meanSignal] = AIF_auto_cluster(concentration_array, image_array, time_vect, TR,species); 
+    [meanAIF, meanSignal] = AIF_auto_cluster(concentration_array, image_array, time_vect, TR,species);
+    baseline = 0; %develop a way to calculate the baseline from the auto clustered AIF
 elseif AIF_type ==1 %AIF User Selected
     AIF_mask = load_nii(handles.AIF_roi); 
     AIF_mask = AIF_mask.img; 
-    [meanAIF, meanSignal] = AIF_manual(image_array,concentration_array,AIF_mask);
+    [meanAIF, meanSignal, baseline] = AIF_manual(image_array,concentration_array,AIF_mask, base_time_vect,base_concentration_array);
+
 elseif AIF_type==2 %AIF Import
     load(handles.import_AIF)
     [meanAIF_adjusted, time_vect, concentration_array] = import_AIF(meanAIF, meanSignal, bolus_time, time_vect, concentration_array);
@@ -538,8 +540,8 @@ elseif AIF_type==2 %AIF Import
     numel(time_vect)
     display('meanAIF_num')
     numel(meanAIF)
-else AIF_type==3 %AIF Use Previous
-    load('previous_meanAIF_signalIntensity_bolusTime.mat');
+elseif AIF_type==3 %AIF Use Previous
+    load('previous_data.mat');
     [meanAIF_adjusted, time_vect, concentration_array] = previous_AIF(meanAIF,meanSignal,bolus_time, time_vect,concentration_array);
     meanAIF = meanAIF_adjusted;
     
@@ -550,78 +552,14 @@ else AIF_type==3 %AIF Use Previous
 end
 
 %save this runs meanAIF, bolus time, and importedAIF
-save('previous_meanAIF_signalIntensity_bolusTime.mat', 'meanAIF','meanSignal','bolus_time');
+save('previous_data.mat', 'meanAIF','meanSignal','bolus_time','baseline');
 
 % Now we fit the AIF with a SCR model: 
 
 %assigning the gamma variate function, gfun, to be our desired fitting
 %function: 
 
-ft = fittype('gfun(t0,tmax,ymax,alpha,time)', 'independent', {'time'},'coefficients', {'ymax', 'alpha','t0','tmax'}); 
-
-%obtain fitting parameters: We have two different files, one human, one mouse 
-%conditional below specifies this: 
-
-if strcmp(species,'mouse')
-prefs = parse_preference_file('mouse_AIF_fit_prefs.txt',1,...
-    {'aif_lower_limits' 'aif_upper_limits' 'aif_initial_values' ...
-     'aif_TolX' 'aif_MaxIter' 'aif_MaxFunEvals' 'aif_Robust' 'aif_TolFun'});
-    prefs.aif_lower_limits = str2num(prefs.aif_lower_limits); 
-    prefs.aif_upper_limits = str2num(prefs.aif_upper_limits);
-    prefs.aif_initial_values = str2num(prefs.aif_initial_values); 
-    prefs.aif_TolX = str2num(prefs.aif_TolX); 
-    prefs.aif_MaxIter = str2num(prefs.aif_MaxIter);
-    prefs.aif_MaxFunEvals = str2num(prefs.aif_MaxFunEvals); 
-    prefs.aif_TolFun = str2num(prefs.aif_TolFun); 
-elseif strcmp(species,'human')
-    prefs = parse_preference_file('human_AIF_fit_prefs.txt',1,...
-    {'aif_lower_limits' 'aif_upper_limits' 'aif_initial_values' ...
-     'aif_TolX' 'aif_MaxIter' 'aif_MaxFunEvals' 'aif_Robust' 'aif_TolFun'});
-    prefs.aif_lower_limits = str2num(prefs.aif_lower_limits); 
-    prefs.aif_upper_limits = str2num(prefs.aif_upper_limits);
-    prefs.aif_initial_values = str2num(prefs.aif_initial_values); 
-    prefs.aif_TolX = str2num(prefs.aif_TolX); 
-    prefs.aif_MaxIter = str2num(prefs.aif_MaxIter);
-    prefs.aif_MaxFunEvals = str2num(prefs.aif_MaxFunEvals); 
-    prefs.aif_TolFun = str2num(prefs.aif_TolFun); 
-end
-
-% collecting the fit paramters into an options structure: 
-options = fitoptions('Method', 'NonlinearLeastSquares',...
-    'MaxIter', prefs.aif_MaxIter,...
-    'MaxFunEvals', prefs.aif_MaxFunEvals,...
-    'TolFun', prefs.aif_TolFun,...
-    'TolX', prefs.aif_TolX,...
-    'Display', 'off',...
-    'Lower', prefs.aif_lower_limits, ...
-    'Upper', prefs.aif_upper_limits,...
-    'StartPoint', prefs.aif_initial_values);
-
-%Performing the fit: 
-time = time_vect;   
-
-clear fit; 
-%[fit_out] = fit(time,meanAIF,ft,'Lower', [3 1.5 0 0.01 ],'Upper', [ 100 10 0.05 0.1 ], 'StartPoint', [ 5 1.8 0.01 0.05]); 
-[fit_out] = fit(time,meanAIF,ft,options);
-% plot(fit_out); 
-% hold on; 
-% plot(time,meanAIF);
-% hold off; 
-
-% Now we pull out the coefficients from the fitted model and generate a
-% generate the curve: 
-ymax = fit_out.ymax; 
-alpha= fit_out.alpha; 
-t0 = fit_out.t0; 
-tmax = fit_out.tmax; 
-kappa = 0.04;   % a constant.  
-
-%Plug them into the modeling equation: 
-gt = gfun(t0,tmax,ymax,alpha,time);
-Ct = zeros(numel(gt),1); 
-for i = 1 : numel(gt) 
-    Ct(i) = gt(i) + kappa * trapz(time(1:i), gt(1:i),1); 
-end 
+Ct = fitting_gamma_variant(meanAIF,species, time_vect);
 
 figure; 
 time_vect_sec = time_vect * 60; %get time in seconds to plot
@@ -633,7 +571,7 @@ plot(time_vect_sec,meanAIF, 'm');
 title('AIF and Fitted AIF Over time');
 xlabel('Time (s)');                                                                             
 ylabel('Concentration (mM)');
-legend('AIF', 'Fitted AIF');
+legend('Fitted AIF', 'Raw AIF');
 hold off; 
 
 %plot the mean AIF signal

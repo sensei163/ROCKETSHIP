@@ -1,4 +1,4 @@
-function [ concentration_array,base_concentration_array, time_vect, base_time_vect, bolus_time] = DSC_signal2concentration(image_array,TE,TR,r2_star,species,path,noise_type,noise_array)
+function [ concentration_array,base_concentration_array, time_vect, base_time_vect, whole_time_vect, bolus_time] = DSC_signal2concentration(image_array,TE,TR,r2_star,species,path,noise_type,noise_array)
 % FUNCTION PURPOSE: To convert signal values to units of concentration, mM.
 % 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%INPUTS%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -263,8 +263,11 @@ concentration_array(isnan(concentration_array)) = 0;
 time_vect = 0 : TR : (dimt-bolus_time-1) * TR; 
 time_vect = (time_vect ./ 60)';     % transpose and put in terms of minutes.  
 %time_vect_plot = 0 : TR : (dimt-1) * TR;
-base_time_vect = 0: TR : (bolus_time - 1) * TR;
-base_time_vect = (time_vect ./ 60)';
+base_time_vect = 0: TR : (bolus_time - 1) * TR; %
+base_time_vect = (base_time_vect ./ 60)'; %transpose and put in terms of minutes
+
+whole_time_vect = 0: TR : (dimt - 1) *TR;
+whole_time_vect = (whole_time_vect ./ 60)';
 
 %Lastly, save the concentration array as nifti image file 
 
