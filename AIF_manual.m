@@ -1,4 +1,4 @@
-function [meanAIF,meanSignal, baseline] = AIF_manual(image_array,concentration_array, AIF_mask, base_time_vect, base_concentration_array) 
+function [meanAIF,meanSignal, baseline, baseline_array] = AIF_manual(image_array,concentration_array, AIF_mask, base_time_vect, base_concentration_array) 
 
 % AIF_MANUAL is a function that computes the AIF of a user selected region
 % of the image. This is done for one slice, with the remainder of the image
@@ -69,7 +69,6 @@ if reshaped %the 3D case
     base_indices = find(AIF_mask(:,:,1)>0);
     base_concentration_time_courses = zeros(numel(base_indices),numel(base_time_vect));
     for i = 1 : numel(base_time_vect)
-        
         base_concentration_current = base_concentration_array(:,:,i);
         base_concentration_time_courses(:,i) = base_concentration_current(base_indices);
         
@@ -105,6 +104,7 @@ meanAIF = meanAIF';     % Transpose for subsequent operations.
 meanSignal = mean(image_time_courses,1);
 meanSignal = meanSignal';
 
+baseline_array = mean(base_concentration_time_courses)';
 baseline = mean(mean(base_concentration_time_courses));
 
 %   END OF FUNCTION 

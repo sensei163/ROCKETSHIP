@@ -529,7 +529,7 @@ if AIF_type == 0 %AIF Auto
 elseif AIF_type ==1 %AIF User Selected
     AIF_mask = load_nii(handles.AIF_roi); 
     AIF_mask = AIF_mask.img; 
-    [meanAIF, meanSignal, baseline] = AIF_manual(image_array,concentration_array,AIF_mask, base_time_vect,base_concentration_array);
+    [meanAIF, meanSignal, baseline,baseline_array] = AIF_manual(image_array,concentration_array,AIF_mask, base_time_vect,base_concentration_array);
 
 elseif AIF_type==2 %AIF Import
     load(handles.import_AIF)
@@ -559,7 +559,21 @@ save('previous_data.mat', 'meanAIF','meanSignal','bolus_time','baseline');
 %assigning the gamma variate function, gfun, to be our desired fitting
 %function: 
 
-Ct = fitting_gamma_variant(meanAIF,species, time_vect);
+%Ct = fitting_gamma_variant(meanAIF,species, time_vect);
+
+
+%biexpcon function
+Cp = cat(1,baseline_array,meanAIF);
+step = [bolus_time (bolus_time + numel(time_vect))];
+T1 = whole_time_vect;
+xdata = struct('Cp',Cp,'baseline', baseline, 'timer', T1, 'step', step, 'bolus_time', bolus_time);
+verbose = -1; %this prevents any internal verbose function from running, but i should 
+%check this with the Sameul Barnes
+
+[Cp, x, xdata, rsqurare] = AIFbiexpfithelplocal(xdata,verbose);
+Ct = Cp;
+Ct(1:bolus_time) = [];
+
 
 figure; 
 time_vect_sec = time_vect * 60; %get time in seconds to plot
