@@ -14,8 +14,8 @@ step = xdata.step;
 bolus_time = xdata.bolus_time;
 Cp_old = xdata.Cp;
 
-OUT = find(step > 0);
-max_index = OUT(end);
+OUT = find(step > 0); %step is 1' from the bolus injection index to the max index and zeros elswhere
+max_index = OUT(end); %selects the max index (in relation to the timer vector)
 
 
 
@@ -34,17 +34,37 @@ end
 %find the index of the maxiumum value to control linear increase of the
 %fitting function 
 %[max_value, max_index] = max(Cp_old);
+
+%uses time values for the fit
+%{
 for j = 1:numel(T1)
     % Baseline
-    if(j< bolus_time)
+    if(j < bolus_time )
         Cp(j) = baseline;
     % Linear upslope to max
-    elseif(j< (max_index))
+    elseif(j < (max_index))
         Cp(j) = baseline + (A-baseline).*((T1(j)-T1(bolus_time))./(T1((max_index))-T1(bolus_time))) + (B-baseline).*((T1(j)-T1(bolus_time))./(T1((max_index))-T1(bolus_time)));
     % Bi-Exponential Decay    
     else
         Cp(j) = A.*(exp(-c.*(T1(j) - T1((max_index))))) + B.*(exp(-d.*(T1(j) - T1((max_index)))));
     end
 end
+%}
+
+
+%uses index values for the fit
+for j = 1:numel(T1)
+    % Baseline
+    if(j < bolus_time )
+        Cp(j) = baseline;
+    % Linear upslope to max
+    elseif(j <= (max_index))
+        Cp(j) = baseline + (A-baseline).*(j-bolus_time)./(max_index-bolus_time) + (B-baseline).*(j-bolus_time)./(max_index-bolus_time);
+    % Bi-Exponential Decay    
+    else
+        Cp(j) = A.*(exp(-c.*(j - max_index))) + B.*(exp(-d.*(j - max_index)));
+    end
+end
+
 end
 

@@ -1,4 +1,4 @@
-function Cp = AIFbiexpcon( x, xdata )
+function Cp = AIFbiexpconlocal6( x, xdata )
 %% AIFbiexpconvolve Cp
 
 %% This models the AIF as a biexponential function convolved with a
@@ -7,6 +7,8 @@ A = x(1);
 B = x(2);
 c = x(3);
 d = x(4);
+e = x(5);
+f = x(6);
 
 baseline = xdata.baseline;
 T1 = xdata.timer;
@@ -14,8 +16,8 @@ step = xdata.step;
 bolus_time = xdata.bolus_time;
 Cp_old = xdata.Cp;
 
-OUT = find(step > 0);
-max_index = OUT(end);
+OUT = find(step > 0); %step is 1' from the bolus injection index to the max index and zeros elswhere
+max_index = OUT(end); %selects the max index (in relation to the timer vector)
 
 
 
@@ -36,14 +38,14 @@ end
 %[max_value, max_index] = max(Cp_old);
 for j = 1:numel(T1)
     % Baseline
-    if(j< bolus_time)
+    if(j < bolus_time)
         Cp(j) = baseline;
     % Linear upslope to max
-    elseif(j <= (max_index))
-        Cp(j) = baseline + (A-baseline).*(j-bolus_time)./(max_index-bolus_time) + (B-baseline).*(j-bolus_time)./(max_index-bolus_time);
+    elseif(j < (max_index))
+        Cp(j) = baseline + (A-baseline).*((T1(j)-T1(bolus_time))./(T1((max_index))-T1(bolus_time))) + (B-baseline).*((T1(j)-T1(bolus_time))./(T1((max_index))-T1(bolus_time)));
     % Bi-Exponential Decay    
     else
-        Cp(j) = A.*(exp(-c.*(j - max_index))) + B.*(exp(-d.*(j - max_index)));
+        Cp(j) = Cp_old(max_index) + c.*(exp(-e.*(T1(j) - T1((max_index))))) + d.*(exp(-f.*(T1(j) - T1((max_index)))));
     end
 end
 end

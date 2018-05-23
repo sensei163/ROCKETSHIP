@@ -1,4 +1,4 @@
-function Cp = AIFbiexpcon( x, xdata )
+function Cp = Forced_linear_AIFbiexpconlocal( x, xdata )
 %% AIFbiexpconvolve Cp
 
 %% This models the AIF as a biexponential function convolved with a
@@ -14,8 +14,8 @@ step = xdata.step;
 bolus_time = xdata.bolus_time;
 Cp_old = xdata.Cp;
 
-OUT = find(step > 0);
-max_index = OUT(end);
+OUT = find(step > 0); %step is 1' from the bolus injection index to the max index and zeros elswhere
+max_index = OUT(end); %selects the max index (in relation to the timer vector)
 
 
 
@@ -36,11 +36,15 @@ end
 %[max_value, max_index] = max(Cp_old);
 for j = 1:numel(T1)
     % Baseline
-    if(j< bolus_time)
+    if(j < bolus_time )
         Cp(j) = baseline;
+    %keep baseline point the same
+    elseif (j == bolus_time)
+        Cp(j) = Cp_old(bolus_time);
     % Linear upslope to max
     elseif(j <= (max_index))
-        Cp(j) = baseline + (A-baseline).*(j-bolus_time)./(max_index-bolus_time) + (B-baseline).*(j-bolus_time)./(max_index-bolus_time);
+        Cp(j) = (Cp_old(max_index) - Cp_old(bolus_time + 1))/(max_index - (bolus_time + 1))* ...
+            (j - (bolus_time + 1)) + Cp_old(bolus_time + 1);
     % Bi-Exponential Decay    
     else
         Cp(j) = A.*(exp(-c.*(j - max_index))) + B.*(exp(-d.*(j - max_index)));

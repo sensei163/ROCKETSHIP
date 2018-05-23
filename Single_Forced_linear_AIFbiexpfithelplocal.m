@@ -15,7 +15,7 @@ x data structure that holds the fitted unknowns
 verbose should be able to cut out as it is for testing purposes
 %}
 
-function [Cp, x, xdata, rsquare] = AIFbiexpfithelp(xdata, verbose)
+function [Cp, x, xdata, rsquare] = Single_Forced_linear_AIFbiexpfithelplocal(xdata, verbose)
 
 warning off
 
@@ -109,7 +109,17 @@ xdata.step = step;
 %W is the weighting matrix, should you want to emphasise certain
 % datapoints
 W = ones(size(Cp));
-[~, max_index] = max(Cp); %changed from [~,max_index] = max(Cp.*step);
+
+%calculate the most likely first peak by finding the first local maxima
+%that is within 3% of the max value of the whole data set
+[local_maxima, maxima_indexes] = findpeaks(Cp);
+maxima_iterator = 1;
+while(local_maxima(maxima_iterator) < (0.97 * max(local_maxima)))
+    maxima_iterator = maxima_iterator + 1;
+end
+
+max_index = maxima_indexes(maxima_iterator);
+
 % WW= sort(Cp.*step, 'descend');
 % ind(1) = find(Cp == WW(1));
 % ind(2) = find(Cp == WW(2));
@@ -156,6 +166,8 @@ upper_limits(1) = maxer*2;
 upper_limits(2) = maxer*2;
 initial_values(1) = maxer*0.5;
 initial_values(2) = maxer*0.5;
+initial_values(3) = 1; 
+initial_values(4) = 1; 
 if verbose>0
     disp('Fitting raw values, limits and initial values adjusted');
     fprintf('lower_limits = %s\n',num2str(lower_limits));
@@ -165,7 +177,7 @@ end
 
 
 % Currently, we use AIF
-[x,resnorm,residual,exitflag,output,lambda,jacobian] = lsqcurvefit(@AIFbiexpcon, ...
+[x,resnorm,residual,exitflag,output,lambda,jacobian] = lsqcurvefit(@Single_Forced_linear_AIFbiexpconlocal, ...
     initial_values, xdata, ...
     Cp',lower_limits,upper_limits,options);
 
@@ -175,7 +187,7 @@ if verbose>0
     disp(['R^2 of AIF fit = ' num2str(rsquare)]);
 end
 
-Cp = AIFbiexpcon(x, xdata);
+Cp = Single_Forced_linear_AIFbiexpconlocal(x, xdata);
 
 
 

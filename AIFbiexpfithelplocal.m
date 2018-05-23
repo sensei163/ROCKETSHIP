@@ -111,10 +111,10 @@ xdata.step = step;
 W = ones(size(Cp));
 
 %calculate the most likely first peak by finding the first local maxima
-%that is within 10% of the max value of the whole data set
+%that is within 3% of the max value of the whole data set
 [local_maxima, maxima_indexes] = findpeaks(Cp);
 maxima_iterator = 1;
-while(local_maxima(maxima_iterator) < (0.90 * max(local_maxima)))
+while(local_maxima(maxima_iterator) < (0.97 * max(local_maxima)))
     maxima_iterator = maxima_iterator + 1;
 end
 
@@ -166,6 +166,8 @@ upper_limits(1) = maxer*2;
 upper_limits(2) = maxer*2;
 initial_values(1) = maxer*0.5;
 initial_values(2) = maxer*0.5;
+initial_values(3) = 1; 
+initial_values(4) = 1; 
 if verbose>0
     disp('Fitting raw values, limits and initial values adjusted');
     fprintf('lower_limits = %s\n',num2str(lower_limits));
