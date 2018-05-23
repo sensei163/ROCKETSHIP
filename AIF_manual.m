@@ -53,7 +53,7 @@ if reshaped %the 3D case
     
     [dimx2, dimy2, dimt2] = size(image_array);
     
-    AIF_mask(:,:,1);
+    %AIF_mask(:,:,1);
     image_indices = find(AIF_mask(:,:,1)>0);
     image_time_courses = zeros(numel(image_indices), dimt2);
     current_time_image = [];
@@ -65,17 +65,20 @@ if reshaped %the 3D case
     
     end
     
-%find the concentration values that correspond to the base_line AIF  %the 3D 
+%find the concentration values that correspond to the base_line AIF the 3D 
     base_indices = find(AIF_mask(:,:,1)>0);
     base_concentration_time_courses = zeros(numel(base_indices),numel(base_time_vect));
     for i = 1 : numel(base_time_vect)
+        
         base_concentration_current = base_concentration_array(:,:,i);
-        base_concentration_time_courses(:,i) = base_concentration_current(base_indices);
+        base_concentration_current = base_concentration_current(base_indices); 
+        base_concentration_current = base_concentration_current;
+        %base_concentration_time_courses(:,i) = base_concentration_current(base_indices);
         
     end
 
-else %the following else block for the 4d case has never been tested, so it may not work
-    display('4D case!')
+else %the following else block for the 4d case has never been tested
+    
     [dimx2, dimy2, dimz2, dimt2] = size(image_array);
     
     AIF_mask(:,:,:,1);

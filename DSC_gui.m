@@ -22,7 +22,7 @@ function varargout = DSC_gui(varargin)
 
 % Edit the above text to modify the response to help DSC_gui
 
-% Last Modified by GUIDE v2.5 27-Feb-2018 14:17:30
+% Last Modified by GUIDE v2.5 17-May-2018 14:26:40
 
 % REVISION HISTORY: 
 % 04/26/2015:AIF and NOISE handling optins have been added.  
@@ -84,7 +84,8 @@ handles.Psvd = [];
 handles.species = 'mouse'; 
 handles.r2_star = []; 
 handles.AIF_type = 0; 
-handles.noise_type = 0; 
+handles.noise_type = 0;
+handles.Fitting_function = 0;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -255,7 +256,8 @@ function r2_star_input_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-uirestore; 
+uirestore;
+
 
 
 function Psvd_input_Callback(hObject, eventdata, handles)
@@ -500,6 +502,7 @@ species = handles.species;
 Psvd = str2double(get(handles.Psvd_input,'String')); 
 rho =  str2double(get(handles.rho_input,'String'));
 AIF_type = handles.AIF_type; 
+Fitting_function = handles.Fitting_function;
 noise_type = handles.noise_type; 
 details = whos('r2_star'); 
 
@@ -526,20 +529,22 @@ end
 if AIF_type == 0 %AIF Auto
     [meanAIF, meanSignal] = AIF_auto_cluster(concentration_array, image_array, time_vect, TR,species);
     baseline = 0; %develop a way to calculate the baseline from the auto clustered AIF
+    baseline_array = zeros(numel(base_time_vect));
 elseif AIF_type ==1 %AIF User Selected
     AIF_mask = load_nii(handles.AIF_roi); 
     AIF_mask = AIF_mask.img; 
-    [meanAIF, meanSignal, baseline,baseline_array] = AIF_manual(image_array,concentration_array,AIF_mask, base_time_vect,base_concentration_array);
+    [meanAIF, meanSignal, baseline,baseline_array] = AIF_manual_noreshape(image_array,concentration_array,AIF_mask, base_time_vect,base_concentration_array);
 
 elseif AIF_type==2 %AIF Import
     load(handles.import_AIF)
-    [meanAIF_adjusted, time_vect, concentration_array] = import_AIF(meanAIF, meanSignal, bolus_time, time_vect, concentration_array);
+    [meanAIF_adjusted, time_vect, concentration_array] = import_AIF(meanAIF, bolus_time, time_vect, concentration_array, r2_star, TE);
     meanAIF = meanAIF_adjusted;
     
     display('time_vect_num')
     numel(time_vect)
     display('meanAIF_num')
     numel(meanAIF)
+    
 elseif AIF_type==3 %AIF Use Previous
     load('previous_data.mat');
     [meanAIF_adjusted, time_vect, concentration_array] = previous_AIF(meanAIF,meanSignal,bolus_time, time_vect,concentration_array);
@@ -551,42 +556,184 @@ elseif AIF_type==3 %AIF Use Previous
     numel(meanAIF)
 end
 
+%create a mean AIF spaning the whole scan time 
+AIF_whole = cat(1,baseline_array, meanAIF);
+
+%now run the selected fitting function
+if Fitting_function == 0 %forced linear biexponential (uses local max) %the upslope is fitted to
+    
+    Cp = cat(1,baseline_array,meanAIF);
+    step = [(bolus_time) (bolus_time + numel(time_vect))];
+    T1 = whole_time_vect;
+    xdata = struct('Cp',Cp,'baseline', baseline, 'timer', T1, 'step', step, 'bolus_time', bolus_time);
+    verbose = -1; %this prevents any internal verbose function from running change to 1 to run verbose
+
+    [Cp, x, xdata, rsqurare] = Single_Forced_linear_AIFbiexpfithelplocal(xdata,verbose);
+    Ct = Cp;
+    Ct(1:bolus_time - 1) = [];
+    Ct = Ct';
+    
+elseif Fitting_function == 1 %biexponential (uses absolute max)
+    Cp = cat(1,baseline_array,meanAIF);
+    step = [bolus_time (bolus_time + numel(time_vect))];
+    T1 = whole_time_vect;
+    xdata = struct('Cp',Cp,'baseline', baseline, 'timer', T1, 'step', step, 'bolus_time', bolus_time);
+    verbose = -1; %this prevents any internal verbose function from running change to 1 to run verbose
+
+    [Cp, x, xdata, rsqurare] = AIFbiexpfithelp(xdata,verbose);
+    Ct = Cp;
+    Ct(1:bolus_time - 1) = [];
+    Ct = Ct';
+    
+elseif Fitting_function == 2 %biexponential (uses local max) 
+    Cp = cat(1,baseline_array,meanAIF);
+    step = [bolus_time (bolus_time + numel(time_vect))];
+    T1 = whole_time_vect;
+    xdata = struct('Cp',Cp,'baseline', baseline, 'timer', T1, 'step', step, 'bolus_time', bolus_time);
+    verbose = -1; %this prevents any internal verbose function from running change to 1 to run verbose
+
+    [Cp, x, xdata, rsqurare] = AIFbiexpfithelplocal(xdata,verbose);
+    Ct = Cp;
+    Ct(1:bolus_time - 1) = [];
+    Ct = Ct';
+    
+elseif Fitting_function == 3 %gamma-variant
+    % Now we fit the AIF with a SCR model: 
+
+    %assigning the gamma variate function, gfun, to be our desired fitting
+    %function: 
+    Ct = fitting_gamma_variant(meanAIF,species, time_vect);
+    Cp = cat(1,baseline_array, Ct); %Cp is created for plotting purposes only. Ct is analyzed for CBF, CBV...
+    
+elseif Fitting_function == 4 %raw data 
+    Ct = meanAIF;
+    Cp = cat(1,baseline_array, Ct);
+
+%{
+elseif Fitting_function == 42 %copy_of_upslopewith peak based decision making (not currently an option)
+    Cp = cat(1,baseline_array,meanAIF);
+    step = [bolus_time (bolus_time + numel(time_vect))];
+    T1 = whole_time_vect;
+    xdata = struct('Cp',Cp,'baseline', baseline, 'timer', T1, 'step', step, 'bolus_time', bolus_time);
+    verbose = -1; %this prevents any internal verbose function from running change to 1 to run verbose
+
+    [Cp, x, xdata, rsqurare] = Forced_linear_AIFbiexpfithelplocal(xdata,verbose);
+    Ct = Cp;
+    Ct(1:bolus_time - 1) = [];
+    [~,max_indexCt] = max(Ct); 
+    
+    if numel(findpeaks(AIF_whole(bolus_time:((bolus_time + 1) + max_indexCt)))) == 1 %check for additional local maxima in upslope, if none
+        %are present use the exact upslope vales for the fitted funciton
+        Ct(1:max_indexCt) = meanAIF(1: max_indexCt);
+        Ct = Ct';
+        base = baseline * ones(numel(baseline_array),1);
+        Cp = [base; Ct];
+    else %if additional local maxima or 'bumps' in the upslope are present, use the 2 point forced linear fit
+        Ct = Ct';
+    end
+%}
+elseif Fitting_function == 5 %copy_of_upslope with peak based decision making
+    Cp = cat(1,baseline_array,meanAIF);
+    step = [bolus_time (bolus_time + numel(time_vect))];
+    T1 = whole_time_vect;
+    xdata = struct('Cp',Cp,'baseline', baseline, 'timer', T1, 'step', step, 'bolus_time', bolus_time);
+    verbose = -1; %this prevents any internal verbose function from running change to 1 to run verbose
+
+    [Cp, x, xdata, rsqurare] = AIFbiexpfithelplocal(xdata,verbose);
+    Ct = Cp;
+    Ct(1:bolus_time -1) = [];
+    
+   %calculate the most likely first peak by finding the first local maxima
+    %as was done in the local fitting help function
+    %peak is the first within 3% of the max value of the whole data set
+    [local_maxima, maxima_indexes] = findpeaks(Ct);
+    maxima_iterator = 1;
+    while(local_maxima(maxima_iterator) < (0.97 * max(local_maxima)))
+        maxima_iterator = maxima_iterator + 1;
+    end
+
+    max_indexCt = maxima_indexes(maxima_iterator);
+    
+    if numel(findpeaks(AIF_whole(bolus_time:(bolus_time + max_indexCt)))) == 1 %check for additional local maxima in upslope, if none
+        %are present use the exact upslope vales for the fitted funciton
+        %[bolus time, max_index + 1] is the range that is examined for the
+        %additional maxima
+        Ct(1:max_indexCt) = meanAIF(1:max_indexCt);
+        Ct = Ct';
+        base = baseline * ones(numel(baseline_array),1);
+        Cp = [base; Ct];
+    else %if additional local maxima or 'bumps' in the upslope are present, use a smooth fit
+        Ct = Ct';
+    end
+    
+elseif Fitting_function == 6 %upslope copy biexponetial
+    
+    Cp = cat(1,baseline_array,meanAIF);
+    step = [bolus_time (bolus_time + numel(time_vect))];
+    T1 = whole_time_vect;
+    xdata = struct('Cp',Cp,'baseline', baseline, 'timer', T1, 'step', step, 'bolus_time', bolus_time);
+    verbose = -1; %this prevents any internal verbose function from running change to 1 to run verbose
+
+    [Cp, x, xdata, rsqurare] = AIFbiexpfithelplocal(xdata,verbose);
+    Ct = Cp;
+    Ct(1:bolus_time - 1) = [];
+    
+    %calculate the most likely first peak by finding the first local maxima
+    %as was done in the local fitting help function
+    %peak is the first within 3% of the max value of the whole data set
+    [local_maxima, maxima_indexes] = findpeaks(Ct);
+    maxima_iterator = 1;
+    while(local_maxima(maxima_iterator) < (0.97 * max(local_maxima)))
+        maxima_iterator = maxima_iterator + 1;
+    end
+
+    max_indexCt = maxima_indexes(maxima_iterator);
+
+    max_indexCt = maxima_indexes(maxima_iterator);
+    
+    %exact upslope vales for the fitted funciton
+    Ct(1:max_indexCt) = meanAIF(1:max_indexCt);
+    Ct = Ct';
+    base = baseline * ones(numel(baseline_array),1);
+    Cp = [base; Ct];
+    
+elseif Fitting_function == 7 %forced bilinear biexponential decay
+    
+    %two linear function
+    Cp = cat(1,baseline_array,meanAIF);
+    step = [(bolus_time) (bolus_time + numel(time_vect))];
+    T1 = whole_time_vect;
+    xdata = struct('Cp',Cp,'baseline', baseline, 'timer', T1, 'step', step, 'bolus_time', bolus_time);
+    verbose = -1; %this prevents any internal verbose function from running change to 1 to run verbose
+
+    [Cp, x, xdata, rsqurare] = Forced_linear_AIFbiexpfithelplocal(xdata,verbose);
+    Ct = Cp;
+    Ct(1:bolus_time - 1) = [];
+    Ct = Ct';
+    
+end
+
 %save this runs meanAIF, bolus time, and importedAIF
 save('previous_data.mat', 'meanAIF','meanSignal','bolus_time','baseline');
 
-% Now we fit the AIF with a SCR model: 
+%plot the meanAIF and fitted function over the entire scan
+figure;
+plot(whole_time_vect,Cp,'-o', whole_time_vect, AIF_whole);
+title('AIF and Fitted AIF Over time');
+xlabel('Time (min)');                                                                             
+ylabel('Concentration (mM)');
+legend('Fitted AIF', 'Raw AIF');
 
-%assigning the gamma variate function, gfun, to be our desired fitting
-%function: 
-
-%Ct = fitting_gamma_variant(meanAIF,species, time_vect);
-
-
-%biexpcon function
-Cp = cat(1,baseline_array,meanAIF);
-step = [bolus_time (bolus_time + numel(time_vect))];
-T1 = whole_time_vect;
-xdata = struct('Cp',Cp,'baseline', baseline, 'timer', T1, 'step', step, 'bolus_time', bolus_time);
-verbose = -1; %this prevents any internal verbose function from running, but i should 
-%check this with the Sameul Barnes
-
-[Cp, x, xdata, rsqurare] = AIFbiexpfithelplocal(xdata,verbose);
-Ct = Cp;
-Ct(1:bolus_time) = [];
-
-
+%plot the mean AIF and fitted function over the time period to be analyzed
 figure; 
 time_vect_sec = time_vect * 60; %get time in seconds to plot
 time_vect_sec = time_vect_sec + (bolus_time);
 %base_time_vect_sec = base_time_vect * 60;
-plot(time_vect_sec,Ct,'g'); 
-hold on; 
-plot(time_vect_sec,meanAIF, 'm');
+plot(time_vect_sec,Ct,'-o',time_vect_sec,meanAIF); 
 title('AIF and Fitted AIF Over time');
 xlabel('Time (s)');                                                                             
 ylabel('Concentration (mM)');
 legend('Fitted AIF', 'Raw AIF');
-hold off; 
 
 %plot the mean AIF signal
 figure; 
@@ -600,6 +747,7 @@ ylabel('Signal Intensity (au)')
 Kh = 0.71; 
 % method = 1; 
 [CBF, CBV, MTT] = DSC_convolution_sSVD(concentration_array,Ct,deltaT,Kh,rho,Psvd,1,image_path); 
+disp('new')
 % guidata(hObject, handles);
 
 
@@ -811,24 +959,161 @@ end
 guidata(hObject, handles);
 
 
-% --- Executes on button press in Drift.
-function Drift_Callback(hObject, eventdata, handles)
-% hObject    handle to Drift (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of Drift
-
-
-% --- Executes during object creation, after setting all properties.
-function Drift_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to Drift (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-
 % --- Executes on button press in Restart.
 function Restart_Callback(hObject, eventdata, handles)
 % hObject    handle to Restart (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object creation, after setting all properties.
+function forcelb_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to forcelb (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function biexp_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to biexp (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function biexl_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to biexl (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function Gammav_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Gammav (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function rawdata_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to rawdata (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+% --- Executes during object creation, after setting all properties.
+
+
+function upslopebiexp_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to upslopebiexp (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function upslopebiexpliadj_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to upslopebiexpliadj (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% --- Executes during object creation, after setting all properties.
+function forcebiexp_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to forcebiexp (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% --- Executes when selected object is changed in Fitting_function.
+function Fitting_function_SelectionChangedFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in Fitting_function 
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.forcelb,'Value',1); 
+set(handles.biexp,'Value',0); 
+set(handles.biexl,'Value',0); 
+set(handles.Gammav,'Value', 0); 
+set(handles.rawdata,'Value', 0);
+set(handles.upslopebiexp,'Value', 0);
+set(handles.upslopebiexpliadj,'Value', 0);
+set(handles.forcebiexp,'Value',0);
+
+switch get(eventdata.NewValue,'Tag') % Get Tag of selected object.
+    case 'forcelb'
+        handles.Fitting_function =  0; 
+        set(handles.forcelb,'Value',1); 
+        set(handles.biexp,'Value',0); 
+        set(handles.biexl,'Value',0); 
+        set(handles.Gammav,'Value', 0); 
+        set(handles.rawdata,'Value', 0);
+        set(handles.upslopebiexp,'Value', 0);
+        set(handles.upslopebiexpliadj,'Value', 0);
+        set(handles.forcebiexp,'Value',0);
+    case 'biexp'
+        handles.Fitting_function = 1; 
+        set(handles.forcelb,'Value',0); 
+        set(handles.biexp,'Value',1); 
+        set(handles.biexl,'Value',0); 
+        set(handles.Gammav,'Value', 0); 
+        set(handles.rawdata,'Value', 0);
+        set(handles.upslopebiexp,'Value', 0);
+        set(handles.upslopebiexpliadj,'Value', 0);
+        set(handles.forcebiexp,'Value',0);
+    case 'biexl'
+        handles.Fitting_function = 2; 
+        set(handles.forcelb,'Value',0); 
+        set(handles.biexp,'Value',0); 
+        set(handles.biexl,'Value',1); 
+        set(handles.Gammav,'Value', 0); 
+        set(handles.rawdata,'Value', 0);
+        set(handles.upslopebiexp,'Value', 0);
+        set(handles.upslopebiexpliadj,'Value', 0);
+        set(handles.forcebiexp,'Value',0);
+    case 'Gammav'
+        handles.Fitting_function = 3; 
+        set(handles.forcelb,'Value',0); 
+        set(handles.biexp,'Value',0); 
+        set(handles.biexl,'Value',0); 
+        set(handles.Gammav,'Value', 1); 
+        set(handles.rawdata,'Value', 0);
+        set(handles.upslopebiexp,'Value', 0);
+        set(handles.upslopebiexpliadj,'Value', 0);
+        set(handles.forcebiexp,'Value',0);
+    case 'rawdata'
+        handles.Fitting_function = 4; 
+        set(handles.forcelb,'Value',0); 
+        set(handles.biexp,'Value',0); 
+        set(handles.biexl,'Value',0); 
+        set(handles.Gammav,'Value', 0); 
+        set(handles.rawdata,'Value', 1);
+        set(handles.upslopebiexp,'Value', 0);
+        set(handles.upslopebiexpliadj,'Value', 0);
+        set(handles.forcebiexp,'Value',0);
+    case 'upslopebiexp'
+        handles.Fitting_function = 5; 
+        set(handles.forcelb,'Value',0); 
+        set(handles.biexp,'Value',0); 
+        set(handles.biexl,'Value',0); 
+        set(handles.Gammav,'Value', 0); 
+        set(handles.rawdata,'Value', 0);
+        set(handles.upslopebiexp,'Value', 1);
+        set(handles.upslopebiexpliadj,'Value', 0);
+        set(handles.forcebiexp,'Value',0);
+    case 'upslopebiexpliadj'
+        handles.Fitting_function = 6; 
+        set(handles.forcelb,'Value',0); 
+        set(handles.biexp,'Value',0); 
+        set(handles.biexl,'Value',0); 
+        set(handles.Gammav,'Value', 0); 
+        set(handles.rawdata,'Value', 0);
+        set(handles.upslopebiexp,'Value', 0);
+        set(handles.upslopebiexpliadj,'Value', 1);
+        set(handles.forcebiexp,'Value',0);
+    case 'forcebiexp'
+        handles.Fitting_function = 7; 
+        set(handles.forcelb,'Value',0); 
+        set(handles.biexp,'Value',0); 
+        set(handles.biexl,'Value',0); 
+        set(handles.Gammav,'Value', 0); 
+        set(handles.rawdata,'Value', 0);
+        set(handles.upslopebiexp,'Value', 0);
+        set(handles.upslopebiexpliadj,'Value', 0);
+        set(handles.forcebiexp,'Value',1);
+end
+guidata(hObject, handles);
