@@ -465,19 +465,60 @@ elseif strcmp(model, 'patlak')
         diary_restore = 1;
     end
     if verbose; p = ProgressBar(number_voxels,'verbose',verbose); end;
-    parfor i = 1:number_voxels
-        % Do quick linear patlak and use values as initial values
-        [estimate, ~] = model_patlak_linear(Ct_data(:,i),Cp_data,timer_data);
-        prefs_local = prefs;
-        prefs_local.initial_value_ktrans = estimate(1);
-        prefs_local.initial_value_vp = estimate(2);
-        % Do non-linear patlak
-        [GG(i,:), residuals(i,:)] = model_patlak(Ct_data(:,i),Cp_data,timer_data,prefs_local);
-        if verbose; p.progress; end;
+    
+    %%%%%%%%%%%% WIP %%%%%%%%%%%%
+    %!!! WARNING !!!% I don't know MATLAB at all and I already dislike it :)
+    
+    GPU_FITTING = true;            % Constant for testing if using GPU for fitting.
+    
+    if GPU_FITTING
+        
+        
+        indie_vars = [timer_data' Cp_data];
+        model_id = ModelID.PATLAK;
+        estimator_id = EstimatorID.LSE;
+        Ct_single = single(Ct_data);
+        
+        tolerance = single(1e-12);
+        max_n_iterations = 200;
+        
+        init_param = zeros([2,number_voxels]);
+        for i=1:number_voxels
+            init_param(1,i) = 0.0002;
+            init_param(2,i) = 0.02;
+        end
+        
+        init_param_single = single(init_param);
+        
+        [fit_values, states, chi_squares, n_iterations, time] = gpufit(Ct_single,[],model_id,init_param_single,tolerance, max_n_iterations,[],estimator_id,indie_vars);
+        for i=1:number_voxels
+            GG(i,1) = fit_values(1,i); %Ktrans
+            GG(i,2) = fit_values(2,i); %vp
+        end
+            % paramname = {'Ktrans'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
+        
+        
+    else
+        parfor i = 1:number_voxels
+            % Do quick linear patlak and use values as initial values
+            [estimate, ~] = model_patlak_linear(Ct_data(:,i),Cp_data,timer_data);
+            prefs_local = prefs;
+            prefs_local.initial_value_ktrans = estimate(1);
+            prefs_local.initial_value_vp = estimate(2);
+            % Do non-linear patlak
+            [GG(i,:), residuals(i,:)] = model_patlak(Ct_data(:,i),Cp_data,timer_data,prefs_local);
+            if verbose; p.progress; end;
+        end;
     end;
     if verbose; p.stop; end;
     if diary_restore, diary on, end;
 
+    
+% In preparation for implementation of an additional model if wanted...
+% elseif strcmp(model, 'patlak_gpu')
+    %%%%%%%%%%%% END WIP ZONE %%%%%%%%%%%
+    
+    
 elseif strcmp(model, 'patlak_linear')
 
     % Preallocate for speed
