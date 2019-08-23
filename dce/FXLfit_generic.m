@@ -413,44 +413,53 @@ elseif strcmp(model, 'nested')
             end
         end
         
-        if verbose; p.progress; end;
-    end;
-    if verbose; p.stop; end;
-    if diary_restore, diary on, end;
+        if verbose; p.progress; end
+    end
+    if verbose; p.stop; end
+    if diary_restore, diary on, end
     
 elseif strcmp(model, 'patlak')
     
-    % Get values from pref file
-    prefs_str = parse_preference_file('dce_preferences.txt',0,...
-        {'voxel_lower_limit_ktrans' 'voxel_upper_limit_ktrans' 'voxel_initial_value_ktrans' ...
-        'voxel_lower_limit_vp' 'voxel_upper_limit_vp' 'voxel_initial_value_vp' ...
-        'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals' 'voxel_Robust'});
-    prefs.lower_limit_ktrans = str2num(prefs_str.voxel_lower_limit_ktrans);
-    prefs.upper_limit_ktrans = str2num(prefs_str.voxel_upper_limit_ktrans);
-    prefs.initial_value_ktrans = str2num(prefs_str.voxel_initial_value_ktrans);
-    prefs.lower_limit_vp = str2num(prefs_str.voxel_lower_limit_vp);
-    prefs.upper_limit_vp = str2num(prefs_str.voxel_upper_limit_vp);
-    prefs.initial_value_vp = str2num(prefs_str.voxel_initial_value_vp);
-    prefs.TolFun = str2num(prefs_str.voxel_TolFun);
-    prefs.TolX = str2num(prefs_str.voxel_TolX);
-    prefs.MaxIter = str2num(prefs_str.voxel_MaxIter);
-    prefs.MaxFunEvals = str2num(prefs_str.voxel_MaxFunEvals);
-    prefs.Robust = prefs_str.voxel_Robust;
-    %Log values used
-    if verbose
-        fprintf('lower_limit_ktrans = %s\n',num2str(prefs.lower_limit_ktrans));
-        fprintf('upper_limit_ktrans = %s\n',num2str(prefs.upper_limit_ktrans));
-        fprintf('initial_value_ktrans = %s\n',num2str(prefs.initial_value_ktrans));
-        fprintf('lower_limit_vp = %s\n',num2str(prefs.lower_limit_vp));
-        fprintf('upper_limit_vp = %s\n',num2str(prefs.upper_limit_vp));
-        fprintf('initial_value_vp = %s\n',num2str(prefs.initial_value_vp));
-        fprintf('TolFun = %s\n',num2str(prefs.TolFun));
-        fprintf('TolX = %s\n',num2str(prefs.TolX));
-        fprintf('MaxIter = %s\n',num2str(prefs.MaxIter));
-        fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
-        fprintf('Robust = %s\n',num2str(prefs.Robust));
+    % check (again) if using gpu
+    prefs_processor = parse_preference_file('dce_preferences.txt',0, {'gpu_use'});
+    prefs.gpufit = str2num(prefs_processor.gpu_use);
+    if prefs.gpufit
+        GPU_FITTING = true;
     end
     
+    % Get CPU fitting values from pref file
+    if ~GPU_FITTING
+        prefs_str = parse_preference_file('dce_preferences.txt',0,...
+            {'voxel_lower_limit_ktrans' 'voxel_upper_limit_ktrans' 'voxel_initial_value_ktrans' ...
+            'voxel_lower_limit_vp' 'voxel_upper_limit_vp' 'voxel_initial_value_vp' ...
+            'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals' 'voxel_Robust'});
+        prefs.lower_limit_ktrans = str2num(prefs_str.voxel_lower_limit_ktrans);
+        prefs.upper_limit_ktrans = str2num(prefs_str.voxel_upper_limit_ktrans);
+        prefs.initial_value_ktrans = str2num(prefs_str.voxel_initial_value_ktrans);
+        prefs.lower_limit_vp = str2num(prefs_str.voxel_lower_limit_vp);
+        prefs.upper_limit_vp = str2num(prefs_str.voxel_upper_limit_vp);
+        prefs.initial_value_vp = str2num(prefs_str.voxel_initial_value_vp);
+        prefs.TolFun = str2num(prefs_str.voxel_TolFun);
+        prefs.TolX = str2num(prefs_str.voxel_TolX);
+        prefs.MaxIter = str2num(prefs_str.voxel_MaxIter);
+        prefs.MaxFunEvals = str2num(prefs_str.voxel_MaxFunEvals);
+        prefs.Robust = prefs_str.voxel_Robust;
+        
+        %Log values used
+        if verbose
+            fprintf('lower_limit_ktrans = %s\n',num2str(prefs.lower_limit_ktrans));
+            fprintf('upper_limit_ktrans = %s\n',num2str(prefs.upper_limit_ktrans));
+            fprintf('initial_value_ktrans = %s\n',num2str(prefs.initial_value_ktrans));
+            fprintf('lower_limit_vp = %s\n',num2str(prefs.lower_limit_vp));
+            fprintf('upper_limit_vp = %s\n',num2str(prefs.upper_limit_vp));
+            fprintf('initial_value_vp = %s\n',num2str(prefs.initial_value_vp));
+            fprintf('TolFun = %s\n',num2str(prefs.TolFun));
+            fprintf('TolX = %s\n',num2str(prefs.TolX));
+            fprintf('MaxIter = %s\n',num2str(prefs.MaxIter));
+            fprintf('MaxFunEvals = %s\n',num2str(prefs.MaxFunEvals));
+            fprintf('Robust = %s\n',num2str(prefs.Robust));
+        end
+    end
     % Preallocate for speed
     GG = zeros([number_voxels 7],'double');
     residuals = zeros([number_voxels numel(xdata{1}.timer)],'double');
@@ -465,35 +474,45 @@ elseif strcmp(model, 'patlak')
         diary_restore = 1;
     end
     if verbose; p = ProgressBar(number_voxels,'verbose',verbose); end;
-    
-    %%%%%%%%%%%% WIP %%%%%%%%%%%%
-    %!!! WARNING !!!% I don't know MATLAB at all and I already dislike it :)
-    
-    GPU_FITTING = true;            % Constant for testing if using GPU for fitting.
-    
+            
     if GPU_FITTING
         
-        
-        indie_vars = [timer_data' Cp_data];
         model_id = ModelID.PATLAK;
         estimator_id = EstimatorID.LSE;
-        Ct_single = single(Ct_data);
         
-        tolerance = single(1e-12);
-        max_n_iterations = 200;
+        % Load GPU fitting values from pref file
+        prefs_str = parse_preference_file('dce_preferences.txt',0,...
+            {'gpu_tolerance' 'gpu_max_n_iterations' 'gpu_initial_value_ktrans' ...
+            'gpu_initial_value_vp'});
+        prefs.gpu_tolerance = str2num(prefs_str.gpu_tolerance);
+        prefs.gpu_max_n_iterations = str2num(prefs_str.gpu_max_n_iterations);
+        prefs.gpu_initial_value_ktrans = str2num(prefs_str.gpu_initial_value_ktrans);
+        prefs.gpu_initial_value_vp = str2num(prefs_str.gpu_initial_value_vp);
+        
+        tolerance = prefs.gpu_tolerance;
+        max_n_iterations = prefs.gpu_max_n_iterations;
+        Ktrans = prefs.gpu_initial_value_ktrans;
+        vp = prefs.gpu_initial_value_vp;
         
         init_param = zeros([2,number_voxels]);
         for i=1:number_voxels
-            init_param(1,i) = 0.0002;
-            init_param(2,i) = 0.02;
+            init_param(1,i) = Ktrans;
+            init_param(2,i) = vp;
         end
-        
         init_param_single = single(init_param);
         
-        [fit_values, states, chi_squares, n_iterations, time] = gpufit(Ct_single,[],model_id,init_param_single,tolerance, max_n_iterations,[],estimator_id,indie_vars);
+        % Load measured data
+        indie_vars = single([timer_data' Cp_data]);
+        Ct_single = single(Ct_data);
+        
+        % Execute GPU fit
+        [parameters, states, chi_squares, n_iterations, time] = gpufit(Ct_single,[],model_id,init_param_single,tolerance, max_n_iterations,[],estimator_id,indie_vars);
         for i=1:number_voxels
-            GG(i,1) = fit_values(1,i); %Ktrans
-            GG(i,2) = fit_values(2,i); %vp
+            % filter negatives
+            if parameters(1,i) > 0
+                GG(i,1) = parameters(1,i); %Ktrans
+            end
+            GG(i,2) = parameters(2,i); %vp
         end
             % paramname = {'Ktrans'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
         
@@ -512,12 +531,6 @@ elseif strcmp(model, 'patlak')
     end;
     if verbose; p.stop; end;
     if diary_restore, diary on, end;
-
-    
-% In preparation for implementation of an additional model if wanted...
-% elseif strcmp(model, 'patlak_gpu')
-    %%%%%%%%%%%% END WIP ZONE %%%%%%%%%%%
-    
     
 elseif strcmp(model, 'patlak_linear')
 

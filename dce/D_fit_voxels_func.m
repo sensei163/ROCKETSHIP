@@ -185,19 +185,22 @@ for model_index=1:numel(dce_model_list)
     disp(time_smoothing_window);
     disp('User selected XY smooth size (sigma)');
     disp(xy_smooth_size);
-    disp('User selected number of CPU cores');
     
-    % Setup matlabpool size
-    
-    c = parcluster('local'); % build the 'local' cluster object
-    n = c.NumWorkers;        % get the number of workers
-    if(number_cpus <= n) && number_cpus > 0
-    elseif(number_cpus == 0)
-        number_cpus = n;
-    else
-        number_cpus = max(n+number_cpus, 1);
+    % Setup matlabpool size if using CPU
+    gpu_prefs = parse_preference_file('dce_preferences.txt',0,{'gpu_use'},{0});
+    USE_GPU = str2num(gpu_prefs.gpu_use);
+    if ~USE_GPU
+        disp('User selected number of CPU cores');
+        c = parcluster('local'); % build the 'local' cluster object
+        n = c.NumWorkers;        % get the number of workers
+        if(number_cpus <= n) && number_cpus > 0
+        elseif(number_cpus == 0)
+            number_cpus = n;
+        else
+            number_cpus = max(n+number_cpus, 1);
+        end
+        disp(number_cpus);
     end
-    disp(number_cpus);
     
     disp('User selected ROI list');
     [nrows,ncols]= size(roi_list);
@@ -221,35 +224,37 @@ for model_index=1:numel(dce_model_list)
     %disp(['Fitting data using the ' 'dce' ' model']);
     
     % Open pool if not open or improperly sized
-    r_prefs = parse_preference_file('dce_preferences.txt',0,{'use_matlabpool'},{0});
-    if str2num(r_prefs.use_matlabpool)
-        if matlabpool('size')~= number_cpus
+    if ~USE_GPU
+        r_prefs = parse_preference_file('dce_preferences.txt',0,{'use_matlabpool'},{0});
+        if str2num(r_prefs.use_matlabpool)
+            if matlabpool('size')~= number_cpus
+                % Do not launch pool with diary on, locks the log file
+                diary off;
+                if matlabpool('size')>0
+                    matlabpool close;
+                end
+                matlabpool('local', number_cpus);
+                diary on;
+            end
+        else
+            s = gcp('nocreate');
             % Do not launch pool with diary on, locks the log file
             diary off;
-            if matlabpool('size')>0
-                matlabpool close;
+            if isempty(s)
+                parpool('local',number_cpus);
+            else
+                if s.NumWorkers~=number_cpus
+                    delete(gcp('nocreate'))
+                    parpool('local',number_cpus);
+                end
             end
-            matlabpool('local', number_cpus);
             diary on;
         end
-    else
-        s = gcp('nocreate');
-        % Do not launch pool with diary on, locks the log file
-        diary off;
-        if isempty(s)
-            parpool('local',number_cpus);
-        else
-            if s.NumWorkers~=number_cpus
-                delete(gcp('nocreate'))
-                parpool('local',number_cpus);
-            end
-        end
-        diary on;
+    
+    
+        % Turn off warnings
+        pctRunOnAll warning 'off'
     end
-    
-    % Turn off warnings
-    pctRunOnAll warning 'off'
-    
     % Substitute R1 data for concentration data in curve to fit
     % FXR model fits to the R1 data directly, not concentrations
     %     if strcmp(cur_dce_model,'fxr')
