@@ -303,6 +303,7 @@ for i = 1:dimt
             permute(nonviable_mask,[2 1 3]),...
             permute(drift_mask,[2 1 3])...
             );
+        drawnow
     end
     
 end
@@ -524,7 +525,7 @@ saveas(nn, fullfile(PathName1, [rootname '_image_ROI.fig']));
 
 %% 5. Manually select injection point, if required
 if(steady_state_time == -1)
-    figure, hold on;
+    fig_get_baseline = figure; hold on;
     plot(mean(DYNAM, 2), 'r');
     plot(mean(DYNAMLV,2), 'b');
     ylabel('a.u.');
@@ -533,8 +534,11 @@ if(steady_state_time == -1)
     
     
     for i = 1:2
+        disp("Getting baseline");
         title(['Select timepoint ' num2str(i) ...
             ' before injection. (i.e. Select an interval (2 points) before contrast injection to define stead state)'])
+        drawnow
+        figure(fig_get_baseline);
         [steady_state_time(i), ~] = ginput(1);
     end
     steady_state_time(2) = round(steady_state_time(2));
@@ -617,7 +621,7 @@ Stotallv = DYNAMLV;
 
 
 % Sss is the steady state Signal before injection
-Sss      = mean(Stotallv(round(steady_state_time(1)):round(steady_state_time(2)),:));
+Sss      = mean(Stotallv(round(steady_state_time(1)):round(steady_state_time(2)),:),1);
 Sstar    = ((1-exp(-tr./T1))./(1-cosd(fa).*exp(-tr./T1)));
 Stlv     = Stotallv;%(inj(2):end,:);
 
@@ -647,14 +651,14 @@ Stlv = Stlv(:,GOODspacelv);
 
 for j = 1:numel(T1LV)
     % Scale R1 time curve values to initial T1 values
-    ScaleFactorlv = (1/T1LV(j)) - mean(R1tLV(round(steady_state_time(1)):round(steady_state_time(2)), j));
+    ScaleFactorlv = (1/T1LV(j)) - mean(R1tLV(round(steady_state_time(1)):round(steady_state_time(2)), j),1);
     R1tLV(:,j) = R1tLV(:,j) + ScaleFactorlv;
 end
 
 if ~quant
     % R1 curves are not real, so we re-process Sss Stlv, we keep the other
     % time streams just to keep legacy downstream code nice.
-    Sss      = mean(Stotallv(round(steady_state_time(1)):round(steady_state_time(2)),:));
+    Sss      = mean(Stotallv(round(steady_state_time(1)):round(steady_state_time(2)),:),1);
     Stlv     = Stotallv;%(inj(2):end,:);
 end
 
@@ -665,7 +669,7 @@ T1TUM     = TUMOR(tumind);
 T1        = T1TUM;
 Stotaltum = DYNAM;
 
-Ssstum = mean(Stotaltum(round(steady_state_time(1)):round(steady_state_time(2)),:));
+Ssstum = mean(Stotaltum(round(steady_state_time(1)):round(steady_state_time(2)),:),1);
 Sstar    = ((1-exp(-tr./T1))./(1-cosd(fa).*exp(-tr./T1)));
 Sttum = Stotaltum;
 
@@ -695,15 +699,15 @@ Sstar = Sstar(GOODspaceT);
 
 for j = 1:numel(T1TUM)
     % Scale Sss values to T1 values
-    ScaleFactortum = (1/T1TUM(j)) - mean(R1tTOI(round(steady_state_time(1)):round(steady_state_time(2)), j));
+    ScaleFactortum = (1/T1TUM(j)) - mean(R1tTOI(round(steady_state_time(1)):round(steady_state_time(2)), j),1);
     R1tTOI(:,j) = R1tTOI(:,j) + ScaleFactortum;
 end
 
 
 n = figure; 
 if quant
-    subplot(423),plot(mean(R1tTOI,2), 'r.'), title('R1 maps pre-filtering ROI'), ylabel('sec^-1')
-    subplot(424), plot(mean(R1tLV,2), 'b.'), title('R1 maps pre-filtering AIF'), ylabel('sec^-1')
+    subplot(423),plot(median(R1tTOI,2), 'r.'), title('R1 maps pre-filtering ROI'), ylabel('sec^-1')
+    subplot(424), plot(median(R1tLV,2), 'b.'), title('R1 maps pre-filtering AIF'), ylabel('sec^-1')
 end
 %% 9. Convert to concentrations
 
@@ -755,11 +759,11 @@ deltaR1TOI= R1tTOI-repmat(mean(R1tTOI(round(steady_state_time(1)):round(steady_s
 
 figure(n), 
 if quant
-    subplot(427),plot(mean(Ct,2), 'r'), title('Ct maps pre-filtering ROI'), ylabel('mM')
-    subplot(428), plot(mean(Cp,2), 'b'), title('Cp maps pre-filtering AIF'), ylabel('mM')
+    subplot(427),plot(median(Ct,2), 'r'), title('Ct maps pre-filtering ROI'), ylabel('mM')
+    subplot(428), plot(median(Cp,2), 'b'), title('Cp maps pre-filtering AIF'), ylabel('mM')
     
-    subplot(425), plot(mean(deltaR1TOI,2), 'r.'), title('Delta R1 ROI'), ylabel('sec^-1')
-    subplot(426), plot(mean(deltaR1LV,2), 'b.'), title('Delta R1 AIF') , ylabel('sec^-1')
+    subplot(425), plot(median(deltaR1TOI,2), 'r.'), title('Delta R1 ROI'), ylabel('sec^-1')
+    subplot(426), plot(median(deltaR1LV,2), 'b.'), title('Delta R1 AIF') , ylabel('sec^-1')
 end
 subplot(421), plot(RawTUM, 'r'), title('T1-weighted ROI'), ylabel('a.u.')
 subplot(422), plot(RawLV, 'b'), title('T1-weighted AIF'), ylabel('a.u.')
