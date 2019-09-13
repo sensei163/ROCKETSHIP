@@ -5,7 +5,9 @@ gpu_use = 1
 gpu_tolerance = 1e-12
 gpu_max_n_iterations = 200
 gpu_initial_value_ktrans = 0.0002
+gpu_initial_value_ve = 0.3
 gpu_initial_value_vp = 0.02
+gpu_initial_value_fp = 0.1
 
 % Matlab Options
 %%%%%%%%%%%%%%%%%%%%%%
