@@ -633,19 +633,19 @@ end
 AB = A./B;
 % return
 % AB should not be less than 0. We interpolate the timeseries to clean
-% this. Threshold is 0.5;
+% this. Threshold is 0.05;
 % up.
 
-[AB T1LV lvind BADspacelABv GOODspacelABv] = cleanAB(AB, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.5, quant);
+[AB T1LV lvind BADspacelABv GOODspacelABv] = cleanAB(AB, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.05, quant);
 
 R1tLV = double((1/tr).*log(AB));
 Sss = Sss(GOODspacelABv);
 Stlv = Stlv(:,GOODspacelABv);
 % R1 should be real. We interpolate the timeseries to clean
-% this. Threshold is 0.5;
+% this. Threshold is 0.005;
 % up.
 
-[R1tLV T1LV lvind BADspacelv GOODspacelv] = cleanR1t(R1tLV, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.5, quant);
+[R1tLV T1LV lvind BADspacelv GOODspacelv] = cleanR1t(R1tLV, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.005, quant);
 Sss = Sss(GOODspacelv);
 Stlv = Stlv(:,GOODspacelv);
 
