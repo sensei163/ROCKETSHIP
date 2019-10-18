@@ -730,7 +730,11 @@ for model_index=1:numel(dce_model_list)
         xls_results = [headings; xls_results];
         xls_path = [results_base '_rois.xls'];
         try
-            xlswrite(xls_path,xls_results);
+            if exist('writecell','file')
+                writecell(xls_results,xls_path);
+            else
+                xlswrite(xls_path,xls_results);
+            end
         catch exception
             disp('Problem writing XLS file. Will continue');
             xls_path

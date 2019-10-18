@@ -632,18 +632,16 @@ end
 
 AB = A./B;
 % return
-% AB should not be less than 0. We interpolate the timeseries to clean
-% this. Threshold is 0.05;
-% up.
+% AB should not be less than 1. We interpolate the timeseries to clean
+% this. Threshold is 0.05, ie if 5% of timepoints <1 remove voxel;
 
 [AB T1LV lvind BADspacelABv GOODspacelABv] = cleanAB(AB, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.05, quant);
 
 R1tLV = double((1/tr).*log(AB));
 Sss = Sss(GOODspacelABv);
 Stlv = Stlv(:,GOODspacelABv);
-% R1 should be real. We interpolate the timeseries to clean
-% this. Threshold is 0.005;
-% up.
+% R1 should be real and <100/sec. We interpolate the timeseries to clean
+% this. Threshold is 0.005, ie if 0.5% of timepoints have img remove voxel;
 
 [R1tLV T1LV lvind BADspacelv GOODspacelv] = cleanR1t(R1tLV, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.005, quant);
 Sss = Sss(GOODspacelv);

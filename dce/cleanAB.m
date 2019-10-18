@@ -8,7 +8,7 @@ BADspace = [];
 CLEANspace = 0;
 timepoints = size(AB,1);
 spacepoints= size(AB,2);
- GOODspace = [1:spacepoints];
+GOODspace = [1:spacepoints];
  
     disp(' ');
     disp(['Clean AB of ' type ' with interpolation'])
@@ -23,7 +23,8 @@ spacepoints= size(AB,2);
         
         TEST = AB(:, j);
         
-        ind  = find(TEST<0);
+        % should be >1, take log() next, anything <1 is <0
+        ind  = find(TEST<1);
         
         % if greater than threshold, remove
         if(numel(ind) > threshold*(timepoints))
