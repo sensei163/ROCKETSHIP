@@ -30,7 +30,7 @@ spacepoints= size(R1t,2);
         end
         
         %Also check for non-finite values
-        ind = find(~isfinite((R1t(:, j))));
+        ind = find(~isfinite((R1t(:, j))) | (R1t(:, j))>100 );
         if(ind > threshold*(timepoints))
             BADspace = [BADspace j];
         elseif(ind > 0)
