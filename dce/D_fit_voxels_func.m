@@ -217,7 +217,7 @@ for model_index=1:numel(dce_model_list)
     disp('Starting Part D - Fitting Voxels/ROIs')
     disp(datestr(now))
     disp(' ');
-    tic
+    %%%%%%%%%%%%%%%%tic
     
     % Start processing
     xdata{1}.numvoxels = numvoxels;
@@ -517,7 +517,8 @@ for model_index=1:numel(dce_model_list)
     %************************
     disp('  ');
     disp(['Begin making maps for ' cur_dce_model '...']);
-    
+    tic
+    %%%%%%%%%%%%%%%%%%%%%%%%%
     if(neuroecon)
         if strcmp(cur_dce_model, 'fxr')
             xdata{1}.R1o = 1./T1TUM;
@@ -569,6 +570,8 @@ for model_index=1:numel(dce_model_list)
             disp('Voxel fitting done')
         end
     end
+    %%%%%%%%%%%%%%%%%%%%%%%
+    toc
     % processing_time = toc;
     % disp(['processing completed in ' datestr(processing_time/86400, 'HH:MM:SS') ' (hr:min:sec)']);
 %     if close_pool
@@ -830,7 +833,7 @@ end
 disp(' ');
 disp('Finished D');
 disp(datestr(now))
-toc
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%toc
 diary off;
 
 
