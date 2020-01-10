@@ -250,7 +250,7 @@ if numel(driftfiles)>0
     DRIFT = sortIMGVOL(DRIFT, sliceloc);
 else
     % no drift roi selected, no drift correction
-    DRIFT = ones(size(TUMOR));
+    DRIFT = zeros(size(TUMOR));
 end
 
 %% Check to make sure the dimensions of the files are consistent
