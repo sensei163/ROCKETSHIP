@@ -1,4 +1,4 @@
-function [TUMOR, LV, NOISE, DYNAMIC, dynampath, dynamname, rootname, hdr, res, sliceloc, errormsg] = loadIMGVOL(handles)
+function [TUMOR, LV, NOISE, DYNAMIC, DRIFT, dynampath, dynamname, rootname, hdr, res, sliceloc, errormsg] = loadIMGVOL(handles)
 
 
 % Takes handles, loads the image files and outputs image volume.
@@ -16,6 +16,7 @@ t1aiffiles = handles.t1aiffiles;
 t1roifiles = handles.t1roifiles;
 t1mapfiles = handles.t1mapfiles;
 noisefiles = handles.noisefiles;
+driftfiles = handles.driftfiles;
 filelist   = handles.filelist;
 
 rootname   = handles.rootname;
@@ -33,6 +34,7 @@ LV    = [];
 NOISE = [];
 DYNAMIC=[];
 T1MAP=[];
+DRIFT=[];
 dynampath = '';
 dynamname = '';
 errormsg = '';
@@ -209,6 +211,46 @@ if noise_pathpick
     end
     % if slicelocations known, resort
     NOISE = sortIMGVOL(NOISE, sliceloc);
+end
+
+% Load DRIFT - either 3D volume or 2D slice
+%%%%%%%%%%%%%%%%%
+if numel(driftfiles)>0
+    sliceloc = [];
+    for i = 1:numel(driftfiles)
+
+        if isDICOM(driftfiles{i})
+            hdr = dicominfo(driftfiles{i});
+            img = dicomread(hdr);
+            if i == 1
+                DRIFT  = img;
+                DRIFT = rescaleDICOM(hdr, DRIFT);
+                sliceloc(end+1) = hdr.(dicomlookup('20', '1041'));
+            else
+                DRIFT(:,:,end+1) = rescaleDICOM(hdr, img);
+                sliceloc(end+1) = hdr.(dicomlookup('20', '1041'));
+            end
+
+
+        elseif isNIFTI(driftfiles{i})
+            nii = load_untouch_nii(driftfiles{i});
+            img = nii.img;
+            if i == 1
+                DRIFT = img;
+            else
+                DRIFT(:,:,end+1) = img;
+            end
+        else
+            errormsg = 'Unknown file type - AIF';
+            return;
+        end
+    end
+
+    % if slicelocations known, resort
+    DRIFT = sortIMGVOL(DRIFT, sliceloc);
+else
+    % no drift roi selected, no drift correction
+    DRIFT = ones(size(TUMOR));
 end
 
 %% Check to make sure the dimensions of the files are consistent

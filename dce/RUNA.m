@@ -22,7 +22,7 @@ function varargout = RUNA(varargin)
 
 % Edit the above text to modify the response to help RUNA
 
-% Last Modified by GUIDE v2.5 28-Mar-2014 10:43:45
+% Last Modified by GUIDE v2.5 09-Jan-2020 14:42:25
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -69,6 +69,7 @@ handles.t1aiffiles = [];
 handles.t1roifiles = [];
 handles.noisefiles = [];
 handles.t1mapfiles = [];
+handles.driftfiles = [];
 handles.saved_results = '';
 
 % Properly enables or disables options
@@ -323,7 +324,7 @@ end
 
 disp('Loading image volumes')
 
-[TUMOR, LV, NOISE, DYNAMIC, dynampath, dynamname, rootname, hdr, res, sliceloc, errormsg] = loadIMGVOL(handles);
+[TUMOR, LV, NOISE, DYNAMIC, DRIFT, dynampath, dynamname, rootname, hdr, res, sliceloc, errormsg] = loadIMGVOL(handles);
 
 if ~isempty(errormsg)
     
@@ -365,12 +366,12 @@ relaxivity = str2num(get(handles.relaxivity, 'String')); %#ok<ST2NM>
 injection_time = str2num(get(handles.injection_time, 'String')); %#ok<ST2NM>
 injection_duration = str2num(get(handles.injection_duration, 'String')); %#ok<ST2NM>
 %water_fraction = str2num(get(handles.water_fraction, 'String')); %#ok<ST2NM>
-drift = get(handles.drift, 'Value');
+drift_global = get(handles.drift_global, 'Value');
 blood_t1 = str2num(get(handles.blood_t1, 'String')); %#ok<ST2NM>
 
 %time_resolution = time_resolution/60; %convert to minutes
-saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynamname, aif_rr_type, ... 
-    tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift, sliceloc,blood_t1, injection_duration);
+saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, DRIFT, hdr, res,quant, rootname, dynampath, dynamname, aif_rr_type, ... 
+    tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift_global, sliceloc,blood_t1, injection_duration);
 
 % saved_results = 'aaa';
 %set(handles.results_a_path,'String',saved_results);
@@ -1008,8 +1009,8 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 uirestore;
 
-% --- Executes on button press in drift.
-function drift_Callback(hObject, eventdata, handles)
+% --- Executes on button press in drift_global.
+function drift_global_Callback(hObject, eventdata, handles)
 uiremember();
 
 
@@ -1022,7 +1023,7 @@ function fileorder_CreateFcn(hObject, eventdata, handles)
 
 
 % --- Executes during object creation, after setting all properties.
-function drift_CreateFcn(hObject, eventdata, handles)
+function drift_global_CreateFcn(hObject, eventdata, handles)
 uirestore;
 
 
@@ -1070,3 +1071,64 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 uirestore;
+
+
+
+function driftpath_Callback(hObject, eventdata, handles)
+% hObject    handle to driftpath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of driftpath as text
+%        str2double(get(hObject,'String')) returns contents of driftpath as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function driftpath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to driftpath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in drift_browse.
+function drift_browse_Callback(hObject, eventdata, handles)
+guidata(hObject, handles);
+
+[filename, pathname, filterindex] = uigetfile( ...
+    {  '*.nii','Nifti Files (*.nii)'; ...
+    '*2dseq','Bruker Files (2dseq)'; ...
+    '*dcm', 'DICOM Files (dcm)'; ...
+    '*.hdr;*.img','Analyze Files (*.hdr, *.img)';...
+    '*.*',  'All Files (*.*)'}, ...
+    'Choose drift ROI', 'MultiSelect', 'on'); %#ok<NASGU>
+if isequal(filename,0)
+    %disp('User selected Cancel')
+else
+    %disp(['User selected ', fullfile(pathname, filename)])
+    
+    % Combine path and filename together
+    fullpath = strcat(pathname,filename);
+    
+    if ischar(fullpath)
+        fullpath = {fullpath};
+    end
+    
+    fullpath = fullpath';
+    
+    if numel(fullpath) > 1
+        visualpath = [fullpath{1} ' -> ' num2str(numel(fullpath)) ' files'];
+    else
+        visualpath = fullpath{1};
+    end
+    
+    set(handles.driftpath,'String',visualpath);
+end
+
+handles.driftfiles = fullpath;
+guidata(hObject, handles);

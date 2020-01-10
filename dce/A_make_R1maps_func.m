@@ -1,5 +1,5 @@
-function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,quant, rootname, dynampath, dynam_name, aif_rr_type, ... 
-    tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time, drift, sliceloc, blood_t1, injection_duration)
+function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, DRIFT, hdr, res,quant, rootname, dynampath, dynam_name, aif_rr_type, ... 
+    tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time, drift_global, sliceloc, blood_t1, injection_duration)
 
 % A_make_R1maps_func - Generate concentration versus time curves for the
 % tumor region and the arterial input region. The setup follows Loveless
@@ -19,6 +19,9 @@ function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,
 %  NOISE              - Image matrix  that delineates a noise region of the
 %                       image (not T1 map). Used for SNR calculation. All
 %                       values outside of the ROI set to <=0
+%  DRIFT              - Image matrix  that delineates a region of the image
+%                       (not T1 map) for drift correction (e.g. water 
+%                       phantom). All values outside of the ROI set to <=0
 %  hdr                - Image header of NIFTI or DICOM file read from DCE
 %                       region
 %  res                - vector with voxel size
@@ -42,8 +45,8 @@ function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, hdr, res,
 %                       state period before contrast injection. -1
 %                       indicates users will be prompted to select it
 %                       graphically
-%  drift              - boolean value, perform drift correction based on
-%                       a rod phantom in image FOV
+%  drift_global       - boolean value, perform drift correction globally,
+%                       not on a slice by slice basis
 %  blood_t1           - the T1 value of blood (in ms) only used if 
 %                       aif_rr_type is set to 'aif_auto_static'
 %  injection_duration - the length of the contrast agent injection in
@@ -125,7 +128,16 @@ disp(relaxivity);
 disp('User selected end of steady state time (image number): ');
 disp(steady_state_time);
 disp('User selected drift correction: ');
-disp(drift);
+if(isempty(find(DRIFT > 0, 1)))
+    disp('None')
+else
+    if(drift_global)
+        disp('Global');
+    else
+        disp('Slicewise');
+    end
+end
+
 if quant
     disp('User selected quantification: ie. T1 maps');
 else
@@ -208,6 +220,9 @@ end
 % NOISE = double(NOISE.img);
 noiseind = find(NOISE > 0);
 
+%Load drift ROI files
+driftind = find(DRIFT > 0);
+
 % If viable toggle is on, choose the file that is generated with the
 % viable tumor region.
 if(viable)
@@ -289,6 +304,7 @@ for i = 1:dimt
         if ~(strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static'))
             aif_mask(lvind)  = 1;
         end
+        drift_mask(driftind) = 1;
         if(viable)
             nonviable_mask(nonvia)=1;
         end
@@ -314,165 +330,245 @@ end
 % a rod phantom in the FOV during the imaging, you can use the drift of the
 % phantom to correct for the MR signal in the tissue of interest.
 
-if(drift)
-    drift_fig=figure;
-    for j = 1:dimz
-        figure(drift_fig);
-        % TODO: flip x and y so it is in radiology space
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        imagesc(matchimg(:,:,j)'); axis off;
-        % Create and highlight title
-        title({'Left click on drift correction region then noise region'; 
-            'To skip (will use adjacent slices) right click twice'},'Color', 'Red');
-        drawnow;
-        
-        % Can't use ginput as it causes a problem with the transparency
-        % maps, this is a bug with the openGL drivers, other workarounds
-        % include running the command "opengl('software')"
-        [x, y, button] = myginput(2,'crosshair');
-        x = round(x);
-        y = round(y);
-        
-        if(button(1) > 1)
-            OUT = [];
-        else
-            OUT = findRod(dynam(:,:,j), [x(1) y(1)],[x(2) y(2)], []);
-            drift_mask(OUT(:,1), OUT(:,2), j)=1;
-        end
-        
-        ROD{j}.OUT = OUT;
-    end
-    % Update ROI figure
-    figure(nn);
-    % Permute x and y
-    imshow3D_overlays(permute(matchimg,[2 1 3]),...
-        [prctile(reshape(matchimg,1,[]),5) prctile(reshape(matchimg,1,[]),95)],...
-        permute(region_mask,[2 1 3]),...
-        permute(noise_mask,[2 1 3]),...
-        permute(aif_mask,[2 1 3]),...
-        permute(nonviable_mask,[2 1 3]),...
-        permute(drift_mask,[2 1 3])...
-        );
+if(~isempty(driftind))
+    
+%     drift_fig=figure;
+%     for j = 1:dimz
+%         figure(drift_fig);
+%         % TODO: flip x and y so it is in radiology space
+%         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%         imagesc(matchimg(:,:,j)'); axis off;
+%         % Create and highlight title
+%         title({'Left click on drift correction region then noise region'; 
+%             'To skip (will use adjacent slices) right click twice'},'Color', 'Red');
+%         drawnow;
+%         
+%         % Can't use ginput as it causes a problem with the transparency
+%         % maps, this is a bug with the openGL drivers, other workarounds
+%         % include running the command "opengl('software')"
+%         [x, y, button] = myginput(2,'crosshair');
+%         x = round(x);
+%         y = round(y);
+%         
+%         if(button(1) > 1)
+%             OUT = [];
+%         else
+%             OUT = findRod(dynam(:,:,j), [x(1) y(1)],[x(2) y(2)], []);
+%             drift_mask(OUT(:,1), OUT(:,2), j)=1;
+%         end
+%         
+%         ROD{j}.OUT = OUT;
+%     end
+% 
+% 
+%     % Update ROI figure
+%     figure(nn);
+%     % Permute x and y
+%     imshow3D_overlays(permute(matchimg,[2 1 3]),...
+%         [prctile(reshape(matchimg,1,[]),5) prctile(reshape(matchimg,1,[]),95)],...
+%         permute(region_mask,[2 1 3]),...
+%         permute(noise_mask,[2 1 3]),...
+%         permute(aif_mask,[2 1 3]),...
+%         permute(nonviable_mask,[2 1 3]),...
+%         permute(drift_mask,[2 1 3])...
+%         );
     
     % Now we Drift correct the image
-    
-    % First get time curve of rod and fit to poly
-    %Gets all slices from the second time point
-    originalimg = dynam(:,:,(1+dimz):(1+dimz)+(dimz-1));
-    scale_fit = cell(1,dimz);
-    % Slice loop
-    for j = 1:dimz 
-        % Slice j from second time point
-        originalimgj = originalimg(:,:,j);
-        scalefactor = ones(size(dynam,3)/dimz,1);
+    if(drift_global)
+        %do global correction
+        scale_raw = ones(1,dimt);
+        
+        % First get time curve of rod and fit to poly
+        %Gets 3d image at the second time point, this is the baseline
+        %signal
+        baseline_img = dynam(:,:,:,2);
         
         % Time loop
         for t = 1:dimt
-            % Slice j at time t
-            currentimgj  = dynam(:,:,j,t);
+            current_img = dynam(:,:,:,t);
+            % calculate signal relative to that at the baseline singal(2nd
+            % timepoint), this is scale_raw
+            scale_raw(t) = mean(baseline_img(driftind))/mean(current_img(driftind));
+        end
+        
+        % Fit time curve of rod to poly4
+        scale_fit = fit((1:numel(scale_raw))',scale_raw','poly4','Robust','on');
+        
+        % Second Scale images
+        DYNAM       = [];
+        DYNAMLV     = [];
+        DYNAMNOISE  = [];
+        DYNAMNONVIA = [];
 
-            % rod voxel locations
-            OUT = ROD{j}.OUT;
+        % Time loop
+        for time_index = 1:dimt
+            % All slices at the time time_index
+            currentimg       = dynam(:,:,:,time_index);
+            
 
-            if(~isempty(OUT))
-                rod_index = sub2ind(size(originalimgj), OUT(:,1), OUT(:,2));
-                % signal relative to that at the second time point
-                scalefactor(t) = mean(originalimgj(rod_index))/mean(currentimgj(rod_index));
+            DRIFT_SIGNAL(time_index) = mean(currentimg(driftind));
+            PRECORRECTED(time_index) = mean(currentimg(:));
+            currentimg = currentimg.*scale_fit(time_index);
+            CORRECTED(time_index) = mean(currentimg(:));
+
+
+            DYNAM(end+1,:)   = currentimg(tumind);
+            DYNAMLV(end+1,:) = currentimg(lvind);
+            DYNAMNOISE(end+1)= std(single(currentimg(noiseind)));
+
+            if(viable)
+                DYNAMNONVIA(end+1,:) = currentimg(nonvia);
             end
         end
         
-        if(~isempty(ROD{j}.OUT))
-            % Fit time curve of rod to poly4
-            scale_fit{j} = fit((1:numel(scalefactor))',scalefactor','poly4','Robust','on');
-        end
-    end
+        % Plot the drift and signal pre/post correction
+        drift_fig = figure;
 
-    % Second Scale images
-    DYNAM       = [];
-    DYNAMLV     = [];
-    DYNAMNOISE  = [];
-    DYNAMNONVIA = [];
-    scale_index = zeros(1,dimz);
+        subplot(2, 1, 1)
+        hold on
+            plot(DRIFT_SIGNAL(:)./(DRIFT_SIGNAL(2)*.01), 'r.')
+            plot(100./scale_fit(1:time_index),'k')
+        hold off
+        title('Drift phantom signal and fit');
+        subplot(2,1,2)
+        hold on
+            plot(PRECORRECTED(:), 'b.')
+            plot(CORRECTED(:), 'gx')
+        hold off
+        title('Drift Corrected and Uncorrected Mean Signal');
+
+        saveas(drift_fig, fullfile(PathName1, [rootname '_drift.fig']));
+            
+    else
+        %do slice by slice correction
     
-    % Time loop
-    for time_index = 1:dimt
-        % All slices at the time i
-        currentimg       = dynam(:,:,:,time_index);
+        % First get time curve of rod and fit to poly
+        %Gets 3d image at the second time point, this is the baseline
+        %signal
+        baseline_img = dynam(:,:,:,2);
+        scale_fit = cell(1,dimz);
         % Slice loop
         for j = 1:dimz 
-            % Slice j at time i
-            currentimgj  = currentimg(:,:,j);
-            
-            % rod voxel locations
-            OUT = ROD{j}.OUT;
-            
-            if(~isempty(OUT)) 
-                scale_index(j) = j;
-            else
-                % Try to find a suitable scale factor in another slice
-                for delta = 1:dimz-1
-                    if j-delta >= 1
-                        if(~isempty(ROD{j-delta}.OUT))
-                            scale_index(j) = j-delta;
-                            OUT = ROD{scale_index(j)}.OUT;
-                            break
+            % Slice j from baseline
+            originalimgj = baseline_img(:,:,j);
+            scalefactor = ones(dimt,1);
+
+            % Time loop
+            for t = 1:dimt
+                % Slice j at time t
+                currentimgj  = dynam(:,:,j,t);
+                drift_imgj = DRIFT(:,:,j);
+
+                % rod voxel locations
+                %OUT = ROD{j}.OUT;
+                driftind_j = find(drift_imgj > 0);
+
+                if(~isempty(driftind_j))
+                    % signal relative to that at the second time point
+                    scalefactor(t) = mean(originalimgj(driftind_j))/mean(currentimgj(driftind_j));
+                end
+            end
+
+            if(~isempty(driftind_j))
+                % Fit time curve of rod to poly4
+                scale_fit{j} = fit((1:numel(scalefactor))',scalefactor,'poly4','Robust','on');
+            end
+        end
+
+        % Second Scale images
+        DYNAM       = [];
+        DYNAMLV     = [];
+        DYNAMNOISE  = [];
+        DYNAMNONVIA = [];
+        scale_index = zeros(1,dimz);
+
+        % Time loop
+        for time_index = 1:dimt
+            % All slices at the time time_index
+            currentimg       = dynam(:,:,:,time_index);
+            % Slice loop
+            for j = 1:dimz 
+                % Slice j at time time_index
+                currentimgj  = currentimg(:,:,j);
+                drift_imgj = DRIFT(:,:,j);
+                
+                % rod voxel locations
+                %OUT = ROD{j}.OUT;
+                driftind_j = find(drift_imgj > 0);
+                
+                if(~isempty(driftind_j)) 
+                    scale_index(j) = j;
+                else
+                    % Try to find a suitable scale factor in another slice
+                    for delta = 1:dimz-1
+                        if j-delta >= 1
+                            drift_imgj = DRIFT(:,:,j-delta);
+                            driftind_j = find(drift_imgj > 0);
+                            if(~isempty(driftind_j))
+                                scale_index(j) = j-delta;
+                                break
+                            end
                         end
-                    end
-                    
-                    if j+delta <= dimz
-                        if(~isempty(ROD{j+delta}.OUT))
-                            scale_index(j) = j+delta;
-                            OUT = ROD{scale_index(j)}.OUT;
-                            break
+
+                        if j+delta <= dimz
+                            drift_imgj = DRIFT(:,:,j+delta);
+                            driftind_j = find(drift_imgj > 0);
+                            if(~isempty(driftind_j))
+                                scale_index(j) = j+delta;
+                                break
+                            end
                         end
                     end
                 end
-            end
-                            
-            if(scale_index(j))
-                rod_index = sub2ind(size(currentimgj), OUT(:,1), OUT(:,2));
-                DRIFT(time_index,j) = mean(currentimgj(rod_index));
-                PRECORRECTED(time_index,j) = mean(currentimgj(:));
-                currentimgj = currentimgj.*scale_fit{scale_index(j)}(time_index);
-                CORRECTED(time_index,j) = mean(currentimgj(:));
-                currentimg(:,:,j) = currentimgj;
-            end
-        end
-        
-        DYNAM(end+1,:)   = currentimg(tumind);
-        DYNAMLV(end+1,:) = currentimg(lvind);
-        DYNAMNOISE(end+1)= std(single(currentimg(noiseind)));
-        
-        if(viable)
-            DYNAMNONVIA(end+1,:) = currentimg(nonvia);
-        end
-    end
-    
-    
-    % Plot the drift for each slice
-    drift_fig = figure;
-    
-    for j = 1:dimz
-%         OUT = ROD{j}.OUT;
-        
-        if(scale_index)
-            subplot(ceil(sqrt(dimz)), ceil(sqrt(dimz)), j)
-            hold on
-                if scale_index(j)==j
-                    % only plot rod signal if that is what was used for
-                    % this correction
-                    plot(DRIFT(:,j)', 'r.')
+
+                if(scale_index(j))
+                    %rod_index = sub2ind(size(currentimgj), OUT(:,1), OUT(:,2));
+                    DRIFT_SIGNAL(time_index,j) = mean(currentimgj(driftind_j));
+                    PRECORRECTED(time_index,j) = mean(currentimgj(:));
+                    currentimgj = currentimgj.*scale_fit{scale_index(j)}(time_index);
+                    CORRECTED(time_index,j) = mean(currentimgj(:));
+                    currentimg(:,:,j) = currentimgj;
                 end
-                plot(1./scale_fit{scale_index(j)}(1:time_index).*DRIFT(2,j),'k')
-                plot(CORRECTED(:,j), 'gx')
-                plot(PRECORRECTED(:,j), 'b.')
-            hold off
-            
-            title(['Slice: ' num2str(j)]);
+            end
+
+            DYNAM(end+1,:)   = currentimg(tumind);
+            DYNAMLV(end+1,:) = currentimg(lvind);
+            DYNAMNOISE(end+1)= std(single(currentimg(noiseind)));
+
+            if(viable)
+                DYNAMNONVIA(end+1,:) = currentimg(nonvia);
+            end
         end
-    end
+
+        % Plot the drift for each slice
+        drift_fig = figure;
+
+        for j = 1:dimz  
+            if(scale_index)
+                subplot(ceil(sqrt(dimz)), ceil(sqrt(dimz)), j)
+                hold on
+                    if scale_index(j)==j
+                        % only plot rod signal if that is what was used for
+                        % this correction
+                        plot(DRIFT_SIGNAL(:,j)', 'r.')
+                        % plot fit scaled by rod signal
+                        plot(1./scale_fit{scale_index(j)}(1:time_index).*DRIFT_SIGNAL(2,j),'k')
+                    else
+                        %otherwise plot drift fit scaled by signal from 
+                        %that slice
+                        plot(1./scale_fit{scale_index(j)}(1:time_index).*PRECORRECTED(2,j),'k')
+                    end
+                    plot(CORRECTED(:,j), 'gx')
+                    plot(PRECORRECTED(:,j), 'b.')
+                hold off
+
+                title(['Slice: ' num2str(j)]);
+            end
+        end
+
+        saveas(drift_fig, fullfile(PathName1, [rootname '_drift.fig']));
     
-    saveas(drift_fig, fullfile(PathName1, [rootname '_drift.fig']));
+    end
 end
 
 %% 4.5. Automatically find AIF voxels
@@ -704,8 +800,8 @@ end
 
 n = figure; 
 if quant
-    subplot(423),plot(median(R1tTOI,2), 'r.'), title('R1 maps pre-filtering ROI'), ylabel('sec^-1')
-    subplot(424), plot(median(R1tLV,2), 'b.'), title('R1 maps pre-filtering AIF'), ylabel('sec^-1')
+    subplot(423),plot(median(R1tTOI,2), 'r'), title('R1 maps pre-filtering ROI'), ylabel('sec^-1')
+    subplot(424), plot(median(R1tLV,2), 'b'), title('R1 maps pre-filtering AIF'), ylabel('sec^-1')
 end
 %% 9. Convert to concentrations
 
@@ -760,8 +856,8 @@ if quant
     subplot(427),plot(median(Ct,2), 'r'), title('Ct maps pre-filtering ROI'), ylabel('mM')
     subplot(428), plot(median(Cp,2), 'b'), title('Cp maps pre-filtering AIF'), ylabel('mM')
     
-    subplot(425), plot(median(deltaR1TOI,2), 'r.'), title('Delta R1 ROI'), ylabel('sec^-1')
-    subplot(426), plot(median(deltaR1LV,2), 'b.'), title('Delta R1 AIF') , ylabel('sec^-1')
+    subplot(425), plot(median(deltaR1TOI,2), 'r'), title('Delta R1 ROI'), ylabel('sec^-1')
+    subplot(426), plot(median(deltaR1LV,2), 'b'), title('Delta R1 AIF') , ylabel('sec^-1')
 end
 subplot(421), plot(RawTUM, 'r'), title('T1-weighted ROI'), ylabel('a.u.')
 subplot(422), plot(RawLV, 'b'), title('T1-weighted AIF'), ylabel('a.u.')
@@ -830,7 +926,9 @@ saved_results = fullfile(PathName1, ['A_' rootname 'R1info.mat']);
 save(saved_results, 'Adata','-v7.3');
 Opt.Input = 'file';
 try
-    mat_md5 = DataHash(saved_results, Opt);
+    %mat_md5 = DataHash(saved_results, Opt);
+    disp('hash disabled')
+    mat_md5 = 0;
 catch
     disp('Problem using md5 hashing. Will continue');
     mat_md5 = 'error';
