@@ -330,50 +330,8 @@ end
 % a rod phantom in the FOV during the imaging, you can use the drift of the
 % phantom to correct for the MR signal in the tissue of interest.
 
-if(~isempty(driftind))
-    
-%     drift_fig=figure;
-%     for j = 1:dimz
-%         figure(drift_fig);
-%         % TODO: flip x and y so it is in radiology space
-%         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%         imagesc(matchimg(:,:,j)'); axis off;
-%         % Create and highlight title
-%         title({'Left click on drift correction region then noise region'; 
-%             'To skip (will use adjacent slices) right click twice'},'Color', 'Red');
-%         drawnow;
-%         
-%         % Can't use ginput as it causes a problem with the transparency
-%         % maps, this is a bug with the openGL drivers, other workarounds
-%         % include running the command "opengl('software')"
-%         [x, y, button] = myginput(2,'crosshair');
-%         x = round(x);
-%         y = round(y);
-%         
-%         if(button(1) > 1)
-%             OUT = [];
-%         else
-%             OUT = findRod(dynam(:,:,j), [x(1) y(1)],[x(2) y(2)], []);
-%             drift_mask(OUT(:,1), OUT(:,2), j)=1;
-%         end
-%         
-%         ROD{j}.OUT = OUT;
-%     end
-% 
-% 
-%     % Update ROI figure
-%     figure(nn);
-%     % Permute x and y
-%     imshow3D_overlays(permute(matchimg,[2 1 3]),...
-%         [prctile(reshape(matchimg,1,[]),5) prctile(reshape(matchimg,1,[]),95)],...
-%         permute(region_mask,[2 1 3]),...
-%         permute(noise_mask,[2 1 3]),...
-%         permute(aif_mask,[2 1 3]),...
-%         permute(nonviable_mask,[2 1 3]),...
-%         permute(drift_mask,[2 1 3])...
-%         );
-    
-    % Now we Drift correct the image
+if(~isempty(driftind))   
+    % Drift correct the image
     if(drift_global)
         %do global correction
         scale_raw = ones(1,dimt);
@@ -430,12 +388,14 @@ if(~isempty(driftind))
             plot(100./scale_fit(1:time_index),'k')
         hold off
         title('Drift phantom signal and fit');
+        legend('phantom','poly fit')
         subplot(2,1,2)
         hold on
             plot(PRECORRECTED(:), 'b.')
             plot(CORRECTED(:), 'gx')
         hold off
         title('Drift Corrected and Uncorrected Mean Signal');
+        legend('uncorrected','corrected', 'Location', 'southeast')
 
         saveas(drift_fig, fullfile(PathName1, [rootname '_drift.fig']));
             
@@ -493,7 +453,6 @@ if(~isempty(driftind))
                 drift_imgj = DRIFT(:,:,j);
                 
                 % rod voxel locations
-                %OUT = ROD{j}.OUT;
                 driftind_j = find(drift_imgj > 0);
                 
                 if(~isempty(driftind_j)) 
@@ -522,7 +481,6 @@ if(~isempty(driftind))
                 end
 
                 if(scale_index(j))
-                    %rod_index = sub2ind(size(currentimgj), OUT(:,1), OUT(:,2));
                     DRIFT_SIGNAL(time_index,j) = mean(currentimgj(driftind_j));
                     PRECORRECTED(time_index,j) = mean(currentimgj(:));
                     currentimgj = currentimgj.*scale_fit{scale_index(j)}(time_index);
@@ -565,9 +523,7 @@ if(~isempty(driftind))
                 title(['Slice: ' num2str(j)]);
             end
         end
-
         saveas(drift_fig, fullfile(PathName1, [rootname '_drift.fig']));
-    
     end
 end
 
