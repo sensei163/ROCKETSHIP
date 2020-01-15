@@ -681,34 +681,33 @@ for model_index=1:numel(dce_model_list)
     %[discard, actual] = fileparts(strrep(dynam_name, '\', '/'));
     
     if strcmp(cur_dce_model, 'tofts')
-        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Residual', 'Ktrans 95% low', ...
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','SSE', 'Ktrans 95% low', ...
             'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high'};
-        paramname = {'Ktrans'; 've'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'};
+        paramname = {'Ktrans'; 've'; 'sse'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'};
     elseif strcmp(cur_dce_model, 'ex_tofts') || strcmp(cur_dce_model, 'nested')
-        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Residual', 'Ktrans 95% low', ...
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','SSE', 'Ktrans 95% low', ...
             'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high'};
-        paramname = {'Ktrans'; 've'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
-        
+        paramname = {'Ktrans'; 've'; 'vp'; 'sse'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'};  
     elseif strcmp(cur_dce_model, 'FXL_rr')
-        headings = {'ROI path', 'ROI', 'Ktrans_TOI', 'Ve','Ktrans_RR','Residual', 'Ktrans_TOI 95% low', ...
+        headings = {'ROI path', 'ROI', 'Ktrans_TOI', 'Ve','Ktrans_RR','SSE', 'Ktrans_TOI 95% low', ...
             'Ktrans_TOI 95% high', 'Ve 95% low', 'Ve 95% high','Ktrans_RR 95% low','Ktrans_RR 95% high'};
-        paramname = {'Ktrans_TOI'; 've'; 'Ktrans_RR'; 'residual'; 'ktransTOI_ci_low'; 'ktransTOI_ci_high'; 've_ci_low';'ve_ci_high'; 'ktransRR_ci_low'; 'ktransRR_ci_high'};
+        paramname = {'Ktrans_TOI'; 've'; 'Ktrans_RR'; 'sse'; 'ktransTOI_ci_low'; 'ktransTOI_ci_high'; 've_ci_low';'ve_ci_high'; 'ktransRR_ci_low'; 'ktransRR_ci_high'};
     elseif strcmp(cur_dce_model, '2cxm')
-        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Fp','Residual', 'Ktrans 95% low', ...
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Vp','Fp','SSE', 'Ktrans 95% low', ...
             'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Vp 95% low','Vp 95% high','Fp 95% low','Fp 95% high'};
-        paramname = {'Ktrans'; 've'; 'vp';'fp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'; 'fp_ci_low'; 'fp_ci_high'};
+        paramname = {'Ktrans'; 've'; 'vp';'fp'; 'sse'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'; 'fp_ci_low'; 'fp_ci_high'};
     elseif strcmp(cur_dce_model, 'tissue_uptake')
-        headings = {'ROI path', 'ROI', 'Ktrans', 'Fp','Vp','Residual', 'Ktrans 95% low', ...
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Fp','Vp','SSE', 'Ktrans 95% low', ...
             'Ktrans 95% high', 'Fp 95% low', 'Fp 95% high','Vp 95% low','Vp 95% high'};
-        paramname = {'Ktrans'; 'fp'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
+        paramname = {'Ktrans'; 'fp'; 'vp'; 'sse'; 'ktrans_ci_low'; 'ktrans_ci_high'; 'fp_ci_low';'fp_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
     elseif strcmp(cur_dce_model, 'patlak')
-        headings = {'ROI path', 'ROI', 'Ktrans','Vp','Residual', 'Ktrans 95% low', ...
+        headings = {'ROI path', 'ROI', 'Ktrans','Vp','SSE', 'Ktrans 95% low', ...
             'Ktrans 95% high','Vp 95% low','Vp 95% high'};
-        paramname = {'Ktrans'; 'vp'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
+        paramname = {'Ktrans'; 'vp'; 'sse'; 'ktrans_ci_low'; 'ktrans_ci_high'; 'vp_ci_low'; 'vp_ci_high'};
     elseif strcmp(cur_dce_model, 'fxr')
-        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Tau','Residual', 'Ktrans 95% low', ...
+        headings = {'ROI path', 'ROI', 'Ktrans', 'Ve','Tau','SSE', 'Ktrans 95% low', ...
             'Ktrans 95% high', 'Ve 95% low', 'Ve 95% high','Tau 95% low','Tau 95% high'};
-        paramname = {'Ktrans'; 've'; 'tau'; 'residual'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'tau_ci_low'; 'tau_ci_high'};
+        paramname = {'Ktrans'; 've'; 'tau'; 'sse'; 'ktrans_ci_low'; 'ktrans_ci_high'; 've_ci_low';'ve_ci_high'; 'tau_ci_low'; 'tau_ci_high'};
     elseif strcmp(cur_dce_model, 'auc')
         if quant
             headings = {'ROI path', 'ROI', 'AUC conc', 'AUC sig','NAUC conc', 'NAUC sig'};
