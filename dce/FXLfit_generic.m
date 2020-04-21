@@ -98,7 +98,7 @@ if strcmp(model, 'ex_tofts')
         tolerance = prefs.gpu_tolerance;
         max_n_iterations = prefs.gpu_max_n_iterations;
         
-        init_param = zeros([2,number_voxels]);
+        init_param = zeros([3,number_voxels]);
         for i=1:number_voxels
             init_param(1,i) = prefs.initial_value_ktrans;
             init_param(2,i) = prefs.initial_value_ve;
@@ -106,7 +106,8 @@ if strcmp(model, 'ex_tofts')
         end
         init_param_single = single(init_param);
         
-        constraints = zeros([2,number_voxels]);
+        constraints = zeros([6,number_voxels]);
+        constraint_type = zeros([3,number_voxels],'int32');
         for i=1:number_voxels
             constraints(1,i) = prefs.lower_limit_ktrans;
             constraints(2,i) = prefs.upper_limit_ktrans;
@@ -114,6 +115,9 @@ if strcmp(model, 'ex_tofts')
             constraints(4,i) = prefs.upper_limit_ve;
             constraints(5,i) = prefs.lower_limit_vp;
             constraints(6,i) = prefs.upper_limit_vp;
+            constraint_type(1,i) = 3;
+            constraint_type(2,i) = 3;
+            constraint_type(3,i) = 3;
         end
         constraints_single = single(constraints);
         
@@ -123,8 +127,8 @@ if strcmp(model, 'ex_tofts')
         
         % Execute GPU fit
         %[parameters, states, chi_squares, n_iterations, time] = gpufit(Ct_single,[],model_id,init_param_single,tolerance, max_n_iterations,[],estimator_id,indie_vars);
-        [parameters, states, chi_squares, n_iterations, time] = gpufit_constraints(Ct_single,constraints_single,[],model_id,init_param_single,tolerance, max_n_iterations,[],estimator_id,indie_vars);
-        fprintf('GPU fit finished in %s seconds\n',num2str(time));
+        [parameters, states, chi_squares, n_iterations, time] = gpufit_constrained(Ct_single,[],model_id,init_param_single,constraints_single,constraint_type,tolerance, max_n_iterations,[],estimator_id,indie_vars);
+        %fprintf('GPU fit finished in %s seconds\n',num2str(time));
         
         % If did not converge discard values
         one_parameter = parameters(1,:);
@@ -278,7 +282,16 @@ elseif strcmp(model, 'tissue_uptake')
         % Execute GPU fit
         [parameters, states, chi_squares, n_iterations, time] = gpufit_constraints(Ct_single,constraints_single,[],model_id,init_param_single,tolerance, max_n_iterations,[],estimator_id,indie_vars);
         %[parameters, states, chi_squares, n_iterations, time] = gpufit(Ct_single,[],model_id,init_param_single,tolerance, max_n_iterations,[],estimator_id,indie_vars);
-        
+        state_0 = numel(states(states==0));
+        state_1 = numel(states(states==1));
+        state_2 = numel(states(states==2));
+        state_3 = numel(states(states==3));
+        state_4 = numel(states(states==4));
+        fprintf('ratio converged = %s\n',num2str(state_0));
+        fprintf('ratio max iteration exceeded = %s\n',num2str(state_1));
+        fprintf('ratio singular hessian = %s\n',num2str(state_2));
+        fprintf('ratio neg curvature MLE = %s\n',num2str(state_3));
+        fprintf('ratio gpu not read = %s\n',num2str(state_4));
         % If did not converge discard values
 %         one_parameter = parameters(1,:);
 %         one_parameter(states~=0) = -0.000001;  %Ktrans
