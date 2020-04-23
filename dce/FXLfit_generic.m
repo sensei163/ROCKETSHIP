@@ -1,7 +1,11 @@
-function [GG, residuals] = FXLfit_generic(xdata, number_voxels, model, verbose)
+function [GG, residuals] = FXLfit_generic(xdata, number_voxels, model, verbose, cpu_only)
 
-if nargin < 4
-    verbose = 1;
+if nargin < 5
+    cpu_only = 0;
+    if nargin < 4
+        verbose = 0;
+        cpu_only = 0;
+    end
 end
 p = 0;
 residuals = [];
@@ -43,7 +47,7 @@ if strcmp(model, 'ex_tofts')
         fprintf('initial_value_vp = %s\n',num2str(prefs.initial_value_vp));
     end
         
-    if ~prefs.gpufit
+    if ~prefs.gpufit || cpu_only
         % Get values from pref file
         prefs_str = parse_preference_file('dce_preferences.txt',0,...
             {'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals' 'voxel_Robust'});
@@ -79,8 +83,7 @@ if strcmp(model, 'ex_tofts')
     
         if verbose; p.stop; end
         if diary_restore, diary on, end
-    end
-    if prefs.gpufit        
+    else        
         model_id = ModelID.TOFTS_EXTENDED;
         estimator_id = EstimatorID.LSE;
         
