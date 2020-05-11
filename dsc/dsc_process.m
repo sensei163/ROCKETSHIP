@@ -1,4 +1,4 @@
-function dsc_process(dsc_image,noise_type,noise_roi_path,AIF_type, aif_path,Fitting_function,TE,TR,r2_star,Psvd,rho,species)
+function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitting_function,TE,TR,r2_star,psvd,rho,species)
     %Unboxing the variables from the handles structure:
     deltaT = TR / 60;  % converstion to minutes.
 
@@ -23,16 +23,16 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,AIF_type, aif_path,Fitt
 
     [concentration_array, base_concentration_array, time_vect, base_time_vect,whole_time_vect, bolus_time] = ...
         DSC_signal2concentration(image_array,TE,TR,r2_star,species,image_path,noise_type,roi_array );
-    if AIF_type == 0 %AIF Auto
+    if aif_type == 0 %AIF Auto
         [meanAIF, meanSignal] = AIF_auto_cluster(concentration_array, image_array, time_vect, TR,species);
         baseline = 0; %develop a way to calculate the baseline from the auto clustered AIF
         baseline_array = zeros(numel(base_time_vect));
-    elseif AIF_type ==1 %AIF User Selected
+    elseif aif_type ==1 %AIF User Selected
         AIF_mask = load_nii(aif_path);
         AIF_mask = AIF_mask.img;
         [meanAIF, meanSignal, baseline,baseline_array] = AIF_manual_noreshape(image_array,concentration_array,AIF_mask, base_time_vect,base_concentration_array);
 
-    elseif AIF_type==2 %AIF Import
+    elseif aif_type==2 %AIF Import
         load(aif_path)
         [meanAIF_adjusted, time_vect, concentration_array] = import_AIF(meanAIF, bolus_time, time_vect, concentration_array, r2_star, TE);
         meanAIF = meanAIF_adjusted;
@@ -42,7 +42,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,AIF_type, aif_path,Fitt
         disp('meanAIF_num')
         numel(meanAIF)
 
-    elseif AIF_type==3 %AIF Use Previous
+    elseif aif_type==3 %AIF Use Previous
         load('previous_data.mat');
         [meanAIF_adjusted, time_vect, concentration_array] = previous_AIF(meanAIF,meanSignal,bolus_time, time_vect,concentration_array);
         meanAIF = meanAIF_adjusted;
@@ -57,7 +57,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,AIF_type, aif_path,Fitt
     AIF_whole = cat(1,baseline_array, meanAIF);
 
     %now run the selected fitting function
-    if Fitting_function == 0 %forced linear biexponential (uses local max) %the upslope is fitted to
+    if fitting_function == 0 %forced linear biexponential (uses local max) %the upslope is fitted to
 
         Cp = cat(1,baseline_array,meanAIF);
         step = [(bolus_time) (bolus_time + numel(time_vect))];
@@ -70,7 +70,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,AIF_type, aif_path,Fitt
         Ct(1:bolus_time - 1) = [];
         Ct = Ct';
 
-    elseif Fitting_function == 1 %biexponential (uses absolute max)
+    elseif fitting_function == 1 %biexponential (uses absolute max)
         Cp = cat(1,baseline_array,meanAIF);
         step = [bolus_time (bolus_time + numel(time_vect))];
         T1 = whole_time_vect;
@@ -82,7 +82,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,AIF_type, aif_path,Fitt
         Ct(1:bolus_time - 1) = [];
         Ct = Ct';
 
-    elseif Fitting_function == 2 %biexponential (uses local max)
+    elseif fitting_function == 2 %biexponential (uses local max)
         Cp = cat(1,baseline_array,meanAIF);
         step = [bolus_time (bolus_time + numel(time_vect))];
         T1 = whole_time_vect;
@@ -94,7 +94,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,AIF_type, aif_path,Fitt
         Ct(1:bolus_time - 1) = [];
         Ct = Ct';
 
-    elseif Fitting_function == 3 %gamma-variant
+    elseif fitting_function == 3 %gamma-variant
         % Now we fit the AIF with a SCR model:
 
         %assigning the gamma variate function, gfun, to be our desired fitting
@@ -102,12 +102,12 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,AIF_type, aif_path,Fitt
         Ct = fitting_gamma_variant(meanAIF,species, time_vect);
         Cp = cat(1,baseline_array, Ct); %Cp is created for plotting purposes only. Ct is analyzed for CBF, CBV...
 
-    elseif Fitting_function == 4 %raw data
+    elseif fitting_function == 4 %raw data
         Ct = meanAIF;
         Cp = cat(1,baseline_array, Ct);
 
     %{
-    elseif Fitting_function == 42 %copy_of_upslopewith peak based decision making (not currently an option)
+    elseif fitting_function == 42 %copy_of_upslopewith peak based decision making (not currently an option)
         Cp = cat(1,baseline_array,meanAIF);
         step = [bolus_time (bolus_time + numel(time_vect))];
         T1 = whole_time_vect;
@@ -129,7 +129,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,AIF_type, aif_path,Fitt
             Ct = Ct';
         end
     %}
-    elseif Fitting_function == 5 %copy_of_upslope with peak based decision making
+    elseif fitting_function == 5 %copy_of_upslope with peak based decision making
         Cp = cat(1,baseline_array,meanAIF);
         step = [bolus_time (bolus_time + numel(time_vect))];
         T1 = whole_time_vect;
@@ -163,7 +163,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,AIF_type, aif_path,Fitt
             Ct = Ct';
         end
 
-    elseif Fitting_function == 6 %upslope copy biexponetial
+    elseif fitting_function == 6 %upslope copy biexponetial
 
         Cp = cat(1,baseline_array,meanAIF);
         step = [bolus_time (bolus_time + numel(time_vect))];
@@ -194,7 +194,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,AIF_type, aif_path,Fitt
         base = baseline * ones(numel(baseline_array),1);
         Cp = [base; Ct];
 
-    elseif Fitting_function == 7 %forced bilinear biexponential decay
+    elseif fitting_function == 7 %forced bilinear biexponential decay
 
         %two linear function
         Cp = cat(1,baseline_array,meanAIF);
@@ -243,6 +243,6 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,AIF_type, aif_path,Fitt
 
     Kh = 0.71;
     % method = 1;
-    [CBF, CBV, MTT] = DSC_convolution_sSVD(concentration_array,Ct,deltaT,Kh,rho,Psvd,1,image_path);
+    [CBF, CBV, MTT] = DSC_convolution_sSVD(concentration_array,Ct,deltaT,Kh,rho,psvd,1,image_path);
     disp('new')
 end
