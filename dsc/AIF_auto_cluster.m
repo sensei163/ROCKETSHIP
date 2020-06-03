@@ -195,7 +195,7 @@ while good_aif ~= 1
 close all;
 
 % Lets plot the curves from the different clusters: 
-figure; 
+figure(1);
 
 %time vector for the plots below 
 if ndims(concentration_array) == 4  
@@ -263,7 +263,7 @@ hold off;
                 rgb_cluster_array(index_array(i,2),index_array(i,1),3) = 1;
             end
         end
-    figure;
+    figure(2);
     image(rgb_cluster_array); 
     axis image; 
     hold off; 
@@ -295,8 +295,7 @@ hold off;
     end
     
 %% Now we plot the clusters. 
-figure; 
-
+figure(3); 
 plot(clustering_variables(clusters==1,1),clustering_variables(clusters==1,2), ...
     'r.', 'MarkerSize', 12); 
 hold on 
@@ -315,9 +314,14 @@ plot(clustering_variables(clusters==5,1),clustering_variables(clusters==5,2), ..
 legend('Cluster 1', 'Cluster 2', 'Cluster 3', 'Cluster 4', 'Cluster 5'); 
 xlabel('Peak Concenration [mM]'); 
 ylabel('First Moment Integral, A.U.'); 
+title('click on desired AIF points, press return to continue');
 hold off; 
+drawnow;
+figure(3);
 
+disp("waiting for user input");
 [fm_values,peak_values]=ginput(); 
+disp("number of user selected points: "+size(fm_values,1));
 
 min_fm = min(fm_values); 
 max_fm = max(fm_values); 

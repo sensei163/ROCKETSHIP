@@ -1,12 +1,15 @@
 function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitting_function,TE,TR,r2_star,psvd,rho,species)
+    disp("starting DSC processing...");
+    tic;
+    
     %Unboxing the variables from the handles structure:
     deltaT = TR / 60;  % converstion to minutes.
 
 
     %Next WE ARE GOING TO LOAD THE IMAGE FILE:
-    disp(dsc_image);
-    disp(species);
-    disp(r2_star);
+    disp("input image: "+dsc_image);
+    disp("species: "+species);
+    disp("R2_star: "+r2_star);
     image_array = load_nii(dsc_image);
     image_array = image_array.img;
     %Next we load the nosie roi array:
@@ -26,7 +29,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
     if aif_type == 0 %AIF Auto
         [meanAIF, meanSignal] = AIF_auto_cluster(concentration_array, image_array, time_vect, TR,species);
         baseline = 0; %develop a way to calculate the baseline from the auto clustered AIF
-        baseline_array = zeros(numel(base_time_vect));
+        baseline_array = zeros(numel(base_time_vect),1);
     elseif aif_type ==1 %AIF User Selected
         AIF_mask = load_nii(aif_path);
         AIF_mask = AIF_mask.img;
@@ -43,7 +46,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
         numel(meanAIF)
 
     elseif aif_type==3 %AIF Use Previous
-        load('previous_data.mat');
+        load('previous_data.mat', 'meanAIF','meanSignal','bolus_time','baseline');
         [meanAIF_adjusted, time_vect, concentration_array] = previous_AIF(meanAIF,meanSignal,bolus_time, time_vect,concentration_array);
         meanAIF = meanAIF_adjusted;
 
@@ -244,5 +247,6 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
     Kh = 0.71;
     % method = 1;
     [CBF, CBV, MTT] = DSC_convolution_sSVD(concentration_array,Ct,deltaT,Kh,rho,psvd,1,image_path);
-    disp('new')
+    disp('finished DSC processing!');
+    toc;
 end

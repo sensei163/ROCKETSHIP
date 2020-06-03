@@ -5,4 +5,4 @@
  addpath(fullfile(mfilepath,'external_programs/niftitools'));
  addpath(fullfile(mfilepath,'parametric_scripts'));
 % Run program
- DSC_gui
+ dsc
