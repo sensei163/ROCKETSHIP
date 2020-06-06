@@ -113,6 +113,7 @@ W = ones(size(Cp));
 %calculate the most likely first peak by finding the first local maxima
 %that is within 3% of the max value of the whole data set
 [local_maxima, maxima_indexes] = findpeaks(Cp);
+%TO DO: replace findpeaks with islocalmax()
 maxima_iterator = 1;
 while(local_maxima(maxima_iterator) < (0.97 * max(local_maxima)))
     maxima_iterator = maxima_iterator + 1;
