@@ -1,15 +1,82 @@
 function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitting_function,TE,TR,r2_star,psvd,rho,species)
+% FUNCTION PURPOSE: To generate blood flow and volume maps from DSC dataset
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%INPUTS%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% dsc_image: STRING - with path to dsc dynamic images
+%
+% noise_type: INT - 0=automatically find noise region
+%                   1=user selected nii mask defining noise region
+%
+% noise_roi_path: path to .nii mask image defining noise region
+%
+% aif_type:  INT -  0=AIF automatically selected
+%                   1=user selected nii mask defining AIF region
+%                   2=user selected .mat file containing AIF
+%                   3=use AIF from previous processed dataset
+% 
+% aif_path: STRING - path to AIF .nii or .mat file
+%
+% fitting_function: INT - function used to fit the AIF
+%                           0 %forced linear biexponential(uses local max), upslope is fitted to linear
+%                           1 %biexponential (uses absolute max)
+%                           2 %biexponential (uses local max)
+%                           3 %gamma-variant
+%                           4 %raw data, no fitting
+%                           5 %copy_of_upslope with peak based decision making
+%                           6 %upslope copy biexponetial
+%                           7 %forced bilinear biexponential decay
+%
+% TE: in SECONDS The echo-time used in the DSC scan .
+%
+% TR: in SECONDS The time resolution of the DSC MRI scan .
+%
+% r2_star:  in L/mmol*s The relaxivity value of the concentrast agent. This is
+% dependent on both species and magnet used.
+%
+% psvd: .
+%
+% rho: in g/ml.
+%
+% species: STRING - Which species is the data obtain from.
+%
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%OUTPUTS%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Generate figures and output files with generated DSC maps
+%
+%%%%%%%%%%%%%%%%******BEGIN FUNCTION BODY******%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
     disp("starting DSC processing...");
     tic;
+    
+    %display input variables
+    disp("input image: "+dsc_image);
+    if(noise_type==0)
+        disp("noise selected automatically");
+    else
+        disp("noise region mask: "+noise_roi_path);
+    end
+    if aif_type == 0 %AIF Auto
+         disp("AIF auto");
+    elseif aif_type ==1 %AIF User Selected
+        disp("AIF from mask file: "+aif_path);
+    elseif aif_type==2 %AIF Import
+        disp("AIF import from: "+aif_path);
+    elseif aif_type==3 %AIF Use Previous
+        disp("AIF from previously processed dataset");
+    end
+    disp("fitting function selected: "+fitting_function);
+    disp("TE (seconds): "+TE);
+    disp("TR (seconds): "+TR);
+    disp("R2_star (L/mmol*s): "+r2_star);
+    disp("psvd: "+psvd);
+    disp("rho: "+rho);
+    disp("species: "+species);   
     
     %Unboxing the variables from the handles structure:
     deltaT = TR / 60;  % converstion to minutes.
 
-
-    %Next WE ARE GOING TO LOAD THE IMAGE FILE:
-    disp("input image: "+dsc_image);
-    disp("species: "+species);
-    disp("R2_star: "+r2_star);
+    %Next WE ARE GOING TO LOAD THE IMAGE FILE:    
     image_array = load_nii(dsc_image);
     image_array = image_array.img;
     %Next we load the nosie roi array:

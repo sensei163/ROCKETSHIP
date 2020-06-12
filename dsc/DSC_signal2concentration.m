@@ -6,9 +6,9 @@ function [ concentration_array,base_concentration_array, time_vect, base_time_ve
 % IMAGE_ARRAY: The image arranged into an array of signal values. Must be a
 % .nii file.
 %
-% TE: The echo-time used in the DSC scan.
+% TE: in SECONDS The echo-time used in the DSC scan.
 %
-% TR: The time resolution of the DSC MRI scan.
+% TR: in SECONDS The time resolution of the DSC MRI scan.
 %
 % r2_star:  The relaxivity value of the concentrast agent. This is
 % dependent on both species and magnet used.
@@ -29,7 +29,7 @@ function [ concentration_array,base_concentration_array, time_vect, base_time_ve
 % CONCENTRATION_ARRAY: An array of concentration values. This array is used
 % as an input for subsequent functios.
 %
-% TIME_VECT a vector of time values. This will be used in subsequent
+% TIME_VECT in MINUTES a vector of time values. This will be used in subsequent
 % calculations.
 % 
 % SAVED FILE: A nifti image, ending in nii_conc.nii, is saved under the
