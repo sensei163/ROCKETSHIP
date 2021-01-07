@@ -1,4 +1,6 @@
-function [ concentration_array,base_concentration_array, time_vect, base_time_vect, whole_time_vect, bolus_time] = DSC_signal2concentration(image_array,TE,TR,r2_star,species,path,noise_type,noise_array)
+function [concentration_array, base_concentration_array, time_vect, base_time_vect,whole_time_vect,...
+    bolus_index, base_signal_array, image_array,background_signal] = DSC_signal2concentration(image_array,...
+    TE,TR,r2_star,species,path,noise_type,noise_array,bolus_detection)
 % FUNCTION PURPOSE: To convert signal values to units of concentration, mM.
 % 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%INPUTS%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -144,27 +146,74 @@ else % We are working with a slice
     end
 end
 
-% Now we need to find the bolus time. Looking for a 'significant' dip! 
-stdev_sigs = zeros(dimt-2,1); 
-[~,minsignal_index] = min(mean_signal);
-for i = 3 : dimt 
-    stdev_sigs(-2+i,1) = std(mean_signal(3:i)); 
-    if (i > 6) && ( (mean_signal(i)) < (mean(mean_signal(3:i-1)) - 4*mean(stdev_sigs(2:-2+i-1,1))))...
-            && ((minsignal_index - i) <= 4) %added 5/21/18 to prevent bolus_time selection during the baseline phase
-        bolus_time = i-1;
-        break
-    end 
-end 
+% Now we need to find the bolus time. Looking for a 'significant' dip!
+
+%preset bolus_time to prompt for user selection if it cannot be found
+%automatically
+bolus_index = -1;
+
+%define a time vector for the course of the scan used in 
+%user selected bolus time and plotting
+whole_time_vect = 0: TR : (dimt - 1) *TR;
+
+%automatic detection
+if bolus_detection == 0 
+    stdev_sigs = zeros(dimt-2,1); 
+    [minsignal,minsignal_index] = min(mean_signal);
+    for i = 3 : dimt 
+        stdev_sigs(-2+i,1) = std(mean_signal(3:i)); 
+        if ((mean_signal(i) < (mean(mean_signal(3:i-1)) - 4*mean(stdev_sigs(2:-2+i-1,1)))) ...
+                && i > 6 )%(mean_signal(i) < 1.25*minsignal)) % && ((minsignal_index - i) <= 5) %added 5/21/18 to prevent bolus_time selection during the baseline phase
+            bolus_index = i-1;
+            break
+        end 
+    end
+end
+
+%user selected bolus time injection
+if bolus_detection == 1 || bolus_index == -1 
+    
+    while(1)
+        %display signal intesity for user
+        f_before_input = figure('Name',"Average Whole Image Intensity");
+        plot(whole_time_vect,mean_signal)
+        title("User Selected Bolus Time (Red Dot)")
+        ylabel("Signal Intensity (au)")
+        xlabel("Time (s)")
+        
+        
+        %take user input on bolus injection time
+        [bolus_time,bolus_signal] = ginput(1);
+        bolus_index = round(bolus_time/TR);
+        
+        %display user input 
+        f_after_input = figure('Name',"Select Bolus Time");
+        plot(whole_time_vect,mean_signal,bolus_time,bolus_signal,'o',...
+            'MarkerSize',4,'MarkerEdgeColor','r','MarkerFaceColor','r')
+        title("User Selected Bolus Time (Red Dot)")
+        ylabel("Signal Intensity (au)")
+        xlabel("Time (s)")
+        
+        %prompt user to confirm bolus injection time
+        prompt = sprintf('Select Continue to Use Current Bolus Injection Time Selection \n or Reselect to Choose a Different Injection Time ');
+        button = questdlg(prompt, 'Continue', 'Continue', 'Reselect', 'Continue');
+        if strcmpi(button, 'Continue')
+            break;
+        end
+        
+        close([f_before_input f_after_input])
+    end
+end
 
 %% Calculate baseline signal before injection and compute concentration: 
 
 % Initialize an array of concentration values: 
 if ndims(image_array) == 4
-    concentration_array = zeros(dimx,dimy,dimz,dimt-bolus_time); 
+    concentration_array = zeros(dimx,dimy,dimz,dimt-bolus_index); 
     % We need an array for the baseline values, too: 
     base_signal_array = zeros(dimx,dimy,dimz); 
 else 
-    concentration_array = zeros(dimx,dimy,dimt-bolus_time); 
+    concentration_array = zeros(dimx,dimy,dimt-bolus_index); 
     base_signal_array = zeros(dimx,dimy); 
 end
 
@@ -182,7 +231,7 @@ for t = 1 : dimt
                     if strcmp(species,'human')
                             if mean(image_array(i,j,k,:)) > 3000 && mean(image_array(i,j,k,:)) < 10000  % If the value are not in this range. Put them to zero. 
                             % The baseline signal value: 
-                            base_signal_array(i,j,k) = mean(image_array(i,j,k,2:bolus_time-1)); 
+                            base_signal_array(i,j,k) = mean(image_array(i,j,k,2:bolus_index-1)); 
                             % Compute the concentration in a voxel-wise manner: 
                             %concentration_array(i,j,k,t) = (-1/TE)*log(image_array(i,j,k,t+bolus_time-1)/base_signal_array(i,j,k)) ./ r2_star; 
                             concentration_array(i,j,k,t) = (-1/TE)*log(image_array(i,j,k,t)/base_signal_array(i,j,k)) ./ r2_star;
@@ -190,7 +239,7 @@ for t = 1 : dimt
                     elseif strcmp(species,'mouse')
                           if mean(image_array(i,j,k,:)) > background_signal * 3 && mean(image_array(i,j,k,:)) < 50000 % If the value are not in this range. Put them to zero. 
                             % The baseline signal value: 
-                            base_signal_array(i,j,k) = mean(image_array(i,j,k,2:bolus_time-1)); 
+                            base_signal_array(i,j,k) = mean(image_array(i,j,k,2:bolus_index-1)); 
                             % Compute the concentration in a voxel-wise manner: 
                             %concentration_array(i,j,k,t) = (-1/TE)*log(image_array(i,j,k,t+bolus_time-1)/base_signal_array(i,j,k)) ./ r2_star; 
                             concentration_array(i,j,k,t) = (-1/TE)*log(image_array(i,j,k,t)/base_signal_array(i,j,k)) ./ r2_star;
@@ -201,13 +250,13 @@ for t = 1 : dimt
                 else 
                     if strcmp(species,'human')
                         if mean(image_array(i,j,:)) >  3000 && mean(image_array(i,j,:)) < 10000
-                        base_signal_array(i,j) = mean(image_array(i,j,2:bolus_time-1));  
+                        base_signal_array(i,j) = mean(image_array(i,j,2:bolus_index-1));  
                         %concentration_array(i,j,t) = (-1/TE)*log(image_array(i,j,t+bolus_time-1)/base_signal_array(i,j)) ./ r2_star;   
                         concentration_array(i,j,t) = (-1/TE)*log(image_array(i,j,t)/base_signal_array(i,j)) ./ r2_star; 
                         end
                     elseif strcmp(species,'mouse')
                         if mean(image_array(i,j,:)) > background_signal * 3  && mean(image_array(i,j,:)) < 50000
-                        base_signal_array(i,j) = mean(image_array(i,j,2:bolus_time-1));  
+                        base_signal_array(i,j) = mean(image_array(i,j,2:bolus_index-1));  
                         %concentration_array(i,j,t) = (-1/TE)*log(image_array(i,j,t+bolus_time-1)/base_signal_array(i,j)) ./ r2_star; 
                         concentration_array(i,j,t) = (-1/TE)*log(image_array(i,j,t)/base_signal_array(i,j)) ./ r2_star;
                         end
@@ -275,22 +324,23 @@ concentration_array(isnan(concentration_array)) = 0;
 %this matches the equation for the calcuation of CBV in Ostergaard et al.,
 %1996)
 if ndims(concentration_array) == 3
-    base_concentration_array = concentration_array(:,:,1:bolus_time-1);
-    concentration_array = concentration_array(:,:,(bolus_time):end);
+    base_concentration_array = concentration_array(:,:,1:bolus_index-1);
+    concentration_array = concentration_array(:,:,(bolus_index):end);
 else
-    base_concentration_array = concentration_array(:,:,:,1:bolus_time-1);
-    concentration_array = concentration_array(:,:,:,(bolus_time):end); 
-    
+    base_concentration_array = concentration_array(:,:,:,1:bolus_index-1);
+    concentration_array = concentration_array(:,:,:,(bolus_index):end); 
 end
-% Now make the time vector: 
 
-time_vect = 0 : TR : (dimt-bolus_time) * TR; 
+
+% Now make the time vectors: 
+
+time_vect = 0 : TR : (dimt-bolus_index) * TR; 
 time_vect = (time_vect ./ 60)';     % transpose and put in terms of minutes.  
 %time_vect_plot = 0 : TR : (dimt-1) * TR;
-base_time_vect = 0: TR : (bolus_time - 2) * TR; %
+base_time_vect = 0: TR : (bolus_index - 2) * TR; %
 base_time_vect = (base_time_vect ./ 60)'; %transpose and put in terms of minutes
 
-whole_time_vect = 0: TR : (dimt - 1) *TR;
+%defined in bolus injection time section for plotting
 whole_time_vect = (whole_time_vect ./ 60)';
 
 %Lastly, save the concentration array as nifti image file 

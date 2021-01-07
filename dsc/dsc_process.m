@@ -1,4 +1,6 @@
-function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitting_function,TE,TR,r2_star,psvd,rho,species)
+function dsc_process(dsc_image,noise_type,noise_roi_path,...
+    aif_type, aif_path,fitting_function,TE,TR,r2_star,psvd,rho,species,...
+    deconvolution_algorithm,bolus_detection)
 % FUNCTION PURPOSE: To generate blood flow and volume maps from DSC dataset
 % 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%INPUTS%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -71,7 +73,19 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
     disp("R2_star (L/mmol*s): "+r2_star);
     disp("psvd: "+psvd);
     disp("rho: "+rho);
-    disp("species: "+species);   
+    disp("species: "+species);
+    
+    if deconvolution_algorithm == 0
+        disp("Deconvolution Algorithm: oSVD")
+    elseif deconvolution_algorithm == 1
+        disp("Deconvolution Algorithm: sSVD")
+    end 
+    
+    if bolus_detection == 0
+        disp("Bolus Injection Time Detection is Automatic")
+    elseif bolus_detection == 1
+        disp("User Will Select Bolus Injection Time")
+    end 
     
     %Unboxing the variables from the handles structure:
     deltaT = TR / 60;  % converstion to minutes.
@@ -92,11 +106,13 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
     [ ~ , image_path] = fileparts(dsc_image);
 
     [concentration_array, base_concentration_array, time_vect, base_time_vect,whole_time_vect, bolus_time] = ...
-        DSC_signal2concentration(image_array,TE,TR,r2_star,species,image_path,noise_type,roi_array );
+        DSC_signal2concentration(image_array,TE,TR,r2_star,species,image_path,noise_type,roi_array,bolus_detection);
+    
     if aif_type == 0 %AIF Auto
         [meanAIF, meanSignal] = AIF_auto_cluster(concentration_array, image_array, time_vect, TR,species);
         baseline = 0; %develop a way to calculate the baseline from the auto clustered AIF
         baseline_array = zeros(numel(base_time_vect),1);
+        
     elseif aif_type ==1 %AIF User Selected
         AIF_mask = load_nii(aif_path);
         AIF_mask = AIF_mask.img;
@@ -127,20 +143,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
     AIF_whole = cat(1,baseline_array, meanAIF);
 
     %now run the selected fitting function
-    if fitting_function == 0 %forced linear biexponential (uses local max) %the upslope is fitted to
-
-        Cp = cat(1,baseline_array,meanAIF);
-        step = [(bolus_time) (bolus_time + numel(time_vect))];
-        T1 = whole_time_vect;
-        xdata = struct('Cp',Cp,'baseline', baseline, 'timer', T1, 'step', step, 'bolus_time', bolus_time);
-        verbose = -1; %this prevents any internal verbose function from running change to 1 to run verbose
-
-        [Cp, x, xdata, rsqurare] = Single_Forced_linear_AIFbiexpfithelplocal(xdata,verbose);
-        Ct = Cp;
-        Ct(1:bolus_time - 1) = [];
-        Ct = Ct';
-
-    elseif fitting_function == 1 %biexponential (uses absolute max)
+    if fitting_function == 0 %biexponential (uses absolute max)
         Cp = cat(1,baseline_array,meanAIF);
         step = [bolus_time (bolus_time + numel(time_vect))];
         T1 = whole_time_vect;
@@ -152,7 +155,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
         Ct(1:bolus_time - 1) = [];
         Ct = Ct';
 
-    elseif fitting_function == 2 %biexponential (uses local max)
+    elseif fitting_function == 1 %biexponential (uses local max)
         Cp = cat(1,baseline_array,meanAIF);
         step = [bolus_time (bolus_time + numel(time_vect))];
         T1 = whole_time_vect;
@@ -164,7 +167,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
         Ct(1:bolus_time - 1) = [];
         Ct = Ct';
 
-    elseif fitting_function == 3 %gamma-variant
+    elseif fitting_function == 2 %gamma-variant
         % Now we fit the AIF with a SCR model:
 
         %assigning the gamma variate function, gfun, to be our desired fitting
@@ -172,7 +175,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
         Ct = fitting_gamma_variant(meanAIF,species, time_vect);
         Cp = cat(1,baseline_array, Ct); %Cp is created for plotting purposes only. Ct is analyzed for CBF, CBV...
 
-    elseif fitting_function == 4 %raw data
+    elseif fitting_function == 3 %raw data
         Ct = meanAIF;
         Cp = cat(1,baseline_array, Ct);
 
@@ -199,7 +202,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
             Ct = Ct';
         end
     %}
-    elseif fitting_function == 5 %copy_of_upslope with peak based decision making
+    elseif fitting_function == 4 %copy_of_upslope with local max
         Cp = cat(1,baseline_array,meanAIF);
         step = [bolus_time (bolus_time + numel(time_vect))];
         T1 = whole_time_vect;
@@ -233,7 +236,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
             Ct = Ct';
         end
 
-    elseif fitting_function == 6 %upslope copy biexponetial
+    elseif fitting_function == 5 %upslope copy biexponetial (absolute max)
 
         Cp = cat(1,baseline_array,meanAIF);
         step = [bolus_time (bolus_time + numel(time_vect))];
@@ -249,6 +252,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
         %as was done in the local fitting help function
         %peak is the first within 3% of the max value of the whole data set
         [local_maxima, maxima_indexes] = findpeaks(Ct);
+ 
         maxima_iterator = 1;
         while(local_maxima(maxima_iterator) < (0.97 * max(local_maxima)))
             maxima_iterator = maxima_iterator + 1;
@@ -264,21 +268,11 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
         base = baseline * ones(numel(baseline_array),1);
         Cp = [base; Ct];
 
-    elseif fitting_function == 7 %forced bilinear biexponential decay
-
-        %two linear function
-        Cp = cat(1,baseline_array,meanAIF);
-        step = [(bolus_time) (bolus_time + numel(time_vect))];
-        T1 = whole_time_vect;
-        xdata = struct('Cp',Cp,'baseline', baseline, 'timer', T1, 'step', step, 'bolus_time', bolus_time);
-        verbose = -1; %this prevents any internal verbose function from running change to 1 to run verbose
-
-        [Cp, x, xdata, rsqurare] = Forced_linear_AIFbiexpfithelplocal(xdata,verbose);
-        Ct = Cp;
-        Ct(1:bolus_time - 1) = [];
-        Ct = Ct';
-
     end
+
+    %Trim the end of the mean AIF and concentration array once curve
+    %flattens
+    %[Ct, concentration_array, recovery_point] = trim_AIF(Ct, concentration_array);
 
     %save this runs meanAIF, bolus time, and importedAIF
     save('previous_data.mat', 'meanAIF','meanSignal','bolus_time','baseline');
@@ -296,7 +290,8 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
     time_vect_sec = time_vect * 60; %get time in seconds to plot
     time_vect_sec = time_vect_sec + (bolus_time);
     %base_time_vect_sec = base_time_vect * 60;
-    plot(time_vect_sec,Ct,'-o',time_vect_sec,meanAIF);
+    %Ct is sometimes trimmed to a different length than time vector
+    plot(time_vect_sec(1:numel(Ct)),Ct,'-o',time_vect_sec,meanAIF);
     title('AIF and Fitted AIF Over time');
     xlabel('Time (s)');
     ylabel('Concentration (mM)');
@@ -313,7 +308,12 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,aif_type, aif_path,fitt
 
     Kh = 0.71;
     % method = 1;
-    [CBF, CBV, MTT] = DSC_convolution_sSVD(concentration_array,Ct,deltaT,Kh,rho,psvd,1,image_path);
+    
+    if deconvolution_algorithm == 0 %oSVD
+        [CBF, CBV, MTT] = DSC_convolution_oSVD(concentration_array,Ct,deltaT,Kh,rho,psvd,1,image_path);
+    elseif deconvolution_algorithm == 1 %sSVD 
+        [CBF, CBV, MTT] = DSC_convolution_sSVD(concentration_array,Ct,deltaT,Kh,rho,psvd,1,image_path);
+    end
     disp('finished DSC processing!');
     toc;
 end
