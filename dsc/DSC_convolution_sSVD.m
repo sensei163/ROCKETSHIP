@@ -41,16 +41,6 @@ function [CBF,CBV,MTT] = DSC_convolution_sSVD(concentration_array, AIF,deltaT,Kh
 
 %% ARRANGE INPUTS ARRAYS AND INITIALIZE OUTPUT ARRAYS: 
 
-% img = load_nii('~/desktop/DSC_test_image.nii'); 
-% concentration_array = img.img; 
-% concentration_array(concentration_array<0) = 0; 
-% concentration_array(concentration_array >32767) = 0; 
-% Kh = 0.71;   % difference in hematocrit between capillaries and large vessels. 
-% rho = 1.04;  % Tissue density. In g/ml. But we want 100g/ml. So we divide by 100;  
-% AIF = mean_AIF; 
-% deltaT = TR/60;  % We want minutes.  
-% Psvd = 0.001; 
-
 if ndims(concentration_array) ==4
  [dimx, dimy, dimz, dimt] = size(concentration_array); 
 else 
@@ -72,7 +62,7 @@ end
  end 
  
 
- 
+ %% Triangularize A and Account for Discretization Errors
  % We need AIF to be in the form of a lower trianguar matrix, A, in order
  % to perform our subsequent singular value decomposition. Also, we prefilter A and account for discretization errors. 
  % This is performed below.
