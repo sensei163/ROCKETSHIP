@@ -1,5 +1,5 @@
 function dsc_process(dsc_image,noise_type,noise_roi_path,...
-    aif_type, aif_path,fitting_function,TE,TR,r2_star,psvd,rho,species,...
+    aif_type, aif_path,fitting_function,TE,TR,r2_star,oi_or_psvd,rho,species,...
     deconvolution_algorithm,bolus_detection)
 % FUNCTION PURPOSE: To generate blood flow and volume maps from DSC dataset
 % 
@@ -70,15 +70,16 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,...
     disp("fitting function selected: "+fitting_function);
     disp("TE (seconds): "+TE);
     disp("TR (seconds): "+TR);
-    disp("R2_star (L/mmol*s): "+r2_star);
-    disp("psvd: "+psvd);
-    disp("rho: "+rho);
+    disp("R2_star (L/mmol*s): "+r2_star)
+    disp("rho (g/mL): "+rho);
     disp("species: "+species);
     
     if deconvolution_algorithm == 0
         disp("Deconvolution Algorithm: oSVD")
+        disp("OI: " + oi_or_psvd);
     elseif deconvolution_algorithm == 1
         disp("Deconvolution Algorithm: sSVD")
+        disp("psvd: " + oi_or_psvd);
     end 
     
     if bolus_detection == 0
@@ -310,9 +311,9 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,...
     % method = 1;
     
     if deconvolution_algorithm == 0 %oSVD
-        [CBF, CBV, MTT] = DSC_convolution_oSVD(concentration_array,Ct,deltaT,Kh,rho,psvd,1,image_path);
+        [CBF, CBV, MTT] = DSC_convolution_oSVD(concentration_array,Ct,deltaT,Kh,rho,oi_or_psvd,1,image_path);
     elseif deconvolution_algorithm == 1 %sSVD 
-        [CBF, CBV, MTT] = DSC_convolution_sSVD(concentration_array,Ct,deltaT,Kh,rho,psvd,1,image_path);
+        [CBF, CBV, MTT] = DSC_convolution_sSVD(concentration_array,Ct,deltaT,Kh,rho,oi_or_psvd,1,image_path);
     end
     disp('finished DSC processing!');
     toc;
