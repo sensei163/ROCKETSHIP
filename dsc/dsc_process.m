@@ -58,13 +58,12 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,...
     else
         disp("noise region mask: "+noise_roi_path);
     end
-    if aif_type == 0 %AIF Auto
-         disp("AIF auto");
-    elseif aif_type ==1 %AIF User Selected
+   
+    if aif_type ==0 %AIF User Selected
         disp("AIF from mask file: "+aif_path);
-    elseif aif_type==2 %AIF Import
+    elseif aif_type==1 %AIF Import
         disp("AIF import from: "+aif_path);
-    elseif aif_type==3 %AIF Use Previous
+    elseif aif_type==2 %AIF Use Previous
         disp("AIF from previously processed dataset");
     end
     disp("fitting function selected: "+fitting_function);
@@ -96,10 +95,10 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,...
     image_array = image_array.img;
     %Next we load the nosie roi array:
     if noise_type == 0
-        roi_array = [];
+        noise_roi_array = [];
     elseif noise_type == 1
-        roi_array = load_nii(noise_roi_path);
-        roi_array = roi_array.img;
+        noise_roi_array = load_nii(noise_roi_path);
+        noise_roi_array = noise_roi_array.img;
     end
 
 
@@ -107,19 +106,14 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,...
     [ ~ , image_path] = fileparts(dsc_image);
 
     [concentration_array, base_concentration_array, time_vect, base_time_vect,whole_time_vect, bolus_time] = ...
-        DSC_signal2concentration(image_array,TE,TR,r2_star,species,image_path,noise_type,roi_array,bolus_detection);
-    
-    if aif_type == 0 %AIF Auto
-        [meanAIF, meanSignal] = AIF_auto_cluster(concentration_array, image_array, time_vect, TR,species);
-        baseline = 0; %develop a way to calculate the baseline from the auto clustered AIF
-        baseline_array = zeros(numel(base_time_vect),1);
+        DSC_signal2concentration(image_array,TE,TR,r2_star,image_path,noise_type,noise_roi_array,bolus_detection);
         
-    elseif aif_type ==1 %AIF User Selected
+    if aif_type ==0 %AIF User Selected
         AIF_mask = load_nii(aif_path);
         AIF_mask = AIF_mask.img;
         [meanAIF, meanSignal, baseline,baseline_array] = AIF_manual_noreshape(image_array,concentration_array,AIF_mask, base_time_vect,base_concentration_array);
 
-    elseif aif_type==2 %AIF Import
+    elseif aif_type==1 %AIF Import
         load(aif_path)
         [meanAIF_adjusted, time_vect, concentration_array] = import_AIF(meanAIF, bolus_time, time_vect, concentration_array, r2_star, TE);
         meanAIF = meanAIF_adjusted;
@@ -129,7 +123,7 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,...
         disp('meanAIF_num')
         numel(meanAIF)
 
-    elseif aif_type==3 %AIF Use Previous
+    elseif aif_type==2 %AIF Use Previous
         load('previous_data.mat', 'meanAIF','meanSignal','bolus_time','baseline');
         [meanAIF_adjusted, time_vect, concentration_array] = previous_AIF(meanAIF,meanSignal,bolus_time, time_vect,concentration_array);
         meanAIF = meanAIF_adjusted;

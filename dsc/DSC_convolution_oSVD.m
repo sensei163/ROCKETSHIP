@@ -210,26 +210,14 @@ for k = 1 : dimz
                 if ndims(concentration_array) == 4
                   CBF(i,j,k) =  100*(Kh/rho)*max(max(f)); %Knuttson et al. and Fieselmann et al., 2011
                   CBV(i,j,k) = 100*(Kh/rho) * (c_int / AIF_int); %Knuttson et al. 
-                  
-                  CBV_res(i,j,k) = 100*(Kh/rho) .* trapz(time_vect_ext,f); %Fieselmann et al., 2011
-                  
                   MTT(i,j,k) = ((CBV(i,j,k)) / CBF(i,j,k))*60; %in seconds Knutsson et al. (*100 will cancel)
-                  
-                  MTT_res(i,j,k) = (trapz(time_vect_ext,f)/max(max(f)))*60; %Fieselmann et al., 2011
-                  
                   [~,max_ind] = max(squeeze(concentration_array(i,j,k,:))); %Fieselmann et al., 2011
                   TTP(i,j,k) = time_vect(max_ind)*60; %in seconds %Fieselmann et al., 2011
                   %We need to threshold the TTP to eliminate noise voxels. Will work with Axel on this one soon... 
                 else 
                   CBF(i,j) =  100*(Kh/rho)*max(max(f)); %Knuttson et al. and Fieselmann et al., 2011
                   CBV(i,j) = 100*(Kh/rho) * (c_int / AIF_int); %Knutsson et al. 
-                  
-                  CBV_res(i,j) = 100*(Kh/rho) .* trapz(time_vect_ext,f); %Fieselmann et al., 2011
-                  
                   MTT(i,j) = ((CBV(i,j)) / CBF(i,j))*60; %in seconds Knutsson et al. (*100 in both will cancel)
-                  
-                  MTT_res(i,j) = (trapz(time_vect_ext,f)/max(max(f)))*60; %Fieselmann et al., 2011
-                  
                   [~,max_ind] = max(squeeze(concentration_array(i,j,:))); %Fieselmann et al., 2011
                   TTP(i,j) = time_vect(max_ind)*60; %in seconds %Fieselmann et al., 2011
                 end
@@ -249,7 +237,7 @@ for k = 1 : dimz
                   [~,max_ind] = max(squeeze(concentration_array(i,j,:))); %Fieselmann et al., 2011
                   TTP(i,j) = time_vect(max_ind)*60; %in seconds %Fieselmann et al., 2011
                 end  
-            end
+           end
         end
     end
 end
@@ -265,19 +253,11 @@ cbf_file = strcat(image_path,'CBF_map.nii');
 save_nii(CBF_map, cbf_file); 
 
 CBV_map = make_nii(CBV); 
-cbv_file = strcat(image_path,'CBV_map_ratio.nii'); 
-save_nii(CBV_map, cbv_file);  
-
-CBV_map = make_nii(CBV_res); 
-cbv_file = strcat(image_path,'CBV_map_res.nii'); 
-save_nii(CBV_map, cbv_file);  
+cbv_file = strcat(image_path,'CBV_map.nii'); 
+save_nii(CBV_map, cbv_file);    
  
 MTT_map = make_nii(MTT); 
-mtt_file = strcat(image_path,'MTT_map_ratio.nii'); 
-save_nii(MTT_map, mtt_file); 
-
-MTT_map = make_nii(MTT_res); 
-mtt_file = strcat(image_path,'MTT_map_res.nii'); 
+mtt_file = strcat(image_path,'MTT_map.nii'); 
 save_nii(MTT_map, mtt_file); 
 
 TTP_map = make_nii(TTP); 

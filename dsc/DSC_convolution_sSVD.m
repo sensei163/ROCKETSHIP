@@ -1,4 +1,4 @@
-function [CBF_max,CBV,MTT] = DSC_convolution_sSVD(concentration_array, AIF,deltaT,Kh,rho,Psvd,method,image_path) 
+function [CBF,CBV,MTT] = DSC_convolution_sSVD(concentration_array, AIF,deltaT,Kh,rho,Psvd,method,image_path) 
 
 % The functioin DSC_CONVOLUTION is used to to calculate the residual function, R(t), and scaling factor, F,
 %to be used in subsequent blood
@@ -52,15 +52,13 @@ else
  dimz = 1; 
 end
  
- CBF_max = zeros(dimx,dimy,dimz); 
- CBF_int = zeros(dimx,dimy,dimz);
+ CBF = zeros(dimx,dimy,dimz); 
  CBV = zeros(dimx,dimy,dimz); 
  MTT = zeros(dimx,dimy,dimz); 
  TTP = zeros(dimx,dimy,dimz); 
  
  if dimz == 1 
-     CBF_max = squeeze(CBF_max);
-     CBF_int = squeeze(CBF_int);
+     CBF = squeeze(CBF);
      CBV = squeeze(CBV);
      MTT = squeeze(MTT); 
      TTP = squeeze(TTP); 
@@ -168,28 +166,28 @@ for k = 1 : dimz
             % 07/19/2015: Added some code to produce time to peak maps
             if method ==1 
                 if ndims(concentration_array) == 4
-                  CBF_max(i,j,k) = 100*(Kh/rho)*max(max(b));
+                  CBF(i,j,k) = 100*(Kh/rho)*max(max(b));
                   CBV(i,j,k) = 100*(Kh/rho) * (c_int / AIF_int); 
-                  MTT(i,j,k) = CBV(i,j,k) / CBF_max(i,j,k); 
+                  MTT(i,j,k) = CBV(i,j,k) / CBF(i,j,k); 
                   [~,max_ind] = max(squeeze(concentration_array(i,j,k,:))); 
                   TTP(i,j,k) = time_vect(max_ind); 
                   %We need to threshold the TTP to eliminate noise voxels. Will work with Axel on this one soon... 
                 else 
-                  CBF_max(i,j) =  100*(Kh/rho)*max(max(b));
+                  CBF(i,j) =  100*(Kh/rho)*max(max(b));
                   CBV(i,j) = 100*(Kh/rho) * (c_int / AIF_int); 
-                  MTT(i,j) = CBV(i,j) / CBF_max(i,j); 
+                  MTT(i,j) = CBV(i,j) / CBF(i,j); 
                   [~,max_ind] = max(squeeze(concentration_array(i,j,:))); 
                   TTP(i,j) = time_vect(max_ind);
                 end
             elseif method == 2 
                 if ndims(concentration_array) == 4
-                  CBF_max(i,j,k) = 100*(Kh/rho)* max(max(b));
+                  CBF(i,j,k) = 100*(Kh/rho)* max(max(b));
                   CBV(i,j,k) = 100*(Kh/rho) .* max(max(b)) .* trapz(time_vect,b_index); 
                   MTT(i,j,k) = trapz(time_vect,b); 
                   [~,max_ind] = max(squeeze(concentration_array(i,j,k,:)));
                   TTP(i,j,k) = time_vect(max_ind); 
                 else 
-                  CBF_max(i,j) = 100*(Kh/rho)*max(max(b));
+                  CBF(i,j) = 100*(Kh/rho)*max(max(b));
                   CBV(i,j) = 100*(Kh/rho) .* max(max(b)) .* trapz(time_vect,b_index); 
                   MTT(i,j) = trapz(time_vect,b); 
                   [~,max_ind] = max(squeeze(concentration_array(i,j,:))); 
@@ -201,8 +199,8 @@ for k = 1 : dimz
 end
 
 
-CBF_map = make_nii(CBF_max); 
-cbf_file = strcat(image_path,'CBFmax_map.nii'); 
+CBF_map = make_nii(CBF); 
+cbf_file = strcat(image_path,'CBF_map.nii'); 
 save_nii(CBF_map, cbf_file); 
 
 CBV_map = make_nii(CBV); 
