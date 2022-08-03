@@ -22,6 +22,7 @@ https://github.com/petmri/ROCKETSHIP/wiki
 Please see Barnes, Ng et al BMC Bioinformatics (2015) for more information.
 
 Thomas Ng 	thomasn@caltech.edu
+
 Samuel Barnes 	srbarnes@caltech.edu
 
 
@@ -30,18 +31,26 @@ Samuel Barnes 	srbarnes@caltech.edu
 
 If you use ROCKETSHIP in your project please reference
 
-Ng et al. ROCKETSHIP: a flexible and modular software tool for the planning, processing and analysis of dynamic MRI studies. BMC Med Img 2015
+[Ng et al. ROCKETSHIP: a flexible and modular software tool for the planning, processing and analysis of dynamic MRI studies. BMC Med Img 2015](https://doi.org/10.1186/s12880-015-0062-3)
 
-in any papers. This reference also has detailed information about the various DCE models used in this project. If you are pursing BBB applications please consider these papers for parameter suggestions
+in any papers. This reference also has detailed information about the various DCE models used in this project. If you are pursing BBB human applications please consider these papers for parameter suggestions
 
-Barnes et al. Optimal acquisition and modeling parameters for accurate assessment of low Ktrans blood-brain barrier permeability using dynamic contrast-enhanced MRI. MRM 2015
+[Barnes et al. Optimal acquisition and modeling parameters for accurate assessment of low Ktrans blood-brain barrier permeability using dynamic contrast-enhanced MRI. MRM 2015](http://www.ncbi.nlm.nih.gov/pubmed/26077645)
 
-Montagne et al. Blood-brain barrier breakdown in the aging human hippocampus. Neuron 2015
+[Montagne et al. Blood-brain barrier breakdown in the aging human hippocampus. Neuron 2015](http://www.ncbi.nlm.nih.gov/pubmed/25611508)
 
-Other Publications using ROCKETSHIP
+or this for mouse applications
 
-Sta Maria et al. Low Dose Focused Ultrasound Induces Enhanced Tumor Accumulation of Natural Killer Cells. PLOS One 2015
+[Montagne et al. Pericyte degeneration causes white matter dysfunction in the mouse central nervous system. Nature Medicine 2018](https://pubmed.ncbi.nlm.nih.gov/29400711/)
 
+Other Publications using ROCKETSHIP for a more complete list see [google scholar](https://scholar.google.com/scholar?cites=17209875609254734596&as_sdt=2005&sciodt=0,5&hl=en)
+* [Sta Maria et al. Low Dose Focused Ultrasound Induces Enhanced Tumor Accumulation of Natural Killer Cells. PLOS One 2015](http://doi.org/10.1371/journal.pone.0142767)
+* [Montagne et al. APOE4 leads to blood–brain barrier dysfunction predicting cognitive decline. Nature 2020](https://pubmed.ncbi.nlm.nih.gov/32376954/)
+* [Backhaus et al. Toward precise arterial input functions derived from DCE‐MRI through a novel extracorporeal circulation approach in mice. MRM 2020](https://pubmed.ncbi.nlm.nih.gov/32077523/)
+* [Bagley et al. Clinical Utility of Plasma Cell-Free DNA in Adult Patients with Newly Diagnosed Glioblastoma: A Pilot Prospective Study. Clinical Cancer Research 2020](https://pubmed.ncbi.nlm.nih.gov/31666247/)
+* [Ng et al. Clinical Implementation of a Free-Breathing, Motion-Robust Dynamic Contrast-Enhanced MRI Protocol to Evaluate Pleural Tumors. American Journal of Roentgenology 2020](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7341067/)
+* [Pacia et al. Feasibility and safety of focused ultrasound-enabled liquid biopsy in the brain of a porcine model. Scientific Reports 2020](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7198482/)
+* [Boehm-Sturm et al. Low-Molecular-Weight Iron Chelates May Be an Alternative to Gadolinium-based Contrast Agents for T1-weighted Contrast-enhanced MR Imaging. Radiology 2017](https://pubmed.ncbi.nlm.nih.gov/28880786/) 
 ## ROCKETSHIP Requirements:
 
 * Matlab Version
@@ -64,11 +73,11 @@ ROCKETSHIP prefers all images to be input in the NIFTI format. DCE fitting does 
 
 ## Quick Start
 
-Clone ROCKETSHIP git clone --recursive https://github.com/petmri/ROCKETSHIP.git
-Add ROCKETSHIP folder to Matlab path
-Calculate T1 maps with script run_parametric.m
-Check T1 maps with script run_analysis.m
-Calculate DCE maps with script run_dce.m
+1. Clone ROCKETSHIP git clone --recursive https://github.com/petmri/ROCKETSHIP.git
+2. Add ROCKETSHIP folder to Matlab path
+3. Calculate T1 maps with script run_parametric.m
+4. Check T1 maps with script run_analysis.m
+5. Calculate DCE maps with script run_dce.m
 
 ## Additional Help
 
