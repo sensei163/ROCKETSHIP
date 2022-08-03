@@ -1,6 +1,7 @@
-ROCKETSHIP v1.2,  2016
+# ROCKETSHIP v1.2,  2016
+---
+_Copyright (c) 2016, Thomas Ng, Samuel Barnes_
 
-Copyright (c) 2016, Thomas Ng, Samuel Barnes
 All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
@@ -25,7 +26,7 @@ Samuel Barnes 	srbarnes@caltech.edu
 
 
 
-ROCKETSHIP Papers
+## ROCKETSHIP Papers
 
 If you use ROCKETSHIP in your project please reference
 
@@ -41,27 +42,27 @@ Other Publications using ROCKETSHIP
 
 Sta Maria et al. Low Dose Focused Ultrasound Induces Enhanced Tumor Accumulation of Natural Killer Cells. PLOS One 2015
 
-ROCKETSHIP Requirements:
+## ROCKETSHIP Requirements:
 
-Matlab Version
-Verified Working: Matlab 2014a, 2014b
-Should Work: Matlab 2015a, 2015b (please let me know if you have tried this)
-Will Not Work: Matlab 2011
-Toolboxes:
-Curve fitting
-Parallel
-Statistics
-Image processing
-Optimization (currently required for some functions, working to remove this requirement)
-Computer:
-Some of the processing is very CPU intensive, a modern multi-core (≥4) processor, while not required, helps keep the processing time reasonable (heavily dependent on image matrix size).
-(Optional) An NVIDIA GPU can be used to significantly speed up processing by using the [gpufit](https://github.com/ironictoo/Gpufit) library.
+* Matlab Version
+  * Verified Working: Matlab 2014a, 2014b
+  * Should Work: Matlab 2015a, 2015b (please let me know if you have tried this)
+  * Will Not Work: Matlab 2011
+* Toolboxes:
+  * Curve fitting
+  * Parallel
+  * Statistics
+  * Image processing
+  * Optimization (currently required for some functions, working to remove this requirement)
+* Computer:
+  * Some of the processing is very CPU intensive, a modern multi-core (≥4) processor, while not required, helps keep the processing time reasonable (heavily dependent on image matrix size).
+  * (Optional) An NVIDIA GPU can be used to significantly speed up processing by using the [gpufit](https://github.com/ironictoo/Gpufit) library.
 
-File formats
+## File formats
 
 ROCKETSHIP prefers all images to be input in the NIFTI format. DCE fitting does have some limited support for directly processing DICOM images, but it is recommended to convert from DICOM to NIFTI first, then use the NIFTI images for all processing. Additionally the parametric fitting (T1, T2, ADC) requires NIFTI files. To convert from DICOM to NIFTI we recommend using the dcm2nii tool that comes with MRIcron, it is available for Windows, Linux, and Mac and is easy to use (although any converter can be used). For dcm2nii select the FSL 4D NIFTI format. Compressed NIFTI images (.nii.gz) can be read by ROCKETSHIP, but not written.
 
-Quick Start
+## Quick Start
 
 Clone ROCKETSHIP git clone --recursive https://github.com/petmri/ROCKETSHIP.git
 Add ROCKETSHIP folder to Matlab path
@@ -69,18 +70,18 @@ Calculate T1 maps with script run_parametric.m
 Check T1 maps with script run_analysis.m
 Calculate DCE maps with script run_dce.m
 
-Additional Help
+## Additional Help
 
 If you need help and can't find it here please contact Sam Barnes sabarnes@llu.edu.
 
 
 
-Listing of files and brief descriptor
+## Listing of files and brief descriptor
 
-README.txt				- This file
+### README.md				- This file
 
-i) dce: ROCKETSHIP DCE module  (94 files)
-
+### i) dce: ROCKETSHIP DCE module  (94 files)
+```
 'ADDLUT.m'				- File parsing helper file		
 'AIFbiexpcon.m'				- Fits AIF to biexponential model
 'AIFbiexpfithelp.m'			- Helping file for AIF fitting
@@ -175,10 +176,11 @@ i) dce: ROCKETSHIP DCE module  (94 files)
 'visualize_list.m'			- File parsing helper file
 'visualize_list_dce.m'			- File parsing helper file
 'visualize_runD.m'			- File parsing helper file
+```
 
-ii) parametric_scripts 
+### ii) parametric_scripts 
 ROCKETSHIP fitting module to generate T2/T2*, T1, ADC and other parametric maps (31 files)
-
+```
 'calculateMap.m'			- Helper file for fitting
 'calculateMap_batch.m'			- Helper file for fitting
 'check_TRfit.m'				- Helper file to check TR fitting
@@ -209,11 +211,12 @@ ROCKETSHIP fitting module to generate T2/T2*, T1, ADC and other parametric maps 
 'update_parameters.m'			- Helper file for fitting
 'visualize_R2.m'			- Helper file for GUI, visualize R2 maps
 'visualize_list.m'			- Image parsing helper file
+```
 
-iii) external_programs
+### iii) external_programs
 
 Listing of various programs incorporated under BSD license as part of ROCKETSHIP. Please go to the relevant page on MATLABCentral for details for each particular app.
-
+```
 'DataHash'
 'ProgressBar'
 'ReadImageJROI'
@@ -223,5 +226,5 @@ Listing of various programs incorporated under BSD license as part of ROCKETSHIP
 'imshow3d'
 'niftitools'
 'uirecall'
-
+```
 
