@@ -55,6 +55,7 @@ Image processing
 Optimization (currently required for some functions, working to remove this requirement)
 Computer:
 Some of the processing is very CPU intensive, a modern multi-core (≥4) processor, while not required, helps keep the processing time reasonable (heavily dependent on image matrix size).
+(Optional) An NVIDIA GPU can be used to significantly speed up processing by using the [gpufit](https://github.com/ironictoo/Gpufit) library.
 
 File formats
 
