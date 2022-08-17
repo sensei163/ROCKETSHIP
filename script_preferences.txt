@@ -1,0 +1,96 @@
+%%%%%%%%% GLOBAL SCRIPT PREFERENCES %%%%%%%%%
+%% RUNA OPTIONS
+% Load image, ROI
+% Calculate concentration vs. time curves from images
+%%%%%%%%%%%%%%%%
+
+%% A_make_R1maps_func
+    % loadIMGVOL
+
+    % 1 = 4D, 2 = 3D, 3 = 2D
+    filevolume = 1
+
+    % 1 = pick noise file, 0 = derive noise from corner square 
+    noise_pathpick = 0
+
+    % width of corner square noise selection
+    noise_pixsize = 9
+
+    % probably deprecated (COPIUM)
+    LUT = 1
+
+    % input nifti datasets
+    dynamic_files = DCE.nii
+    aif_files = aif.nii
+    roi_files = brain_mask.nii.gz
+    t1map_files = T1_map_t1_fa_linear_fit_VFA.motioncorrected.nii
+    noise_files =
+    drift_files =
+
+    % Name of output file
+    rootname = dce
+
+    % X, Y, Z, t 'xyzt' or X, Y, t, Z 'xytz'
+    fileorder = xyzt
+
+    % boolean value indicating whether to pursue
+    % quantitative DCE vs. semi-quant values
+    quant = 1
+
+    % roi_files is a T1 map=0; roi_files is a mask=1
+    roimaskroi = 1
+    % aif_files is a T1 map=0; aif_files is a mask=1
+    aifmaskroi = 0
+
+% Indicates the type of vascular input ROI, 
+% 'rr' = reference region
+% 'aif_roi' = arterial input
+% 'aif_roi_static' = arterial input with user defined T1 value
+% 'aif_auto' = AIF is to be auto found 
+% 'aif_auto_static' = auto found with user defined T1 value 
+aif_rr_type = 'aif_roi
+
+% repetition time of dynamic scan (ms)
+tr = 21.572
+
+% flip angle of dynamic scan (degrees)
+fa = 20
+
+% hematocrit percent (0 - 1.00) of subject
+hematocrit = 0.45
+
+% snr required for AIF voxels, snr must exceed this
+% value averaged over all time points
+snr_filter = 5
+
+% -1 = determine via figure, -2 = auto
+injection_time = -2
+
+% r1 relaxivity (in mM^-1*sec^-1) of contrast agent
+relaxivity = 3.7
+
+% boolean value, perform drift correction globally,
+% not on a slice by slice basis
+drift_global = 1
+
+% the T1 value of blood (in ms) only used if 
+% aif_rr_type is set to 'aif_auto_static' or 'aif_roi_static'
+blood_t1 = 1000
+
+% the length of the contrast agent injection in
+% number of acquisitions, for auto AIF only
+injection_duration = 1
+
+
+%% RUNB OPTIONS
+
+start_time
+end_time
+start_injection
+end_injection
+fit_aif
+time_resolution
+aif_type
+    import_aif_path
+timevectyn
+    timevectpath

@@ -1,32 +1,13 @@
-function [TUMOR, LV, NOISE, DYNAMIC, DRIFT, dynampath, dynamname, rootname, hdr, res, sliceloc, errormsg] = loadIMGVOL(handles)
+function [TUMOR, LV, NOISE, DYNAMIC, DRIFT, dynampath, dynamname, rootname, ...
+    hdr, res, sliceloc, errormsg] = ...
+    loadIMGVOL(filevolume, noise_pathpick, noise_pixsize, LUT, t1aiffiles, ...
+    t1roifiles, t1mapfiles, noisefiles, driftfiles, filelist, rootname, ...
+    fileorder, mask_roi, mask_aif)
 
 
 % Takes handles, loads the image files and outputs image volume.
 
-filevolume = get(handles.filevolume, 'Value');
 
-noise_pathpick= get(handles.noisefile, 'Value');
-noise_path = get(handles.noise_path,'String');
-noise_pixelspick=get(handles.noisepixels, 'Value');
-noise_pixsize=str2num(get(handles.noisepixsize, 'String'));
-
-LUT = handles.LUT;
-
-t1aiffiles = handles.t1aiffiles;
-t1roifiles = handles.t1roifiles;
-t1mapfiles = handles.t1mapfiles;
-noisefiles = handles.noisefiles;
-driftfiles = handles.driftfiles;
-filelist   = handles.filelist;
-
-rootname   = handles.rootname;
-
-fileorder = get(get(handles.fileorder,'SelectedObject'),'Tag');
-
-quant     = get(handles.quant, 'Value');
-
-mask_roi = get(handles.roimaskroi, 'Value') == 1;
-mask_aif = get(handles.aifmaskroi, 'Value') == 1;
 
 % Initialize Image sets
 TUMOR = [];
