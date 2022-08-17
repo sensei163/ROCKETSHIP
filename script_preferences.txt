@@ -48,7 +48,7 @@
 % 'aif_roi_static' = arterial input with user defined T1 value
 % 'aif_auto' = AIF is to be auto found 
 % 'aif_auto_static' = auto found with user defined T1 value 
-aif_rr_type = 'aif_roi
+aif_rr_type = aif_roi
 
 % repetition time of dynamic scan (ms)
 tr = 21.572
