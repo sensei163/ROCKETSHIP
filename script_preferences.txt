@@ -81,16 +81,30 @@ blood_t1 = 1000
 % number of acquisitions, for auto AIF only
 injection_duration = 1
 
-
+%%%%%%%%%%%%%%%%
 %% RUNB OPTIONS
 
-start_time
-end_time
-start_injection
-end_injection
-fit_aif
-time_resolution
-aif_type
-    import_aif_path
-timevectyn
-    timevectpath
+% start time to restrict analysis to (in minutes, 0 if all)
+start_time = 0
+
+% end time to restrict analysis to (in minutes, 0 if all)
+end_time = 0
+
+auto_find_injection = 1
+    % start of contrast injection (in minutes)
+    start_injection = 0.5
+    % end of contrast injection (in minutes)
+    end_injection = 0.7
+
+% time resolution of dynamic scan (in seconds)
+time_resolution = 2.6
+
+
+% raw = 2, fitted = 1, import = 3, raw for reference region
+aif_type = 1
+    import_aif_path = 
+
+% bool to use manual time vector
+timevectyn = 0
+% import manual time vector from .mat file (string)
+    timevectpath = 

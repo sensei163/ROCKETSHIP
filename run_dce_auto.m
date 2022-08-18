@@ -71,16 +71,35 @@ end
 %% RUNB
 % load B prefs
 script_prefs = parse_preference_file('script_preferences.txt', 0, ...
-    {'start_time', 'end_time', 'start_injection', 'end_injection', ...
-    'fit_aif', 'time_resolution', });
+    {'start_time', 'end_time', 'auto_find_injection', 'start_injection', ...
+    'end_injection', 'fit_aif', 'time_resolution', 'aif_type', ...
+    'import_aif_path', 'timevectyn', 'timevectpath'});
 
 % type casts
 start_time = str2num(script_prefs.start_time);
 end_time = str2num(script_prefs.end_time);
+auto_find_injection = str2num(script_prefs.auto_find_injection);
 start_injection = str2num(script_prefs.start_injection);
 end_injection = str2num(script_prefs.end_injection);
+%fit_aif = str2num(script_prefs.fit_aif);
+time_resolution = str2double(script_prefs.time_resolution);
+aif_type = str2num(script_prefs.aif_type);
+import_aif_path = script_prefs.import_aif_path;
+timevectyn = str2num(script_prefs.timevectyn);
+timevectpath = script_prefs.timevectpath;
 
+% convert time resolution into minutes
+time_resolution = time_resolution / 60;
+
+fit_aif = aif_type;
+if (auto_find_injection)
+    start_injection = -1;
+    end_injection = -1;
+end
 
 % main function call
-B_results = B_AIF_fitting_func(A_results,start_time,end_time,start_injection,end_injection,fit_aif,import_aif_path,time_resolution, timevectpath);
+B_results = B_AIF_fitting_func(A_results,start_time,end_time, start_injection,end_injection,fit_aif,import_aif_path,time_resolution, timevectpath);
+
+%% RUND
+% whatever happened to C?
 

@@ -615,6 +615,11 @@ elseif (steady_state_time == -2)
         dimy = size(DYNAMIC,2);
         dimz = dimz;
         end_ss = dce_auto_aif(DYNAMLV,lvind,dimx,dimy,dimz,injection_duration);
+        start_injection = end_ss;
+        %get max of dynamlv
+        %end_injection = max dynamlv
+        [~, end_injection] = max(DYNAMLV);
+        end_injection = mean(end_injection);
     end
     steady_state_time(2) = end_ss;
     steady_state_time(1) = 1; 
@@ -884,6 +889,8 @@ Adata.tumind    = tumind;
 Adata.voxelSNR  = voxelSNR;
 Adata.voxelSNR_filtered = voxelSNR_filtered;
 Adata.injection_duration = injection_duration;
+Adata.start_injection = start_injection;
+Adata.end_injection = end_injection;
 
 %% 14. Save the file for the next Step
 

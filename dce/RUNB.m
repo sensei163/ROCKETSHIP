@@ -22,7 +22,7 @@ function varargout = RUNB(varargin)
 
 % Edit the above text to modify the response to help RUNB
 
-% Last Modified by GUIDE v2.5 25-Jul-2014 17:15:41
+% Last Modified by GUIDE v2.5 17-Aug-2022 12:11:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -477,3 +477,11 @@ if exist(results_a_path, 'file')==2
     set(handles.end_injection,'String',num2str(a_end_min));
 end
 guidata(hObject, handles);
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over aif_type.
+function aif_type_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to aif_type (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
