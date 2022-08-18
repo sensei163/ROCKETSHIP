@@ -118,31 +118,31 @@ timevectyn = 0
 
 % DCE model bools (1 = use), T1 maps required for all except auc
 % Tofts
-dce_model.tofts = 0
+tofts = 0
 
 % Tofts extended (w/ Vp)
-dce_model.ex_tofts = 0
+ex_tofts = 0
 
 % "shutter speed"
-dce_model.fxr = 0
+fxr = 0
 
 % area under the curve (does not require T1 map)
-dce_model.auc = 0
+auc = 0
 
 % series of nested model
-dce_model.nested = 0
+nested = 0
 
 % 2 param model w/ no backflux
-dce_model.patlak = 1
+patlak = 1
 
 % 3 param model, assumes cp>>ct
-dce_model.tissue_uptake = 0
+tissue_uptake = 0
 
 % Two Compartment eXchange Model
-dce_model.two_cxm = 0
+two_cxm = 0
 
 % Fast eXchange Limit tofts with reference region
-dce_model.FXL_rr = 0
+FXL_rr = 0
 
 
 %dce_model.fractal = 
