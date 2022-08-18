@@ -83,6 +83,8 @@ injection_duration = 1
 
 %%%%%%%%%%%%%%%%
 %% RUNB OPTIONS
+% Define timing parameters for analysis, derive fitted AIF or reference
+% region from 1+ datasets
 
 % start time to restrict analysis to (in minutes, 0 if all)
 start_time = 0
@@ -90,6 +92,7 @@ start_time = 0
 % end time to restrict analysis to (in minutes, 0 if all)
 end_time = 0
 
+% disable if you really know what you're doing
 auto_find_injection = 1
     % start of contrast injection (in minutes)
     start_injection = 0.5
@@ -99,12 +102,67 @@ auto_find_injection = 1
 % time resolution of dynamic scan (in seconds)
 time_resolution = 2.6
 
-
 % raw = 2, fitted = 1, import = 3, raw for reference region
 aif_type = 1
     import_aif_path = 
 
 % bool to use manual time vector
 timevectyn = 0
-% import manual time vector from .mat file (string)
+    % import manual time vector from .mat file (string)
     timevectpath = 
+
+%%%%%%%%%%%%%%%%
+%% RUND OPTIONS
+% Choose kinetic models for data fitting, derive parameters for single
+% dataset. Remember to check `dce_preferences.txt` for fitting parameters.
+
+% DCE model bools (1 = use), T1 maps required for all except auc
+% Tofts
+dce_model.tofts = 0
+
+% Tofts extended (w/ Vp)
+dce_model.ex_tofts = 0
+
+% "shutter speed"
+dce_model.fxr = 0
+
+% area under the curve (does not require T1 map)
+dce_model.auc = 0
+
+% series of nested model
+dce_model.nested = 0
+
+% 2 param model w/ no backflux
+dce_model.patlak = 1
+
+% 3 param model, assumes cp>>ct
+dce_model.tissue_uptake = 0
+
+% Two Compartment eXchange Model
+dce_model.two_cxm = 0
+
+% Fast eXchange Limit tofts with reference region
+dce_model.FXL_rr = 0
+
+
+%dce_model.fractal = 
+
+% type of time smoothing
+% options: none, moving (avg), rlowess (robust local regression)
+time_smoothing = none
+% size of time smoothing window (in time points)
+time_smoothing_window = 5
+% sigma of the Gaussian low pass smooth function
+xy_smooth_size = 0
+% # of CPU cores for parallel processing (0 for max, -1 for max-1)
+number_cpus = 0
+
+% paths to ROIs that specify homogenous regions to calculate a single
+% DCE fit for. Values >0 considered in the ROI, values <=0 considered
+% outside the ROI
+% multiple files syntax = file1.nii file2.nii file3.nii
+roi_list = 
+% bool to perform DCE fit on individual voxels
+fit_voxels = 1
+% output filetype (1 = NIFTI, 2 = 3D DICOM, 3 = 2D DICOM
+outputft = 1

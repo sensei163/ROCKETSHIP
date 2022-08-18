@@ -102,4 +102,34 @@ B_results = B_AIF_fitting_func(A_results,start_time,end_time, start_injection,en
 
 %% RUND
 % whatever happened to C?
+script_prefs = parse_preference_file('script_preferences.txt', 0, ...
+    {'dce_model.tofts', 'dce_model.ex_tofts', 'dce_model.fxr', 'dce_model.auc', ...
+    'dce_model.nested', 'dce_model.patlak', 'dce_model.tissue_uptake', 'dce_model.two_cxm', ...
+    'dce_model.FXL_rr', 'time_smoothing', 'time_smoothing_window', 'xy_smooth_size', ...
+    'number_cpus', 'roi_list', 'fit_voxels', 'outputft'});
 
+% type casts
+dce_model.tofts = str2num(script_prefs.dce_model.tofts);
+dce_model.ex_tofts = str2num(script_prefs.dce_model.ex_tofts);
+dce_model.fxr = str2num(script_prefs.dce_model.fxr);
+dce_model.auc = str2num(script_prefs.dce_model.auc);
+dce_model.nested = str2num(script_prefs.dce_model.nested);
+dce_model.patlak = str2num(script_prefs.dce_model.patlak);
+dce_model.tissue_uptake = str2num(script_prefs.dce_model.tissue_uptake);
+dce_model.two_cxm = str2num(script_prefs.dce_model.two_cxm);
+dce_model.FXL_rr = str2num(script_prefs.dce_model.FXL_rr);
+
+time_smoothing = str2num(script_prefs.time_smoothing);
+time_smoothing_window = str2num(script_prefs.time_smoothing_window);
+xy_smooth_size = str2num(script_prefs.xy_smooth_size);
+number_cpus = str2num(script_prefs.number_cpus);
+fit_voxels = str2num(script_prefs.fit_voxels);
+outputft = str2num(script_prefs.outputft);
+
+roi_list = split(script_prefs.roi_list);
+
+% main function call
+D_results = D_fit_voxels_func(B_results,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon, outputft);
+
+%% RUN E
+fitting_analysis('results_path', D_results);
