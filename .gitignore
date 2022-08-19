@@ -177,3 +177,4 @@ pip-log.txt
 #############
 email_preferences.txt
 dce_last_state.mat
+dce/dce_preferences.txt
