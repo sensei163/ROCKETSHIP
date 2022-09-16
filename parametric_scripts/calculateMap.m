@@ -187,8 +187,13 @@ else
 end
 
 % Auto detect GPU
-gpufit_available = strfind(gpuDevice().Name, 'NVIDIA') && ...
-    ( exist("Gpufit-build/matlab/GpufitConstrainedMex.mexa64", 'file') == 3);
+try
+    gpufit_available = strfind(gpuDevice().Name, 'NVIDIA') && ...
+        ( exist("Gpufit-build/matlab/GpufitConstrainedMex.mexa64", 'file') == 3);
+catch
+    disp("Gpufit detection failed. Defaulting to CPU.")
+    gpufit_available = 0;
+end
 
 % Create parallel processing pool
 if ~neuroecon && ~gpufit_available
