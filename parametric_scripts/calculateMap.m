@@ -456,28 +456,10 @@ for n=1:number_of_fits
     if(fit_voxels)
        
         % Fit the model
-%         prefs = parse_preference_file('T1_prefs.txt', 0, ...
-%             {'gpu_use'});
         if(gpufit_available && strcmp(fit_type, 't1_fa_fit'))
             disp("GPU detected, using T1 exponential GPU fitting")
             model_id = ModelID.T1_FA_EXPONENTIAL;
             estimator_id = EstimatorID.LSE;
-
-%             si = linear_shape(m,:)';
-%             si = cast(si,'double');
-            
-            % Load GPU fitting values from pref file
-%             T1_prefs = parse_preference_file('T1_prefs.txt',0,...
-%                 {'gpu_tolerance' 'gpu_max_n_iterations', 'gpu_initial_value_a', ...
-%                 gpu_initial_value_t1});
-%             prefs.gpu_tolerance = str2num(prefs_str.gpu_tolerance);
-%             prefs.gpu_max_n_iterations = str2num(prefs_str.gpu_max_n_iterations);
-
-            %Log values used
-%             if verbose
-%                 fprintf('GPU Tolerance = %s\n',num2str(prefs.gpu_tolerance));
-%                 fprintf('GPU Max Iterations = %s\n',num2str(prefs.gpu_max_n_iterations));
-%             end
             
             tolerance = 1e-12;
             max_n_iterations = 200;
@@ -487,15 +469,21 @@ for n=1:number_of_fits
             number_voxels = dim_x*dim_y*dim_z;
             si = linear_shape';
             si = cast(si,'double');
-            si_max = max(si,[],"all");
-%             scale_max = max(si);
+            
+            % cope scaling to help convergence
+%             si_max = max(si,[],"all");
+%             si_max = reshape(max(shaped_image,[],4)*10, dim_x*dim_y*dim_z,[])';
 %             if si_max > 0
 %                 si = si./si_max;
 %             end
             
             init_param = zeros([2,number_voxels]);
+            init_param(1,:) = reshape(max(shaped_image,[],4)*10, dim_x*dim_y*dim_z,[])';
             for i=1:number_voxels
-                init_param(1,i) = si_max*10;
+%                 index_i = i * dim_te;
+%                 si_i = si(index_i:index_i+dim_te);
+%                 init_param(1,i) = max(si_i)*10;
+%                 init_param(1,i) = 1;
                 init_param(2,i) = 500;
             end
             init_param_single = single(init_param);
@@ -522,20 +510,18 @@ for n=1:number_of_fits
                 gpufit_constrained(si_single,[], model_id, init_param_single, ...
                 constraints_single, constraint_types, tolerance, max_n_iterations, ...
                 [], estimator_id, indie_vars);
-%         fit_output = parallelFit(parameter_list,fit_type,shaped_image,tr, 
-% submit, fit_file, ncoeffs, coeffs, tr_present,rsquared_threshold);
+            
+            % convergence stats
+%             size(states(states==1))/number_voxels*100
+%             size(states(states==2))/number_voxels*100
+
             % If did not converge discard values
             one_parameter = parameters(1,:);
-            one_parameter(states~=0) = -0.000001;  %a
+            one_parameter(states~=0) = -2;  %a
             parameters(1,:) = one_parameter;
             one_parameter = parameters(2,:);
-            one_parameter(states~=0) = -0.000001;  %t1
+            one_parameter(states~=0) = --2;  %t1
             parameters(2,:) = one_parameter;
-            
-%             GG = [parameters' chi_squares'];
-            % add zeros for the unknown + and - 95 CI
-%             GG = [GG zeros(number_voxels, 4)];
-%             residuals = [];
 
             fit_output(:,1) = parameters(2,:);
             fit_output(:,2) = parameters(1,:);
@@ -646,12 +632,17 @@ for n=1:number_of_fits
             r_squared				 = fit_output(:,3);
             confidence_interval_low	 = fit_output(:,4);
             confidence_interval_high = fit_output(:,5);
-
+            
             % Throw out bad results
-            indr = find(r_squared < rsquared_threshold);
+            if (gpufit_available)
+                % Gpufit uses chi squared
+                indr = find(r_squared > inf);
+            else
+                indr = find(r_squared < rsquared_threshold);
+            end
             inde = find(exponential_fit ~=-2);
             m    =intersect(indr,inde);
-
+            
             rho_fit(m) = -1;
             exponential_fit(m) = -1;
             confidence_interval_low(m) = -1;
