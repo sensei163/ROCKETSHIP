@@ -1,7 +1,7 @@
 function T1mapping_fit(path)
 % INPUTS
 %------------------------------------
-file_list = {strcat(path,'VFA.motioncorrected.nii')};
+file_list = {strcat(path,'VFA_mc.nii')};
 					% must point to valid nifti files
 parameter_list = [2 5 10 12 15]';
 					% units of ms or degrees

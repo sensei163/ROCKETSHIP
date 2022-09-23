@@ -729,8 +729,7 @@ elseif strcmp(model, 'patlak')
     
         if verbose; p.stop; end
         if diary_restore, diary on, end
-    end        
-    if prefs.gpufit       
+    else
         model_id = ModelID.PATLAK;
         estimator_id = EstimatorID.LSE;
         
