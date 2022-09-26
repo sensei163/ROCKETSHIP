@@ -1,6 +1,7 @@
-ROCKETSHIP v1.2,  2016
+# ROCKETSHIP v1.2,  2016
+---
+_Copyright (c) 2016, Thomas Ng, Samuel Barnes_
 
-Copyright (c) 2016, Thomas Ng, Samuel Barnes
 All rights reserved.
 
 This program is free software; you can redistribute it and/or modify
@@ -21,66 +22,75 @@ https://github.com/petmri/ROCKETSHIP/wiki
 Please see Barnes, Ng et al BMC Bioinformatics (2015) for more information.
 
 Thomas Ng 	thomasn@caltech.edu
+
 Samuel Barnes 	srbarnes@caltech.edu
 
 
 
-ROCKETSHIP Papers
+## ROCKETSHIP Papers
 
 If you use ROCKETSHIP in your project please reference
 
-Ng et al. ROCKETSHIP: a flexible and modular software tool for the planning, processing and analysis of dynamic MRI studies. BMC Med Img 2015
+[Ng et al. ROCKETSHIP: a flexible and modular software tool for the planning, processing and analysis of dynamic MRI studies. BMC Med Img 2015](https://doi.org/10.1186/s12880-015-0062-3)
 
-in any papers. This reference also has detailed information about the various DCE models used in this project. If you are pursing BBB applications please consider these papers for parameter suggestions
+in any papers. This reference also has detailed information about the various DCE models used in this project. If you are pursing BBB human applications please consider these papers for parameter suggestions
 
-Barnes et al. Optimal acquisition and modeling parameters for accurate assessment of low Ktrans blood-brain barrier permeability using dynamic contrast-enhanced MRI. MRM 2015
+[Barnes et al. Optimal acquisition and modeling parameters for accurate assessment of low Ktrans blood-brain barrier permeability using dynamic contrast-enhanced MRI. MRM 2015](http://www.ncbi.nlm.nih.gov/pubmed/26077645)
 
-Montagne et al. Blood-brain barrier breakdown in the aging human hippocampus. Neuron 2015
+[Montagne et al. Blood-brain barrier breakdown in the aging human hippocampus. Neuron 2015](http://www.ncbi.nlm.nih.gov/pubmed/25611508)
 
-Other Publications using ROCKETSHIP
+or this for mouse applications
 
-Sta Maria et al. Low Dose Focused Ultrasound Induces Enhanced Tumor Accumulation of Natural Killer Cells. PLOS One 2015
+[Montagne et al. Pericyte degeneration causes white matter dysfunction in the mouse central nervous system. Nature Medicine 2018](https://pubmed.ncbi.nlm.nih.gov/29400711/)
 
-ROCKETSHIP Requirements:
+Other Publications using ROCKETSHIP for a more complete list see [google scholar](https://scholar.google.com/scholar?cites=17209875609254734596&as_sdt=2005&sciodt=0,5&hl=en)
+* [Sta Maria et al. Low Dose Focused Ultrasound Induces Enhanced Tumor Accumulation of Natural Killer Cells. PLOS One 2015](http://doi.org/10.1371/journal.pone.0142767)
+* [Montagne et al. APOE4 leads to blood–brain barrier dysfunction predicting cognitive decline. Nature 2020](https://pubmed.ncbi.nlm.nih.gov/32376954/)
+* [Backhaus et al. Toward precise arterial input functions derived from DCE‐MRI through a novel extracorporeal circulation approach in mice. MRM 2020](https://pubmed.ncbi.nlm.nih.gov/32077523/)
+* [Bagley et al. Clinical Utility of Plasma Cell-Free DNA in Adult Patients with Newly Diagnosed Glioblastoma: A Pilot Prospective Study. Clinical Cancer Research 2020](https://pubmed.ncbi.nlm.nih.gov/31666247/)
+* [Ng et al. Clinical Implementation of a Free-Breathing, Motion-Robust Dynamic Contrast-Enhanced MRI Protocol to Evaluate Pleural Tumors. American Journal of Roentgenology 2020](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7341067/)
+* [Pacia et al. Feasibility and safety of focused ultrasound-enabled liquid biopsy in the brain of a porcine model. Scientific Reports 2020](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7198482/)
+* [Boehm-Sturm et al. Low-Molecular-Weight Iron Chelates May Be an Alternative to Gadolinium-based Contrast Agents for T1-weighted Contrast-enhanced MR Imaging. Radiology 2017](https://pubmed.ncbi.nlm.nih.gov/28880786/) 
+## ROCKETSHIP Requirements:
 
-Matlab Version
-Verified Working: Matlab 2014a, 2014b
-Should Work: Matlab 2015a, 2015b (please let me know if you have tried this)
-Will Not Work: Matlab 2011
-Toolboxes:
-Curve fitting
-Parallel
-Statistics
-Image processing
-Optimization (currently required for some functions, working to remove this requirement)
-Computer:
-Some of the processing is very CPU intensive, a modern multi-core (≥4) processor, while not required, helps keep the processing time reasonable (heavily dependent on image matrix size).
-(Optional) An NVIDIA GPU can be used to significantly speed up processing by using the [gpufit](https://github.com/ironictoo/Gpufit) library.
+* Matlab Version
+  * Verified Working: Matlab 2014a, 2014b
+  * Should Work: Matlab 2015a, 2015b (please let me know if you have tried this)
+  * Will Not Work: Matlab 2011
+* Toolboxes:
+  * Curve fitting
+  * Parallel
+  * Statistics
+  * Image processing
+  * Optimization (currently required for some functions, working to remove this requirement)
+* Computer:
+  * Some of the processing is very CPU intensive, a modern multi-core (≥4) processor, while not required, helps keep the processing time reasonable (heavily dependent on image matrix size).
+  * (Optional) An NVIDIA GPU can be used to significantly speed up processing by using the [gpufit](https://github.com/ironictoo/Gpufit) library.
 
-File formats
+## File formats
 
 ROCKETSHIP prefers all images to be input in the NIFTI format. DCE fitting does have some limited support for directly processing DICOM images, but it is recommended to convert from DICOM to NIFTI first, then use the NIFTI images for all processing. Additionally the parametric fitting (T1, T2, ADC) requires NIFTI files. To convert from DICOM to NIFTI we recommend using the dcm2nii tool that comes with MRIcron, it is available for Windows, Linux, and Mac and is easy to use (although any converter can be used). For dcm2nii select the FSL 4D NIFTI format. Compressed NIFTI images (.nii.gz) can be read by ROCKETSHIP, but not written.
 
-Quick Start
+## Quick Start
 
-Clone ROCKETSHIP git clone --recursive https://github.com/petmri/ROCKETSHIP.git
-Add ROCKETSHIP folder to Matlab path
-Calculate T1 maps with script run_parametric.m
-Check T1 maps with script run_analysis.m
-Calculate DCE maps with script run_dce.m
+1. Clone ROCKETSHIP git clone --recursive https://github.com/petmri/ROCKETSHIP.git
+2. Add ROCKETSHIP folder to Matlab path
+3. Calculate T1 maps with script run_parametric.m
+4. Check T1 maps with script run_analysis.m
+5. Calculate DCE maps with script run_dce.m
 
-Additional Help
+## Additional Help
 
 If you need help and can't find it here please contact Sam Barnes sabarnes@llu.edu.
 
 
 
-Listing of files and brief descriptor
+## Listing of files and brief descriptor
 
-README.txt				- This file
+### README.md				- This file
 
-i) dce: ROCKETSHIP DCE module  (94 files)
-
+### i) dce: ROCKETSHIP DCE module  (94 files)
+```
 'ADDLUT.m'				- File parsing helper file		
 'AIFbiexpcon.m'				- Fits AIF to biexponential model
 'AIFbiexpfithelp.m'			- Helping file for AIF fitting
@@ -175,10 +185,11 @@ i) dce: ROCKETSHIP DCE module  (94 files)
 'visualize_list.m'			- File parsing helper file
 'visualize_list_dce.m'			- File parsing helper file
 'visualize_runD.m'			- File parsing helper file
+```
 
-ii) parametric_scripts 
+### ii) parametric_scripts 
 ROCKETSHIP fitting module to generate T2/T2*, T1, ADC and other parametric maps (31 files)
-
+```
 'calculateMap.m'			- Helper file for fitting
 'calculateMap_batch.m'			- Helper file for fitting
 'check_TRfit.m'				- Helper file to check TR fitting
@@ -209,11 +220,12 @@ ROCKETSHIP fitting module to generate T2/T2*, T1, ADC and other parametric maps 
 'update_parameters.m'			- Helper file for fitting
 'visualize_R2.m'			- Helper file for GUI, visualize R2 maps
 'visualize_list.m'			- Image parsing helper file
+```
 
-iii) external_programs
+### iii) external_programs
 
 Listing of various programs incorporated under BSD license as part of ROCKETSHIP. Please go to the relevant page on MATLABCentral for details for each particular app.
-
+```
 'DataHash'
 'ProgressBar'
 'ReadImageJROI'
@@ -223,5 +235,5 @@ Listing of various programs incorporated under BSD license as part of ROCKETSHIP
 'imshow3d'
 'niftitools'
 'uirecall'
-
+```
 
