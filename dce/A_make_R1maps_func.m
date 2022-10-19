@@ -3,7 +3,7 @@ function [saved_results, errormsg] = A_make_R1maps_func(filevolume, noise_pathpi
     noise_pixsize, LUT, filelist, t1aiffiles, t1roifiles, t1mapfiles, noisefiles, ...
     driftfiles, rootname, fileorder, quant, mask_roi, mask_aif, ...
     aif_rr_type, tr, fa, hematocrit, snr_filter, relaxivity, ...
-    steady_state_time, drift_global, blood_t1, injection_duration)
+    steady_state_time, drift_global, blood_t1, injection_duration, start_t, end_t)
 
 % A_make_R1maps_func - Generate concentration versus time curves for the
 % tumor region and the arterial input region. The setup follows Loveless
@@ -104,17 +104,7 @@ end
 %% DO NOT ALTER LINES BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
 % Log input results
 %[log_path,base,~] = fileparts(dce_path);
-[TUMOR, LV, NOISE, DYNAMIC, DRIFT, dynampath, dynam_name, rootname, hdr, ...
-    res, sliceloc, errormsg] = ...
-    loadIMGVOL(filevolume, noise_pathpick, noise_pixsize, LUT, t1aiffiles, ...
-    t1roifiles, t1mapfiles, noisefiles, driftfiles, filelist, rootname, ...
-    fileorder, mask_roi, mask_aif);
-log_path = dynampath;
-log_path = fullfile(log_path, ['A_' rootname 'R1info.log']);
-if exist(log_path, 'file')==2
-  delete(log_path);
-end
-diary(log_path);
+
 fprintf('************** User Input **************\n\n');
 % disp('User selected dce file: ');
 % fprintf('%s\n\n',dce_path);
@@ -136,6 +126,28 @@ disp('User selected contrast agent R1 relaxivity (/mM/sec): ');
 disp(relaxivity);
 disp('User selected end of steady state time (image number): ');
 disp(steady_state_time);
+
+if quant
+    disp('User selected quantification: ie. T1 maps');
+else
+    disp('User selected no quantification: raw signal data only');
+end
+
+
+%% 2. a) Load the files
+
+[TUMOR, LV, NOISE, DYNAMIC, DRIFT, dynampath, dynam_name, rootname, hdr, ...
+    res, sliceloc, errormsg] = ...
+    loadIMGVOL(filevolume, noise_pathpick, noise_pixsize, LUT, t1aiffiles, ...
+    t1roifiles, t1mapfiles, noisefiles, driftfiles, filelist, rootname, ...
+    fileorder, mask_roi, mask_aif, start_t, end_t);
+log_path = dynampath;
+log_path = fullfile(log_path, ['A_' rootname 'R1info.log']);
+if exist(log_path, 'file')==2
+  delete(log_path);
+end
+diary(log_path);
+
 disp('User selected drift correction: ');
 if(isempty(find(DRIFT > 0, 1)))
     disp('None')
@@ -146,24 +158,16 @@ else
         disp('Slicewise');
     end
 end
-
-if quant
-    disp('User selected quantification: ie. T1 maps');
-else
-    disp('User selected no quantification: raw signal data only');
-end
 fprintf('************** End User Input **************\n\n\n');
-
 disp('Starting Part A Processing')
 disp(datestr(now))
 disp(' ');
 tic
 
-%% 2. a) Load the files
 % Ask for file location
 place = '';
-
 [PathName1,~,~] = fileparts(log_path);
+
 % [PathName1,base,ext] = fileparts(dce_path);
 % dynam = [base ext];
 % 
@@ -292,7 +296,7 @@ for i = 1:dimt
     DYNAMLV(end+1,:) = currentimg(lvind);
     DYNAMNOISE(end+1)= std(single(currentimg(noiseind)));
     
-    if(i == 1)
+    if(i == 1 && exist('prctile', 'file'))
         % This is used for create a graphic showing the ROIs in relation to the
         % DCE MRI image.
         matchimg = currentimg;
@@ -330,6 +334,8 @@ for i = 1:dimt
             permute(drift_mask,[2 1 3])...
             );
         drawnow
+    else
+        warning('ROIs relative to DCE image not drawn due to lack of function "prctile". Your version of MATLAB may require the Statistics and Machine Learning Toolbox')
     end
     
 end
@@ -565,25 +571,28 @@ if strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static')
         LV = LV_temp;
     end
     
-    % Update the ROI plot with the new AIF roi
-    aif_mask = zeros(size_image_3d);
-    aif_mask(lvind)  = 1;
-    figure(nn);
-    % Permute x and y
-    imshow3D_overlays(permute(matchimg,[2 1 3]),...
-        [prctile(reshape(matchimg,1,[]),5) prctile(reshape(matchimg,1,[]),95)],...
-        permute(region_mask,[2 1 3]),...
-        permute(noise_mask,[2 1 3]),...
-        permute(aif_mask,[2 1 3]),...
-        permute(nonviable_mask,[2 1 3]),...
-        permute(drift_mask,[2 1 3])...
-        );
+    if (exist('prctile', 'file'))
+        % Update the ROI plot with the new AIF roi
+        aif_mask = zeros(size_image_3d);
+        aif_mask(lvind)  = 1;
+        figure(nn);
+        % Permute x and y
+        imshow3D_overlays(permute(matchimg,[2 1 3]),...
+            [prctile(reshape(matchimg,1,[]),5) prctile(reshape(matchimg,1,[]),95)],...
+            permute(region_mask,[2 1 3]),...
+            permute(noise_mask,[2 1 3]),...
+            permute(aif_mask,[2 1 3]),...
+            permute(nonviable_mask,[2 1 3]),...
+            permute(drift_mask,[2 1 3])...
+            );
+        
+    % We save the ROI image as a fig, We save in the same directory as the
+    % dynamic file.
+    saveas(nn, fullfile(PathName1, [rootname '_image_ROI.fig']));
+    else
+        warning('ROI plot not updated with AIF roi due to lack of "prctile" function. You may need the MATLAB Stats toolbox.')
+    end
 end
-
-
-% We save the ROI image as a fig, We save in the same directory as the
-% dynamic file.
-saveas(nn, fullfile(PathName1, [rootname '_image_ROI.fig']));
 
 %% 5. Manually select injection point, if required
 if(steady_state_time == -1)

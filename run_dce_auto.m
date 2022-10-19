@@ -12,7 +12,7 @@ script_prefs = parse_preference_file('script_preferences.txt', 0, ...
     'aif_files' 'roi_files' 't1map_files' 'noise_files' 'drift_files' ...
     'rootname' 'fileorder' 'quant' 'roimaskroi' 'aifmaskroi' 'aif_rr_type' ...
     'tr' 'fa' 'hematocrit' 'snr_filter' 'relaxivity' 'injection_time' ...
-    'injection_duration' 'drift_global' 'blood_t1'});
+    'injection_duration' 'drift_global' 'blood_t1', 'start_t', 'end_t'});
 
 % force 4D files
 filevolume = 1;
@@ -32,13 +32,13 @@ if ~strcmp(script_prefs.noise_files,'')
     noise_files = cellstr(strcat(subject_tp_path,script_prefs.noise_files));
 else
     noise_files = '';
-end;
+end
 
 if ~strcmp(script_prefs.drift_files,'')
     drift_files = cellstr(strcat(subject_tp_path,script_prefs.drift_files));
 else
     drift_files = '';
-end;
+end
     
 quant = str2num(script_prefs.quant);
 roimaskroi = str2num(script_prefs.roimaskroi);
@@ -52,6 +52,8 @@ relaxivity = str2double(script_prefs.relaxivity);
 drift_global = str2num(script_prefs.drift_global);
 blood_t1 = str2num(script_prefs.blood_t1);
 injection_duration = str2num(script_prefs.injection_duration);
+start_t = str2num(script_prefs.start_t);
+end_t = str2num(script_prefs.end_t);
 
 % main function call
 [A_results, errormsg] = A_make_R1maps_func(filevolume, noise_pathpick, ...
@@ -60,10 +62,10 @@ injection_duration = str2num(script_prefs.injection_duration);
     noise_files, drift_files, ...
     script_prefs.rootname, script_prefs.fileorder, quant, roimaskroi, ...
     aifmaskroi, script_prefs.aif_rr_type, tr, fa, hematocrit, snr_filter, ...
-    relaxivity, injection_time, drift_global, blood_t1, injection_duration);
+    relaxivity, injection_time, drift_global, blood_t1, injection_duration, ...
+    start_t, end_t);
 
 if ~isempty(errormsg)
-    
     disp_error(errormsg, handles);
     return;
 end
@@ -136,6 +138,16 @@ neuroecon = 0;
 
 % main function call
 D_results = D_fit_voxels_func(B_results,dce_model,script_prefs.time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon, outputft);
+
+% fig to png
+cd(subject_tp_path);
+fig = openfig(strcat(subject_tp_path,'dceAIF_fitting.fig'));
+filename = 'dceAIF_fitting.png';
+saveas(fig, filename);
+
+fig = openfig(strcat(subject_tp_path,'dce_timecurves.fig'));
+filename = 'dce_timecurves.png';
+saveas(fig, filename);
 
 %% clean up
 close all
