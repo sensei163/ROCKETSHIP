@@ -44,7 +44,7 @@ quant = str2num(script_prefs.quant);
 roimaskroi = str2num(script_prefs.roimaskroi);
 aifmaskroi = str2num(script_prefs.aifmaskroi);
 
-if exist('dynamic.json', 'file')
+if exist('DCE.json', 'file')
     fname = 'meta_Electronics.json'; 
     fid = fopen(fname); 
     raw = fread(fid,inf); 
