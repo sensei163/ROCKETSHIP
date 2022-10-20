@@ -51,16 +51,16 @@
 % 'aif_auto_static' = auto found with user defined T1 value 
 aif_rr_type = aif_roi
 
-% repetition time of dynamic scan (ms)
+% repetition time of dynamic scan (ms), overwritten by json if it exists
 tr = 21.572
 
-% flip angle of dynamic scan (degrees)
+% flip angle of dynamic scan (degrees), overwritten by json if it exists
 fa = 20
 
 % what t-dimension image to start from/end on
 % useful for excluding bad data points at beginning or end
 % leave blank to do from beginning/to end
-start_t = 3
+start_t = 
 end_t = 
 
 % hematocrit percent (0 - 1.00) of subject

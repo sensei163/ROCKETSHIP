@@ -1,9 +1,26 @@
-function T1mapping_fit(path)
+function T1mapping_fit(tp_path)
 % INPUTS
 %------------------------------------
-file_list = {strcat(path,'VFA_mc.nii')};
+file_list = {strcat(tp_path,'VFA_mc.nii')};
 					% must point to valid nifti files
-parameter_list = [2 5 10 12 15]';
+json_list = dir(strcat(tp_path,'*.json'));
+% TODO - fix to exclude dynamic
+parameter_list = zeros(size(json_list,1)-1, 1);
+tr = 5.14;          % units ms, only used for T1 FA fitting
+% extract TR and FA from jsons
+for i = 1:size(json_list, 1)-1
+    fname = strcat(tp_path, json_list(i).name); 
+    fid = fopen(fname);
+    raw = fread(fid,inf);
+    str = char(raw');
+    fclose(fid);
+    json = jsondecode(str);
+    fa = json.FlipAngle;
+    tr = json.RepetitionTime * 1000;
+    parameter_list(i) = fa;
+end
+
+parameter_list = sort(parameter_list);
 					% units of ms or degrees
 fit_type = 't1_fa_fit';
 					% options{'none','t2_linear_simple','t2_linear_weighted','t2_exponential','t2_linear_fast'
@@ -12,13 +29,14 @@ odd_echoes = 0;		% boolean, if selected only odd parameters will be
 					% used for fit
 rsquared_threshold = 0.6;
 					% all fits with R^2 less than this set to -1
-number_cpus = 4;	% not used if running on neuroecon or GPU
+number_cpus = feature('numcores');
+                    % not used if running on neuroecon or GPU
 neuroecon = 0;		% boolean
 output_basename = 'T1_map';
 					% base of output filename
 data_order = 'xyzn';% in what order is the data organized
 					% options{'xynz','xyzn','xyzfile'}
-tr = 5.14;			% units ms, only used for T1 FA fitting
+
 email = '';
 					% Email will be sent to this address on job completion
 save_log       = 1;

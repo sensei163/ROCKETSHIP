@@ -43,8 +43,21 @@ end
 quant = str2num(script_prefs.quant);
 roimaskroi = str2num(script_prefs.roimaskroi);
 aifmaskroi = str2num(script_prefs.aifmaskroi);
-tr = str2double(script_prefs.tr);
-fa = str2double(script_prefs.fa);
+
+if exist('dynamic.json', 'file')
+    fname = 'meta_Electronics.json'; 
+    fid = fopen(fname); 
+    raw = fread(fid,inf); 
+    str = char(raw'); 
+    fclose(fid); 
+    json = jsondecode(str);
+    % convert sec to ms
+    tr = json.RepetitionTime * 1000;
+    fa = json.FlipAngle;
+else
+    tr = str2double(script_prefs.tr);
+    fa = str2double(script_prefs.fa); 
+end
 hematocrit = str2double(script_prefs.hematocrit);
 snr_filter = str2num(script_prefs.snr_filter);
 injection_time = str2num(script_prefs.injection_time);
