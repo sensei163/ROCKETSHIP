@@ -4,11 +4,11 @@ name: CI
 on:
   push:
     branches:
-      - ci
+      - master
       - llu-usc-script
   pull_request:
     branches:
-      - ci
+      - master
       - llu-usc-script
 
 jobs:
