@@ -324,13 +324,37 @@ end
 
 disp('Loading image volumes')
 
-[TUMOR, LV, NOISE, DYNAMIC, DRIFT, dynampath, dynamname, rootname, hdr, res, sliceloc, errormsg] = loadIMGVOL(handles);
+filevolume = get(handles.filevolume, 'Value');
 
-if ~isempty(errormsg)
-    
-    disp_error(errormsg, handles);
-    return;
-end
+noise_pathpick= get(handles.noisefile, 'Value');
+noise_path = get(handles.noise_path,'String');
+noise_pixelspick=get(handles.noisepixels, 'Value');
+noise_pixsize=str2num(get(handles.noisepixsize, 'String'));
+
+LUT = handles.LUT;
+
+t1aiffiles = handles.t1aiffiles;
+t1roifiles = handles.t1roifiles;
+t1mapfiles = handles.t1mapfiles;
+noisefiles = handles.noisefiles;
+driftfiles = handles.driftfiles;
+filelist   = handles.filelist;
+
+rootname   = handles.rootname;
+
+fileorder = get(get(handles.fileorder,'SelectedObject'),'Tag');
+
+quant     = get(handles.quant, 'Value');
+
+mask_roi = get(handles.roimaskroi, 'Value') == 1;
+mask_aif = get(handles.aifmaskroi, 'Value') == 1;
+
+
+% loadIMGVOL(filevolume, noise_pathpick, noise_path, noise_pixelspick, ...
+% noise_pixsize, LUT, t1aiffiles, t1roifiles, t1mapfiles, noisefiles, ...
+% driftfiles, filelist, rootname, fileorder, quant, mask_roi, mask_aif);
+
+
 
 % Debug checks
 % size(TUMOR)
@@ -370,11 +394,21 @@ drift_global = get(handles.drift_global, 'Value');
 blood_t1 = str2num(get(handles.blood_t1, 'String')); %#ok<ST2NM>
 
 %time_resolution = time_resolution/60; %convert to minutes
-saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, DRIFT, hdr, res,quant, rootname, dynampath, dynamname, aif_rr_type, ... 
-    tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift_global, sliceloc,blood_t1, injection_duration);
-
+% saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, DRIFT, hdr, res,quant, rootname, dynampath, dynamname, aif_rr_type, ... 
+%     tr,fa,hematocrit,snr_filter,relaxivity,injection_time,drift_global, sliceloc,blood_t1, injection_duration);
+[saved_results, errormsg] = A_make_R1maps_func(filevolume, noise_pathpick, ...
+    noise_pixsize, LUT, filelist, t1aiffiles, t1roifiles, t1mapfiles, ...
+    noisefiles, driftfiles,  rootname, fileorder, quant, mask_roi, ...
+    mask_aif, aif_rr_type, tr, fa, hematocrit,snr_filter,relaxivity, ...
+    injection_time, drift_global, blood_t1, injection_duration);
 % saved_results = 'aaa';
 %set(handles.results_a_path,'String',saved_results);
+
+if ~isempty(errormsg)
+    
+    disp_error(errormsg, handles);
+    return;
+end
 
 handles.saved_results = saved_results;
 guidata(hObject, handles);

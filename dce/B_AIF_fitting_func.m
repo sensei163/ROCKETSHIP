@@ -59,6 +59,10 @@ quant    = Adata.quant;
 rootname = Adata.rootname;
 Cp       = Adata.Cp;
 Ct       = Adata.Ct;
+if (start_injection == -1 || end_injection == -1)
+    start_injection = Adata.start_injection*time_resolution;
+    end_injection = Adata.end_injection*time_resolution;
+end
 
 % We also load the Rawdata for raw curve fitting if necessary
 Stlv    = Adata.Stlv;

@@ -1,5 +1,9 @@
-function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, DRIFT, hdr, res,quant, rootname, dynampath, dynam_name, aif_rr_type, ... 
-    tr,fa,hematocrit,snr_filter,relaxivity,steady_state_time, drift_global, sliceloc, blood_t1, injection_duration)
+% function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, DRIFT, hdr, res,quant, rootname, dynampath, dynam_name, aif_rr_type, ... 
+function [saved_results, errormsg] = A_make_R1maps_func(filevolume, noise_pathpick, ...
+    noise_pixsize, LUT, filelist, t1aiffiles, t1roifiles, t1mapfiles, noisefiles, ...
+    driftfiles, rootname, fileorder, quant, mask_roi, mask_aif, ...
+    aif_rr_type, tr, fa, hematocrit, snr_filter, relaxivity, ...
+    steady_state_time, drift_global, blood_t1, injection_duration, start_t, end_t)
 
 % A_make_R1maps_func - Generate concentration versus time curves for the
 % tumor region and the arterial input region. The setup follows Loveless
@@ -100,12 +104,7 @@ end
 %% DO NOT ALTER LINES BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
 % Log input results
 %[log_path,base,~] = fileparts(dce_path);
-log_path = dynampath;
-log_path = fullfile(log_path, ['A_' rootname 'R1info.log']);
-if exist(log_path, 'file')==2
-  delete(log_path);
-end
-diary(log_path);
+
 fprintf('************** User Input **************\n\n');
 % disp('User selected dce file: ');
 % fprintf('%s\n\n',dce_path);
@@ -127,6 +126,28 @@ disp('User selected contrast agent R1 relaxivity (/mM/sec): ');
 disp(relaxivity);
 disp('User selected end of steady state time (image number): ');
 disp(steady_state_time);
+
+if quant
+    disp('User selected quantification: ie. T1 maps');
+else
+    disp('User selected no quantification: raw signal data only');
+end
+
+
+%% 2. a) Load the files
+
+[TUMOR, LV, NOISE, DYNAMIC, DRIFT, dynampath, dynam_name, rootname, hdr, ...
+    res, sliceloc, errormsg] = ...
+    loadIMGVOL(filevolume, noise_pathpick, noise_pixsize, LUT, t1aiffiles, ...
+    t1roifiles, t1mapfiles, noisefiles, driftfiles, filelist, rootname, ...
+    fileorder, mask_roi, mask_aif, start_t, end_t);
+log_path = dynampath;
+log_path = fullfile(log_path, ['A_' rootname 'R1info.log']);
+if exist(log_path, 'file')==2
+  delete(log_path);
+end
+diary(log_path);
+
 disp('User selected drift correction: ');
 if(isempty(find(DRIFT > 0, 1)))
     disp('None')
@@ -137,24 +158,16 @@ else
         disp('Slicewise');
     end
 end
-
-if quant
-    disp('User selected quantification: ie. T1 maps');
-else
-    disp('User selected no quantification: raw signal data only');
-end
 fprintf('************** End User Input **************\n\n\n');
-
 disp('Starting Part A Processing')
 disp(datestr(now))
 disp(' ');
 tic
 
-%% 2. a) Load the files
 % Ask for file location
 place = '';
-
 [PathName1,~,~] = fileparts(log_path);
+
 % [PathName1,base,ext] = fileparts(dce_path);
 % dynam = [base ext];
 % 
@@ -177,6 +190,7 @@ place = '';
 % res  = dynam.hdr.dime.pixdim;
 % save for part D
 %dynam.fileprefix;
+
 dynam = DYNAMIC; %double(dynam.img);
 
 
@@ -282,7 +296,7 @@ for i = 1:dimt
     DYNAMLV(end+1,:) = currentimg(lvind);
     DYNAMNOISE(end+1)= std(single(currentimg(noiseind)));
     
-    if(i == 1)
+    if(i == 1 && exist('prctile', 'file'))
         % This is used for create a graphic showing the ROIs in relation to the
         % DCE MRI image.
         matchimg = currentimg;
@@ -320,6 +334,8 @@ for i = 1:dimt
             permute(drift_mask,[2 1 3])...
             );
         drawnow
+    else
+        warning('ROIs relative to DCE image not drawn due to lack of function "prctile". Your version of MATLAB may require the Statistics and Machine Learning Toolbox')
     end
     
 end
@@ -555,25 +571,28 @@ if strcmp(aif_rr_type,'aif_auto') || strcmp(aif_rr_type,'aif_auto_static')
         LV = LV_temp;
     end
     
-    % Update the ROI plot with the new AIF roi
-    aif_mask = zeros(size_image_3d);
-    aif_mask(lvind)  = 1;
-    figure(nn);
-    % Permute x and y
-    imshow3D_overlays(permute(matchimg,[2 1 3]),...
-        [prctile(reshape(matchimg,1,[]),5) prctile(reshape(matchimg,1,[]),95)],...
-        permute(region_mask,[2 1 3]),...
-        permute(noise_mask,[2 1 3]),...
-        permute(aif_mask,[2 1 3]),...
-        permute(nonviable_mask,[2 1 3]),...
-        permute(drift_mask,[2 1 3])...
-        );
+    if (exist('prctile', 'file'))
+        % Update the ROI plot with the new AIF roi
+        aif_mask = zeros(size_image_3d);
+        aif_mask(lvind)  = 1;
+        figure(nn);
+        % Permute x and y
+        imshow3D_overlays(permute(matchimg,[2 1 3]),...
+            [prctile(reshape(matchimg,1,[]),5) prctile(reshape(matchimg,1,[]),95)],...
+            permute(region_mask,[2 1 3]),...
+            permute(noise_mask,[2 1 3]),...
+            permute(aif_mask,[2 1 3]),...
+            permute(nonviable_mask,[2 1 3]),...
+            permute(drift_mask,[2 1 3])...
+            );
+        
+    % We save the ROI image as a fig, We save in the same directory as the
+    % dynamic file.
+    saveas(nn, fullfile(PathName1, [rootname '_image_ROI.fig']));
+    else
+        warning('ROI plot not updated with AIF roi due to lack of "prctile" function. You may need the MATLAB Stats toolbox.')
+    end
 end
-
-
-% We save the ROI image as a fig, We save in the same directory as the
-% dynamic file.
-saveas(nn, fullfile(PathName1, [rootname '_image_ROI.fig']));
 
 %% 5. Manually select injection point, if required
 if(steady_state_time == -1)
@@ -605,6 +624,11 @@ elseif (steady_state_time == -2)
         dimy = size(DYNAMIC,2);
         dimz = dimz;
         end_ss = dce_auto_aif(DYNAMLV,lvind,dimx,dimy,dimz,injection_duration);
+        start_injection = end_ss;
+        %get max of dynamlv
+        %end_injection = max dynamlv
+        [~, end_injection] = max(DYNAMLV);
+        end_injection = mean(end_injection);
     end
     steady_state_time(2) = end_ss;
     steady_state_time(1) = 1; 
@@ -874,6 +898,8 @@ Adata.tumind    = tumind;
 Adata.voxelSNR  = voxelSNR;
 Adata.voxelSNR_filtered = voxelSNR_filtered;
 Adata.injection_duration = injection_duration;
+Adata.start_injection = start_injection;
+Adata.end_injection = end_injection;
 
 %% 14. Save the file for the next Step
 

@@ -1,32 +1,10 @@
-function [TUMOR, LV, NOISE, DYNAMIC, DRIFT, dynampath, dynamname, rootname, hdr, res, sliceloc, errormsg] = loadIMGVOL(handles)
-
+function [TUMOR, LV, NOISE, DYNAMIC, DRIFT, dynampath, dynamname, rootname, ...
+    hdr, res, sliceloc, errormsg] = ...
+    loadIMGVOL(filevolume, noise_pathpick, noise_pixsize, LUT, t1aiffiles, ...
+    t1roifiles, t1mapfiles, noisefiles, driftfiles, filelist, rootname, ...
+    fileorder, mask_roi, mask_aif, start_t, end_t)
 
 % Takes handles, loads the image files and outputs image volume.
-
-filevolume = get(handles.filevolume, 'Value');
-
-noise_pathpick= get(handles.noisefile, 'Value');
-noise_path = get(handles.noise_path,'String');
-noise_pixelspick=get(handles.noisepixels, 'Value');
-noise_pixsize=str2num(get(handles.noisepixsize, 'String'));
-
-LUT = handles.LUT;
-
-t1aiffiles = handles.t1aiffiles;
-t1roifiles = handles.t1roifiles;
-t1mapfiles = handles.t1mapfiles;
-noisefiles = handles.noisefiles;
-driftfiles = handles.driftfiles;
-filelist   = handles.filelist;
-
-rootname   = handles.rootname;
-
-fileorder = get(get(handles.fileorder,'SelectedObject'),'Tag');
-
-quant     = get(handles.quant, 'Value');
-
-mask_roi = get(handles.roimaskroi, 'Value') == 1;
-mask_aif = get(handles.aifmaskroi, 'Value') == 1;
 
 % Initialize Image sets
 TUMOR = [];
@@ -41,8 +19,6 @@ errormsg = '';
 hdr = [];
 res = [];
 %% Load image files
-
-
 
 % Load ROI file - either 3D volume or 2D slice
 % hdr , res are derived from here
@@ -291,7 +267,15 @@ if filevolume == 1
         img = nii.img;
         hdr = nii.hdr;
         res = nii.hdr.dime.pixdim(2:4);
-        DYNAMIC = img;
+        if (start_t > 0) & (end_t > start_t)
+            DYNAMIC = img(:,:,:,start_t:end_t);
+        elseif (start_t > 1) & isempty(end_t)
+            DYNAMIC = img(:,:,:,start_t:size(img,4));
+        elseif (end_t > 0)
+            DYNAMIC = img(:,:,:,1:end_t);
+        else
+            DYNAMIC = img;
+        end
     else
         errormsg = 'Unknown file type - DYNAMIC';
         return;
@@ -422,18 +406,3 @@ end
 if rem(size(DYNAMIC,3),size(TUMOR,3)) ~= 0
     errormsg = 'timepoints not divisible by slices';
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
