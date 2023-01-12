@@ -5,11 +5,11 @@ on:
   push:
     branches:
       - ci
-      - llu-usc-script
+      - dev
   pull_request:
     branches:
       - ci
-      - llu-usc-script
+      - dev
 
 jobs:
   build:
