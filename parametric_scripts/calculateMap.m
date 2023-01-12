@@ -189,9 +189,13 @@ end
 % Auto detect GPU
 try
     gpufit_available = strfind(gpuDevice().Name, 'NVIDIA') && ...
-        ( exist("Gpufit-build/matlab/GpufitConstrainedMex.mexa64", 'file') == 3);
+        ( exist("matlab/GpufitConstrainedMex.mexa64", 'file') == 3);
 catch
     disp("Gpufit detection failed. Defaulting to CPU.")
+    gpufit_available = 0;
+end
+para_prefs = parse_preference_file('parametric_preferences.txt',0,{'force_cpu'},{0});
+if str2num(para_prefs.force_cpu)
     gpufit_available = 0;
 end
 

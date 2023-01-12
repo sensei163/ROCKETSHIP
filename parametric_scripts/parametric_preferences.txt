@@ -1,4 +1,5 @@
 % Matlab Options
 %%%%%%%%%%%%%%%%%%%%%%
+force_cpu = 0
 % True for version R2013a and older
 use_matlabpool = 0

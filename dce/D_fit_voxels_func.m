@@ -186,9 +186,23 @@ for model_index=1:numel(dce_model_list)
     disp('User selected XY smooth size (sigma)');
     disp(xy_smooth_size);
     
+    % Auto detect GPU
+    try
+        USE_GPU = strfind(gpuDevice().Name, 'NVIDIA') && ...
+            ( exist("matlab/GpufitConstrainedMex.mexa64", 'file') == 3);
+        disp("Gpufit detected. GPU will be utilized for voxel fitting.")
+    catch
+        disp("Gpufit detection failed. Defaulting to CPU.")
+        USE_GPU = 0;
+    end
+    
     % Setup matlabpool size if using CPU
-    gpu_prefs = parse_preference_file('dce_preferences.txt',0,{'gpu_use'},{0});
-    USE_GPU = str2num(gpu_prefs.gpu_use);
+    gpu_prefs = parse_preference_file('dce_preferences.txt',0,{'force_cpu'},{0});
+    FORCE_CPU = str2num(gpu_prefs.force_cpu);
+    if FORCE_CPU
+        USE_GPU = 0;
+    end
+    
     if ~USE_GPU
         disp('User selected number of CPU cores');
         c = parcluster('local'); % build the 'local' cluster object
