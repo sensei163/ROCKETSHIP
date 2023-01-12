@@ -711,7 +711,10 @@ AB = A./B;
 % AB should not be less than 1. We interpolate the timeseries to clean
 % this. Threshold is 0.05, ie if 5% of timepoints <1 remove voxel;
 
-[AB T1LV lvind BADspacelABv GOODspacelABv] = cleanAB(AB, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.05, quant);
+[AB, T1LV, lvind, BADspacelABv, GOODspacelABv] = cleanAB(AB, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.05, quant);
+if numel(T1LV)==0
+    error('Error all AIF voxels removed due to bad/negative values, check T1 values and AIF placement');
+end
 
 R1tLV = double((1/tr).*log(AB));
 Sss = Sss(GOODspacelABv);
@@ -719,7 +722,10 @@ Stlv = Stlv(:,GOODspacelABv);
 % R1 should be real and <100/sec. We interpolate the timeseries to clean
 % this. Threshold is 0.005, ie if 0.5% of timepoints have img remove voxel;
 
-[R1tLV T1LV lvind BADspacelv GOODspacelv] = cleanR1t(R1tLV, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.005, quant);
+[R1tLV, T1LV, lvind, BADspacelv, GOODspacelv] = cleanR1t(R1tLV, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.005, quant);
+if numel(T1LV)==0
+    error('Error all AIF voxels removed due to bad/negative values, check T1 values and AIF placement');
+end
 Sss = Sss(GOODspacelv);
 Stlv = Stlv(:,GOODspacelv);
 
@@ -764,7 +770,9 @@ end
 AB = A./B;
 
 [AB T1TUM tumind BADspaceAB GOODspaceAB] = cleanAB(AB, T1TUM,tumind, 'Tumor', min(numel(T1TUM)), 0.7, quant);
-
+if numel(T1TUM)==0
+    error('Error all voxels removed due to bad/negative values, check ROI, T1 values, and image quality');
+end
 R1tTOI = double((1/tr).*log(AB));
 
 Ssstum = Ssstum(GOODspaceAB);
@@ -773,7 +781,9 @@ Sstar = Sstar(GOODspaceAB);
 
 
 [R1tTOI T1TUM tumind BADspaceT GOODspaceT] = cleanR1t(R1tTOI, T1TUM,tumind, 'Tumor', min(numel(T1TUM)), 0.7, quant);
-
+if numel(T1TUM)==0
+    error('Error all voxels removed due to bad/negative values, check ROI, T1 values, and image quality');
+end
 Ssstum = Ssstum(GOODspaceT);
 Sttum = Sttum(:,GOODspaceT);
 Sstar = Sstar(GOODspaceT);

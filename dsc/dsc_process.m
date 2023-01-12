@@ -1,5 +1,5 @@
 function dsc_process(dsc_image,noise_type,noise_roi_path,...
-    aif_type, aif_path,fitting_function,TE,TR,r2_star,oi_or_psvd,rho,species,...
+    aif_type, aif_path,fitting_function,TE,TR,r2_star,oi_or_psvd,rho,...
     deconvolution_algorithm,bolus_detection)
 % FUNCTION PURPOSE: To generate blood flow and volume maps from DSC dataset
 % 
@@ -162,12 +162,12 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,...
         Ct(1:bolus_time - 1) = [];
         Ct = Ct';
 
-    elseif fitting_function == 2 %gamma-variant
+    elseif fitting_function == 2 %gamma-variate
         % Now we fit the AIF with a SCR model:
 
         %assigning the gamma variate function, gfun, to be our desired fitting
         %function:
-        Ct = fitting_gamma_variant(meanAIF,species, time_vect);
+        Ct = fitting_gamma_variate(meanAIF, time_vect);
         Cp = cat(1,baseline_array, Ct); %Cp is created for plotting purposes only. Ct is analyzed for CBF, CBV...
 
     elseif fitting_function == 3 %raw data
@@ -219,7 +219,8 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,...
 
         max_indexCt = maxima_indexes(maxima_iterator);
 
-        if numel(findpeaks(AIF_whole(bolus_time:(bolus_time + max_indexCt)))) == 1 %check for additional local maxima in upslope, if none
+        if numel(findpeaks(AIF_whole(bolus_time:(bolus_time + max_indexCt)))) == 1 
+            %check for additional local maxima in upslope, if none
             %are present use the exact upslope vales for the fitted funciton
             %[bolus time, max_index + 1] is the range that is examined for the
             %additional maxima
@@ -247,13 +248,10 @@ function dsc_process(dsc_image,noise_type,noise_roi_path,...
         %as was done in the local fitting help function
         %peak is the first within 3% of the max value of the whole data set
         [local_maxima, maxima_indexes] = findpeaks(Ct);
- 
         maxima_iterator = 1;
         while(local_maxima(maxima_iterator) < (0.97 * max(local_maxima)))
             maxima_iterator = maxima_iterator + 1;
         end
-
-        max_indexCt = maxima_indexes(maxima_iterator);
 
         max_indexCt = maxima_indexes(maxima_iterator);
 

@@ -1,6 +1,6 @@
 %% Clean up the R1 by interpolation
 
-function [R1t, T1 ROIind, BADspace, GOODspace] = cleanR1t(R1t, T1, ROIind, type, pick, threshold, quant)
+function [R1t, T1, ROIind, BADspace, GOODspace] = cleanR1t(R1t, T1, ROIind, type, pick, threshold, quant)
 
 BADspace = [];
 CLEANspace = 0;
