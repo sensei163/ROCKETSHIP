@@ -723,10 +723,17 @@ Stlv = Stlv(:,GOODspacelABv);
 Sss = Sss(GOODspacelv);
 Stlv = Stlv(:,GOODspacelv);
 
-for j = 1:numel(T1LV)
-    % Scale R1 time curve values to initial T1 values
-    ScaleFactorlv = (1/T1LV(j)) - mean(R1tLV(round(steady_state_time(1)):round(steady_state_time(2)), j),1);
-    R1tLV(:,j) = R1tLV(:,j) + ScaleFactorlv;
+if ~isempty(T1LV)
+    for j = 1:numel(T1LV)
+        % Scale R1 time curve values to initial T1 values
+        ScaleFactorlv = (1/T1LV(j)) - mean(R1tLV(round(steady_state_time(1)):round(steady_state_time(2)), j),1);
+        R1tLV(:,j) = R1tLV(:,j) + ScaleFactorlv;
+    end
+else
+    error("ERROR: Arterial input matrix T1LV is empty. All AIF voxels may have been removed by the cleaning steps. " + ...
+        "This is most often caused by either a poor baseline (negative perhaps) and/or poor T1 values. " + ...
+        "Try cutting off a data point or two in script_preferences (start_t) and/or " + ...
+        "manually setting blood T1 values (blood_t1) and changing aif_rr_type to a static option.")
 end
 
 if ~quant
@@ -771,12 +778,18 @@ Ssstum = Ssstum(GOODspaceT);
 Sttum = Sttum(:,GOODspaceT);
 Sstar = Sstar(GOODspaceT);
 
-for j = 1:numel(T1TUM)
-    % Scale Sss values to T1 values
-    ScaleFactortum = (1/T1TUM(j)) - mean(R1tTOI(round(steady_state_time(1)):round(steady_state_time(2)), j),1);
-    R1tTOI(:,j) = R1tTOI(:,j) + ScaleFactortum;
+if ~isempty(T1TUM)
+    for j = 1:numel(T1TUM)
+        % Scale Sss values to T1 values
+        ScaleFactortum = (1/T1TUM(j)) - mean(R1tTOI(round(steady_state_time(1)):round(steady_state_time(2)), j),1);
+        R1tTOI(:,j) = R1tTOI(:,j) + ScaleFactortum;
+    end
+else
+    error("ERROR: Arterial input matrix T1TUM is empty. All AIF voxels may have been removed by the cleaning steps. " + ...
+    "This is most often caused by either a poor baseline (negative perhaps) and/or the data not settling into " + ...
+    "a steady state. Try cutting off a data point or two in script_preferences (start_t) and/or manually setting " + ...
+    "blood T1 values (blood_t1) and changing aif_rr_type to a static option.")
 end
-
 
 n = figure; 
 if quant

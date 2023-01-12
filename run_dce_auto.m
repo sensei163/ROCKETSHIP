@@ -5,6 +5,7 @@ function run_dce_auto(subject_tp_path)
  addpath(fullfile(mfilepath,'external_programs'));
  addpath(fullfile(mfilepath,'external_programs/niftitools'));
  addpath(fullfile(mfilepath,'parametric_scripts'));
+ echo off;
 %% RUN A
 % load A prefs
 script_prefs = parse_preference_file('script_preferences.txt', 0, ...
@@ -44,12 +45,12 @@ quant = str2num(script_prefs.quant);
 roimaskroi = str2num(script_prefs.roimaskroi);
 aifmaskroi = str2num(script_prefs.aifmaskroi);
 
-if exist('DCE.json', 'file')
-    fname = 'meta_Electronics.json'; 
-    fid = fopen(fname); 
-    raw = fread(fid,inf); 
-    str = char(raw'); 
-    fclose(fid); 
+dce_json = strcat(subject_tp_path, 'DCE.json');
+if exist(dce_json, 'file')
+    fid = fopen(dce_json);
+    raw = fread(fid,inf);
+    str = char(raw');
+    fclose(fid);
     json = jsondecode(str);
     % convert sec to ms
     tr = json.RepetitionTime * 1000;
@@ -69,17 +70,22 @@ start_t = str2num(script_prefs.start_t);
 end_t = str2num(script_prefs.end_t);
 
 % main function call
-[A_results, errormsg] = A_make_R1maps_func(filevolume, noise_pathpick, ...
-    noise_pixsize, LUT, dynamic_files,aif_files, ...
-    roi_files, t1map_files, ...
-    noise_files, drift_files, ...
-    script_prefs.rootname, script_prefs.fileorder, quant, roimaskroi, ...
-    aifmaskroi, script_prefs.aif_rr_type, tr, fa, hematocrit, snr_filter, ...
-    relaxivity, injection_time, drift_global, blood_t1, injection_duration, ...
-    start_t, end_t);
+try
+    [A_results, errormsg] = A_make_R1maps_func(filevolume, noise_pathpick, ...
+        noise_pixsize, LUT, dynamic_files,aif_files, ...
+        roi_files, t1map_files, ...
+        noise_files, drift_files, ...
+        script_prefs.rootname, script_prefs.fileorder, quant, roimaskroi, ...
+        aifmaskroi, script_prefs.aif_rr_type, tr, fa, hematocrit, snr_filter, ...
+        relaxivity, injection_time, drift_global, blood_t1, injection_duration, ...
+        start_t, end_t);
+catch L
+    disp(L.message)
+    return;
+end
 
 if ~isempty(errormsg)
-    disp_error(errormsg, handles);
+    error(errormsg);
     return;
 end
 
@@ -113,8 +119,21 @@ if (auto_find_injection)
 end
 
 % main function call
-B_results = B_AIF_fitting_func(A_results,start_time,end_time, start_injection,end_injection,fit_aif,import_aif_path,time_resolution, timevectpath);
-
+fail = 0;
+while (fail < 3)
+    try
+        B_results = B_AIF_fitting_func(A_results,start_time,end_time, start_injection,end_injection,fit_aif,import_aif_path,time_resolution, timevectpath);
+        break;
+    catch L
+        disp("RUNB failed. Repeating in case of bad read...")
+        disp(L.message)
+    end
+    fail = fail + 1;
+end
+if fail >= 3
+    warning("RUNB failed and could not recover.")
+    return;
+end
 %% RUND
 % whatever happened to C?
 script_prefs = parse_preference_file('script_preferences.txt', 0, ...
