@@ -17,7 +17,7 @@ try
         ( exist("matlab/GpufitConstrainedMex.mexa64", 'file') == 3);
     disp("Gpufit detected. GPU will be utilized for voxel fitting.")
 catch
-    disp("Gpufit detection failed. Defaulting to CPU.")
+    disp("Gpufit not detected. Defaulting to CPU.")
     USE_GPU = 0;
 end
 gpu_prefs = parse_preference_file('dce_preferences.txt',0,{'force_cpu'},{0});
