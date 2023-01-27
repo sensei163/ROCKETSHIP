@@ -607,7 +607,7 @@ if(steady_state_time == -1)
     for i = 1:2
         disp("Getting baseline");
         title(['Select timepoint ' num2str(i) ...
-            ' before injection. (i.e. Select an interval (2 points) before contrast injection to define stead state)'])
+            ' before injection. (i.e. Select an interval (2 points) before contrast injection to define steady state)'])
         drawnow
         figure(fig_get_baseline);
         [steady_state_time(i), ~] = ginput(1);
@@ -618,6 +618,9 @@ if(steady_state_time == -1)
         %No zero index in matlab
         steady_state_time(1) = 1;
     end
+    start_injection = steady_state_time(2);
+    [~, end_injection] = max(DYNAMLV);
+    end_injection = mean(end_injection);
 elseif (steady_state_time == -2)
     if ~exist('end_ss','var')
         dimx = size(DYNAMIC,1);
