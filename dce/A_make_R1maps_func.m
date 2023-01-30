@@ -627,12 +627,10 @@ elseif (steady_state_time == -2)
         dimy = size(DYNAMIC,2);
         dimz = dimz;
         end_ss = dce_auto_aif(DYNAMLV,lvind,dimx,dimy,dimz,injection_duration);
-        start_injection = end_ss;
-        %get max of dynamlv
-        %end_injection = max dynamlv
-        [~, end_injection] = max(DYNAMLV);
-        end_injection = mean(end_injection);
     end
+    start_injection = end_ss;
+    [~, end_injection] = max(DYNAMLV);
+    end_injection = mean(end_injection);
     steady_state_time(2) = end_ss;
     steady_state_time(1) = 1; 
 else

@@ -185,13 +185,17 @@ for i=1:number_aif
     external = load(char(handles.aif_list(i)));
     if isfield(external,'Cp_use')
         Cp_use = external.Cp_use;
-    elseif isfield(external,'xdata')
-        Cp_use = external.xdata{1}.Cp;
+    elseif isfield(external,'Adata')
+        Cp_use = external.Adata.Cp;
+        Stlv_use = external.Adata.Stlv;
+%         import_timer = external.Adata.timer;
+        start_injection = external.Adata.start_injection;
     else
         disp(['No Cp curve found in ' handles.aif_list(i)])
         return
     end
-    
+    Stlv_use = mean(Stlv_use, 2);
+    Cp_use = mean(Cp_use, 2);
     if i==1
         %initialize
         Cp_average = zeros(size(Cp_use));
@@ -201,6 +205,7 @@ for i=1:number_aif
     
     % 5.5 Plot the results   
     h(i) = plot(Cp_use,'b','LineWidth',0.3);
+    
 %     M{i} = '';
 end
 
@@ -219,7 +224,7 @@ xlabel('Time (image number)');
     
 
 save_name = fullfile(handles.save_path, ['average_' num2str(number_aif) '_aifs.mat']);
-save(save_name,'Cp_use','-v7.3');
+save(save_name,'Cp_use', 'Stlv_use', 'start_injection','-v7.3');
 
 disp(['Average of ' num2str(number_aif) ' AIFs saved to: ' save_name]);
 delete(handles.figure1);
