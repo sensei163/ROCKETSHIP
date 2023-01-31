@@ -185,6 +185,9 @@ for i=1:number_aif
     external = load(char(handles.aif_list(i)));
     if isfield(external,'Cp_use')
         Cp_use = external.Cp_use;
+        Stlv_use = external.Stlv;
+%         import_timer = external.timer;
+        start_injection = external.Adata.start_injection;
     elseif isfield(external,'Adata')
         Cp_use = external.Adata.Cp;
         Stlv_use = external.Adata.Stlv;

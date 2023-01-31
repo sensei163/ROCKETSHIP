@@ -1,4 +1,7 @@
 function run_dce_auto(subject_tp_path)
+    % Use full path to the subject timepoint as this function's argument.
+    % Beware, try-catches are used to keep a batch script running.
+    
     % Find and add subpaths 
     mfilepath=fileparts(which('run_dce_auto'));
     addpath(fullfile(mfilepath,'dce'));
@@ -14,7 +17,7 @@ function run_dce_auto(subject_tp_path)
         'rootname' 'fileorder' 'quant' 'roimaskroi' 'aifmaskroi' 'aif_rr_type' ...
         'tr' 'fa' 'hematocrit' 'snr_filter' 'relaxivity' 'injection_time' ...
         'injection_duration' 'drift_global' 'blood_t1', 'start_t', 'end_t'});
-
+    
     % force 4D files
     filevolume = 1;
     % don't need to display pretty file list
@@ -23,20 +26,30 @@ function run_dce_auto(subject_tp_path)
     % type casts
     noise_pathpick = str2num(script_prefs.noise_pathpick);
     noise_pixsize = str2num(script_prefs.noise_pixsize);
-
-    dynamic_files = cellstr(strcat(subject_tp_path,script_prefs.dynamic_files));
-    aif_files = cellstr(strcat(subject_tp_path,script_prefs.aif_files));
-    roi_files = cellstr(strcat(subject_tp_path,script_prefs.roi_files));
-    t1map_files = cellstr(strcat(subject_tp_path,script_prefs.t1map_files));
+    
+    % gather filenames
+    tmp = dir(strcat(subject_tp_path, script_prefs.dynamic_files, '*'));
+    dynamic_files = cellstr(strcat(tmp.folder, '/', tmp.name));
+    
+    tmp = dir(strcat(subject_tp_path, script_prefs.aif_files, '*'));
+    aif_files = cellstr(strcat(tmp.folder, '/', tmp.name));
+    
+    tmp = dir(strcat(subject_tp_path, script_prefs.roi_files, '*'));
+    roi_files = cellstr(strcat(tmp.folder, '/', tmp.name));
+    
+    tmp = dir(strcat(subject_tp_path, script_prefs.t1map_files, '*'));
+    t1map_files = cellstr(strcat(tmp.folder, '/', tmp.name));
 
     if ~strcmp(script_prefs.noise_files,'')
-        noise_files = cellstr(strcat(subject_tp_path,script_prefs.noise_files));
+        tmp = dir(strcat(subject_tp_path, script_prefs.dynamic_files, '*'));
+        noise_files = cellstr(strcat(tmp.folder, '/', tmp.name));
     else
         noise_files = '';
     end
 
     if ~strcmp(script_prefs.drift_files,'')
-        drift_files = cellstr(strcat(subject_tp_path,script_prefs.drift_files));
+        tmp = dir(strcat(subject_tp_path, script_prefs.dynamic_files, '*'));
+        drift_files = cellstr(strcat(tmp.folder, '/', tmp.name));
     else
         drift_files = '';
     end
@@ -134,7 +147,6 @@ function run_dce_auto(subject_tp_path)
         return;
     end
     %% RUND
-    % whatever happened to C?
     script_prefs = parse_preference_file('script_preferences.txt', 0, ...
         {'tofts', 'ex_tofts', 'fxr', 'auc', 'nested', 'patlak', ...
         'tissue_uptake', 'two_cxm', 'FXL_rr', 'time_smoothing', ...

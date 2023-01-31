@@ -16,7 +16,7 @@ jobs:
     strategy:
       #fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-22.04]
+        os: [ubuntu-latest, ubuntu-20.04]
         release: [R2020a, R2021a, R2022a]
     runs-on: ${{ matrix.os }}
 
@@ -42,4 +42,10 @@ jobs:
         uses: matlab-actions/run-command@v1
         with:
           command: run_dce_auto('test data/test2/')
+
+      - name: Upload Ktrans result
+        uses: actions/upload-artifact@v3
+        with:
+          name: Ktrans_result
+          path: test\ data/test2/dce_patlak_fit_Ktrans.nii
 
