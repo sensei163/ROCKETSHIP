@@ -11,8 +11,20 @@ p = 0;
 residuals = [];
 
 % check (again) if using gpu
-prefs_processor = parse_preference_file('dce_preferences.txt',0, {'gpu_use'});
-prefs.gpufit = str2num(prefs_processor.gpu_use);
+% Auto detect GPU
+try
+    USE_GPU = strfind(gpuDevice().Name, 'NVIDIA') && ...
+        ( exist("matlab/GpufitConstrainedMex.mexa64", 'file') == 3);
+    disp("Gpufit detected. GPU will be utilized for voxel fitting.")
+catch
+    disp("Gpufit not detected. Defaulting to CPU.")
+    USE_GPU = 0;
+end
+gpu_prefs = parse_preference_file('dce_preferences.txt',0,{'force_cpu'},{0});
+FORCE_CPU = str2num(gpu_prefs.force_cpu);
+if FORCE_CPU
+    USE_GPU = 0;
+end
 
 
 if strcmp(model, 'ex_tofts')
@@ -47,7 +59,7 @@ if strcmp(model, 'ex_tofts')
         fprintf('initial_value_vp = %s\n',num2str(prefs.initial_value_vp));
     end
         
-    if ~prefs.gpufit || cpu_only
+    if ~USE_GPU || cpu_only
         % Get values from pref file
         prefs_str = parse_preference_file('dce_preferences.txt',0,...
             {'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals' 'voxel_Robust'});
@@ -197,7 +209,7 @@ elseif strcmp(model, 'tissue_uptake')
         fprintf('initial_value_vp = %s\n',num2str(prefs.initial_value_vp));
     end
     
-    if ~prefs.gpufit
+    if ~USE_GPU
         % Get values from pref file
         prefs_str = parse_preference_file('dce_preferences.txt',0,...
             {'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals' 'voxel_Robust'});
@@ -241,7 +253,7 @@ elseif strcmp(model, 'tissue_uptake')
         if diary_restore, diary on, end
     end
     
-    if prefs.gpufit        
+    if USE_GPU       
         model_id = ModelID.TISSUE_UPTAKE;
         estimator_id = EstimatorID.LSE;
         
@@ -336,7 +348,7 @@ elseif strcmp(model, 'tofts')
         fprintf('initial_value_ve = %s\n',num2str(prefs.initial_value_ve));
     end
     
-    if ~prefs.gpufit
+    if ~USE_GPU
         % Get values from pref file
         prefs_str = parse_preference_file('dce_preferences.txt',0,...
             {'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals' 'voxel_Robust'});
@@ -374,7 +386,7 @@ elseif strcmp(model, 'tofts')
         if diary_restore, diary on, end
     end   
         
-    if prefs.gpufit
+    if USE_GPU
         model_id = ModelID.TOFTS;
         estimator_id = EstimatorID.LSE;
         
@@ -687,7 +699,7 @@ elseif strcmp(model, 'patlak')
         fprintf('initial_value_vp = %s\n',num2str(prefs.initial_value_vp));
     end
         
-    if ~prefs.gpufit
+    if ~USE_GPU
         % Get CPU fitting values from pref file
         prefs_str = parse_preference_file('dce_preferences.txt',0,...
             {'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals' 'voxel_Robust'});
@@ -856,7 +868,7 @@ elseif strcmp(model, '2cxm')
         fprintf('initial_value_fp = %s\n',num2str(prefs.initial_value_fp));
     end
     
-    if ~prefs.gpufit
+    if ~USE_GPU
         % Get values from pref file
         prefs_str = parse_preference_file('dce_preferences.txt',0,...
             {'voxel_TolFun' 'voxel_TolX' 'voxel_MaxIter' 'voxel_MaxFunEvals' 'voxel_Robust'});
@@ -893,7 +905,7 @@ elseif strcmp(model, '2cxm')
         if diary_restore, diary on, end
     end
     
-    if prefs.gpufit
+    if USE_GPU
         model_id = ModelID.TWO_COMPARTMENT_EXCHANGE;
         estimator_id = EstimatorID.LSE;
         

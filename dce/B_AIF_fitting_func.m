@@ -250,7 +250,7 @@ else
     if isfield(external,'Cp_use')
         Cp_use = external.Cp_use;
         Stlv_use = external.Stlv_use;
-        import_timer = external.timer;
+        import_timer = timer;
         import_start = external.start_injection;
     elseif isfield(external,'Bdata')
         if isfield(external.Bdata,'Cp_use')

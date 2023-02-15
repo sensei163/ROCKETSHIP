@@ -23,8 +23,8 @@
     dynamic_files = DCE_mc_bfc_norm.nii
 
     aif_files = aif.nii
-    roi_files = T1_bet_mask_dyn.nii.gz
-    t1map_files = t1_map_fixed_use_me.nii.gz
+    roi_files = T1_bet_mask_dyn.nii
+    t1map_files = t1_map_fixed_use_me.nii
     noise_files =
     drift_files =
 

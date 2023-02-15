@@ -16,8 +16,7 @@ GNU General Public License for more details.
 
 Contains program and associated files to process and analyze parametric MRI and DCE-MRI files. Developed at the Biological Imaging Center at the California Institute of Technology. 
 
-SEE GITHUB WIKI FOR HELP:
-https://github.com/petmri/ROCKETSHIP/wiki
+### [SEE GITHUB WIKI FOR HELP](https://github.com/petmri/ROCKETSHIP/wiki)
 
 Please see Barnes, Ng et al BMC Bioinformatics (2015) for more information.
 
