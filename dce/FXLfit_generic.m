@@ -12,13 +12,11 @@ residuals = [];
 
 % check (again) if using gpu
 % Auto detect GPU
-try
-    USE_GPU = strfind(gpuDevice().Name, 'NVIDIA') && ...
-        ( exist("matlab/GpufitConstrainedMex.mexa64", 'file') == 3);
+USE_GPU = gpufit_cuda_available;
+if USE_GPU
     disp("Gpufit detected. GPU will be utilized for voxel fitting.")
-catch
+else
     disp("Gpufit not detected. Defaulting to CPU.")
-    USE_GPU = 0;
 end
 gpu_prefs = parse_preference_file('dce_preferences.txt',0,{'force_cpu'},{0});
 FORCE_CPU = str2num(gpu_prefs.force_cpu);

@@ -187,13 +187,11 @@ for model_index=1:numel(dce_model_list)
     disp(xy_smooth_size);
     
     % Auto detect GPU
-    try
-        USE_GPU = strfind(gpuDevice().Name, 'NVIDIA') && ...
-            ( exist("matlab/GpufitConstrainedMex.mexa64", 'file') == 3);
+    USE_GPU = gpufit_cuda_available;
+    if USE_GPU
         disp("Gpufit detected. GPU will be utilized for voxel fitting.")
-    catch
+    else
         disp("Gpufit not detected. Defaulting to CPU.")
-        USE_GPU = 0;
     end
     
     % Setup matlabpool size if using CPU
