@@ -12,7 +12,12 @@ residuals = [];
 
 % check (again) if using gpu
 % Auto detect GPU
-USE_GPU = gpufit_cuda_available;
+try
+    USE_GPU = gpufit_cuda_available;
+catch
+    USE_GPU = 0;
+end
+
 if USE_GPU
     disp("Gpufit detected. GPU will be utilized for voxel fitting.")
 else

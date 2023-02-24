@@ -190,9 +190,15 @@ end
 try
     gpufit_available = gpufit_cuda_available;
 catch
-    disp("Gpufit detection failed. Defaulting to CPU.")
     gpufit_available = 0;
 end
+
+if gpufit_available
+    disp("Gpufit detected. GPU will be utilized for T1 mapping.")
+else
+    disp("Gpufit detection failed. Defaulting to CPU.")
+end
+
 para_prefs = parse_preference_file('parametric_preferences.txt',0,{'force_cpu'},{0});
 if str2num(para_prefs.force_cpu)
     gpufit_available = 0;

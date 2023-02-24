@@ -187,7 +187,12 @@ for model_index=1:numel(dce_model_list)
     disp(xy_smooth_size);
     
     % Auto detect GPU
-    USE_GPU = gpufit_cuda_available;
+    try
+        USE_GPU = gpufit_cuda_available;
+    catch
+        USE_GPU = 0;
+    end
+
     if USE_GPU
         disp("Gpufit detected. GPU will be utilized for voxel fitting.")
     else
