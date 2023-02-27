@@ -60,13 +60,13 @@ function run_dce_auto(subject_tp_path)
 
     dce_json = strcat(subject_tp_path, 'DCE.json');
     if exist(dce_json, 'file')
+        display("DCE JSON found.")
         fid = fopen(dce_json);
         raw = fread(fid,inf);
         str = char(raw');
         fclose(fid);
         json = jsondecode(str);
-        % convert sec to ms
-        tr = json.RepetitionTime * 1000;
+        tr = json.RepetitionTime;
         fa = json.FlipAngle;
     else
         tr = str2double(script_prefs.tr);
