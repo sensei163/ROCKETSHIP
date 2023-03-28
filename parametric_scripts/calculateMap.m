@@ -188,7 +188,7 @@ end
 
 % Auto detect GPU
 try
-    gpufit_available = gpufit_cuda_available;
+    gpufit_available = GpufitCudaAvailableMex;
 catch
     gpufit_available = 0;
 end

@@ -13,7 +13,7 @@ residuals = [];
 % check (again) if using gpu
 % Auto detect GPU
 try
-    USE_GPU = gpufit_cuda_available;
+    USE_GPU = GpufitCudaAvailableMex;
 catch
     USE_GPU = 0;
 end

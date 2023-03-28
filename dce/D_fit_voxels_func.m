@@ -188,7 +188,7 @@ for model_index=1:numel(dce_model_list)
     
     % Auto detect GPU
     try
-        USE_GPU = gpufit_cuda_available;
+        USE_GPU = GpufitCudaAvailableMex;
     catch
         USE_GPU = 0;
     end
