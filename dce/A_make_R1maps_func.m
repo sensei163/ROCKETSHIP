@@ -104,6 +104,13 @@ end
 %% DO NOT ALTER LINES BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
 % Log input results
 %[log_path,base,~] = fileparts(dce_path);
+[dynampath, ~]  = fileparts(filelist{1});
+log_path = dynampath;
+log_path = fullfile(log_path, ['A_' rootname 'R1info.log']);
+if exist(log_path, 'file')==2
+  delete(log_path);
+end
+diary(log_path);
 
 fprintf('************** User Input **************\n\n');
 % disp('User selected dce file: ');
@@ -141,12 +148,6 @@ end
     loadIMGVOL(filevolume, noise_pathpick, noise_pixsize, LUT, t1aiffiles, ...
     t1roifiles, t1mapfiles, noisefiles, driftfiles, filelist, rootname, ...
     fileorder, mask_roi, mask_aif, start_t, end_t);
-log_path = dynampath;
-log_path = fullfile(log_path, ['A_' rootname 'R1info.log']);
-if exist(log_path, 'file')==2
-  delete(log_path);
-end
-diary(log_path);
 
 disp('User selected drift correction: ');
 if(isempty(find(DRIFT > 0, 1)))
