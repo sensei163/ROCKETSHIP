@@ -24,7 +24,7 @@
 
     aif_files = aif.nii
     roi_files = T1_bet_mask_dyn.nii
-    t1map_files = t1_map_fixed_use_me.nii
+    t1map_files = T1_map_t1_fa_fit_VFA.nii
     noise_files =
     drift_files =
 
@@ -60,7 +60,7 @@ fa = 20
 % what t-dimension image to start from/end on
 % useful for excluding bad data points at beginning or end
 % leave blank to do from beginning/to end
-start_t = 
+start_t = 3
 end_t = 
 
 % hematocrit percent (0 - 1.00) of subject
@@ -74,7 +74,8 @@ snr_filter = 5
 injection_time = -2
 
 % r1 relaxivity (in mM^-1*sec^-1) of contrast agent
-relaxivity = 3.7
+% dotarem 3T, human blood
+relaxivity = 2.8
 
 % boolean value, perform drift correction globally,
 % not on a slice by slice basis
@@ -82,7 +83,7 @@ drift_global = 1
 
 % the T1 value of blood (in ms) only used if 
 % aif_rr_type is set to 'aif_auto_static' or 'aif_roi_static'
-blood_t1 = 1000
+blood_t1 = 2000
 
 % the length of the contrast agent injection in
 % number of acquisitions, for auto AIF only
@@ -107,10 +108,11 @@ auto_find_injection = 1
     end_injection = 0.7
 
 % time resolution of dynamic scan (in seconds)
-time_resolution = 15.4
+% used to be 15.4 but that caused some really dumb segfault in gpufit
+time_resolution = 15
 
 % raw = 2, fitted = 1, import = 3, raw for reference region
-aif_type = 1
+aif_type = 2
     import_aif_path = 
 
 % bool to use manual time vector
