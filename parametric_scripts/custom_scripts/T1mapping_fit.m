@@ -1,18 +1,35 @@
 function T1mapping_fit(tp_path)
 % INPUTS
 %------------------------------------
-file_list = {strcat(tp_path,'VFA_mc.nii')};
+file_list = {strcat(tp_path,'VFA.nii')};
 					% must point to valid nifti files
 json_list = dir(strcat(tp_path,'*.json'));
+
+% use regex to find VFA files
+pattern = '^\d+\.json$';
+
+% Initialize a count for JSON files that match the pattern
+jsonFileCount = 0;
+
+% Loop through the files and count JSON files that match the pattern
+for i = 1:numel(json_list)
+    % Check if the file name matches the pattern
+    if regexp(json_list(i).name, pattern, 'once')
+        jsonFileCount = jsonFileCount + 1;
+    end
+end
+
 % TODO - fix to exclude dynamic
-parameter_list = zeros(size(json_list,1)-1, 1);
+parameter_list = zeros(size(jsonFileCount,1), 1);
 if isempty(json_list)
     % default FAs
     parameter_list = [2 5 10 12 15];
+    % if B1 map exists, load it into a 4D array
+
     tr = 5.14;          % units ms, only used for T1 FA fitting
 else
     % extract TR and FA from jsons
-    for i = 1:size(json_list, 1)-1
+    for i = 1:jsonFileCount
         fname = strcat(tp_path, json_list(i).name);
         fid = fopen(fname);
         raw = fread(fid,inf);
@@ -24,6 +41,16 @@ else
         parameter_list(i) = fa;
     end
     parameter_list = sort(parameter_list);
+end
+
+B1_file = char(strcat(tp_path, "B1_scaled_FAreg.nii"));
+if (exist(B1_file, "file"))
+    fa_list = load_untouch_nii(B1_file);
+    true_fa = ones([size(fa_list.img) length(parameter_list)]);
+    for i = 1:size(parameter_list)
+        true_fa(:,:,:,i) = fa_list.img(:,:,:) * parameter_list(i);
+    end
+    cur_dataset.true_fa = true_fa;
 end
 
 					% units of ms or degrees
@@ -89,8 +116,8 @@ JOB_struct(1).save_txt = save_txt;
 %------------------------------------
 
 % Call Mapping Function
-% try
+try
     calculateMap(JOB_struct);
-% catch L
-%     disp("T1 mapping failed! Sad!")
-% end
+catch L
+    disp("T1 mapping failed! Sad!")
+end
