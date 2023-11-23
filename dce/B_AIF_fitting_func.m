@@ -57,18 +57,18 @@ load(results_a_path);
 % unload the variables from previous data array
 quant    = Adata.quant;
 rootname = Adata.rootname;
-Cp       = Adata.Cp;
-Ct       = Adata.Ct;
+Cp       = double(Adata.Cp);
+Ct       = double(Adata.Ct);
 if (start_injection == -1 || end_injection == -1)
     start_injection = Adata.start_injection*time_resolution;
     end_injection = Adata.end_injection*time_resolution;
 end
 
 % We also load the Rawdata for raw curve fitting if necessary
-Stlv    = Adata.Stlv;
-Sttum   = Adata.Sttum;
-Sss     = Adata.Sss;
-Ssstum  = Adata.Ssstum;
+Stlv    = double(Adata.Stlv);
+Sttum   = double(Adata.Sttum);
+Sss     = double(Adata.Sss);
+Ssstum  = double(Adata.Ssstum);
 
 results  = '';
 
@@ -312,6 +312,11 @@ subplot(1,2,1)
 plot(timer,CpROI,'r.');
 hold on;
 plot(timer, Cp_use,'b');
+disp('AIF mmol:')
+perLine = 14;
+fmt = [repmat('%8.4f ', 1, perLine), '\n'];
+fprintf(fmt, CpROI);
+if mod( length(CpROI), perLine) ~= 0; fprintf('\n'); end
 
 M{1} = 'Original Plasma Curve';
 % M{2} = 'Selected Curve';
