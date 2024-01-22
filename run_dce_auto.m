@@ -16,7 +16,8 @@ function run_dce_auto(subject_tp_path)
         'aif_files' 'roi_files' 't1map_files' 'noise_files' 'drift_files' ...
         'rootname' 'fileorder' 'quant' 'roimaskroi' 'aifmaskroi' 'aif_rr_type' ...
         'tr' 'fa' 'hematocrit' 'snr_filter' 'relaxivity' 'injection_time' ...
-        'injection_duration' 'drift_global' 'blood_t1', 'start_t', 'end_t'});
+        'injection_duration' 'drift_global' 'blood_t1', 'start_t', 'end_t' ...
+        'time_resolution'});
     
     % force 4D files
     filevolume = 1;
@@ -57,6 +58,7 @@ function run_dce_auto(subject_tp_path)
     quant = str2num(script_prefs.quant);
     roimaskroi = str2num(script_prefs.roimaskroi);
     aifmaskroi = str2num(script_prefs.aifmaskroi);
+    time_resolution = str2double(script_prefs.time_resolution);
 
     dce_json = strcat(subject_tp_path, 'DCE.json');
     if exist(dce_json, 'file')
@@ -66,7 +68,12 @@ function run_dce_auto(subject_tp_path)
         str = char(raw');
         fclose(fid);
         json = jsondecode(str);
-        tr = json.RepetitionTime;
+        if isfield(json, 'RepetitionTimeExcitation')
+            tr = json.RepetitionTimeExcitation;
+            time_resolution = json.RepetitionTime;
+        else
+            tr = json.RepetitionTime;
+        end
         fa = json.FlipAngle;
     else
         tr = str2double(script_prefs.tr);
@@ -115,7 +122,6 @@ function run_dce_auto(subject_tp_path)
     auto_find_injection = str2num(script_prefs.auto_find_injection);
     start_injection = str2num(script_prefs.start_injection);
     end_injection = str2num(script_prefs.end_injection);
-    time_resolution = str2double(script_prefs.time_resolution);
     aif_type = str2num(script_prefs.aif_type);
     import_aif_path = script_prefs.import_aif_path;
     timevectyn = str2num(script_prefs.timevectyn);

@@ -141,6 +141,20 @@ else
 end
 
 
+disp('User selected starting repetition: ')
+if ~isempty(start_t)
+    disp(start_t)
+else
+    disp('None')
+end
+
+disp('User selected ending repetition: ')
+if ~isempty(end_t)
+    disp(end_t)
+else
+    disp('None')
+end
+
 %% 2. a) Load the files
 
 [TUMOR, LV, NOISE, DYNAMIC, DRIFT, dynampath, dynam_name, rootname, hdr, ...
@@ -692,6 +706,9 @@ elseif snrfilter>=prefilter_number_aif_voxels
     error('Error SNR filter removed all AIF points, lower SNR filter requirement');
 end
 
+disp('Average Filtered AIF T1: ')
+disp(mean(LV(lvind)));
+
 %% 7. Convert AIF/ Reference region to R1
 T1LV     = LV(lvind);
 T1       = T1LV;
@@ -845,7 +862,7 @@ end
 
 CC = make_nii(CTFILE, res, [1 1 1],[],[],hdr);
 if quant
-    save_nii(CC, fullfile(PathName1, [rootname 'dynamicCt.nii']));
+    save_nii(CC, fullfile(PathName1, [rootname 'dynamicCt.nii.gz']));
 end
 %% 11. Save as delta R1 values (May be useful if the Contrast agent has longer correlation time).
 
