@@ -28,12 +28,12 @@ parameter_list = zeros(size(jsonFileCount,1), 1);
 if isempty(json_list)
     % default FAs
     parameter_list = [2 5 10 12 15];
-    mfilePath = mfilename('fullpath')
+    mfilePath = mfilename('fullpath');
     if contains(mfilePath, 'LiveEditorEvaluationHelper')
         mfilePath = matlab.desktop.editor.getActiveFilename;
     end
-    preferencePath = strcat(mfilePath, '/../../script_preferences.txt')
-    script_prefs = parse_preference_file('script_preferences.txt', 0, ...
+    preferencePath = strcat(mfilePath, '/../../script_preferences.txt');
+    script_prefs = parse_preference_file(preferencePath, 0, ...
         {'tr'});
     tr = script_prefs.tr;          % units ms, only used for T1 FA fitting
 else
