@@ -28,6 +28,11 @@ parameter_list = zeros(size(jsonFileCount,1), 1);
 if isempty(json_list)
     % default FAs
     parameter_list = [2 5 10 12 15];
+    mfilePath = mfilename('fullpath')
+    if contains(mfilePath, 'LiveEditorEvaluationHelper')
+        mfilePath = matlab.desktop.editor.getActiveFilename;
+    end
+    preferencePath = strcat(mfilePath, '/../../script_preferences.txt')
     script_prefs = parse_preference_file('script_preferences.txt', 0, ...
         {'tr'});
     tr = script_prefs.tr;          % units ms, only used for T1 FA fitting
@@ -48,6 +53,7 @@ else
 end
 
 B1_file = char(strcat(tp_path, "B1_scaled_FAreg.nii"));
+% if B1 map exists, load it into a 4D array
 if (exist(B1_file, "file"))
     fa_list = load_untouch_nii(B1_file);
     true_fa = ones([size(fa_list.img) length(parameter_list)]);
