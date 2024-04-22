@@ -29,7 +29,7 @@ function run_dce_auto(subject_tp_path)
     noise_pixsize = str2num(script_prefs.noise_pixsize);
     
     % gather filenames
-    tmp = dir(strcat(subject_tp_path, script_prefs.dynamic_files, '*'));
+    tmp = dir(strcat(subject_tp_path, script_prefs.dynamic_files));
     dynamic_files = cellstr(strcat(tmp.folder, '/', tmp.name));
     
     tmp = dir(strcat(subject_tp_path, script_prefs.aif_files, '*'));
@@ -39,7 +39,7 @@ function run_dce_auto(subject_tp_path)
     roi_files = cellstr(strcat(tmp.folder, '/', tmp.name));
     
     tmp = dir(strcat(subject_tp_path, script_prefs.t1map_files, '*'));
-    t1map_files = cellstr(strcat(tmp.folder, '/', tmp.name));
+    t1map_files = cellstr(strcat(tmp(1).folder, '/', tmp(1).name)); 
 
     if ~strcmp(script_prefs.noise_files,'')
         tmp = dir(strcat(subject_tp_path, script_prefs.dynamic_files, '*'));
@@ -62,7 +62,7 @@ function run_dce_auto(subject_tp_path)
 
     dce_json = strcat(subject_tp_path, 'DCE.json');
     if exist(dce_json, 'file')
-        display("DCE JSON found.")
+        disp("DCE JSON found.")
         fid = fopen(dce_json);
         raw = fread(fid,inf);
         str = char(raw');
@@ -91,14 +91,14 @@ function run_dce_auto(subject_tp_path)
 
     % main function call
     try
-        [A_results, errormsg] = A_make_R1maps_func(filevolume, noise_pathpick, ...
+        [A_results, A_vars, errormsg] = A_make_R1maps_func(filevolume, noise_pathpick, ...
             noise_pixsize, LUT, dynamic_files,aif_files, ...
             roi_files, t1map_files, ...
             noise_files, drift_files, ...
             script_prefs.rootname, script_prefs.fileorder, quant, roimaskroi, ...
             aifmaskroi, script_prefs.aif_rr_type, tr, fa, hematocrit, snr_filter, ...
             relaxivity, injection_time, drift_global, blood_t1, injection_duration, ...
-            start_t, end_t);
+            start_t, end_t, false);
     catch L
         disp(L.message)
         return;
@@ -140,7 +140,9 @@ function run_dce_auto(subject_tp_path)
     fail = 0;
     while (fail < 3)
         try
-            B_results = B_AIF_fitting_func(A_results,start_time,end_time, start_injection,end_injection,fit_aif,import_aif_path,time_resolution, timevectpath);
+            [B_results, B_vars] = B_AIF_fitting_func(A_results, A_vars, start_time,end_time, ...
+                start_injection,end_injection,fit_aif,import_aif_path, ...
+                time_resolution, timevectpath, false);
             break;
         catch L
             disp("RUNB failed. Repeating in case of bad read...")
@@ -186,16 +188,23 @@ function run_dce_auto(subject_tp_path)
     neuroecon = 0;
 
     % main function call
-    D_results = D_fit_voxels_func(B_results,dce_model,script_prefs.time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon, outputft);
-
+    try
+        D_results = D_fit_voxels_func(B_results, B_vars, dce_model, ...
+            script_prefs.time_smoothing,time_smoothing_window, ...
+            xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon, ...
+            outputft, false);
+    catch L
+        disp("RUND failed, probably due to a REALLY dumb error:")
+        disp(L.message)
+    end
     % fig to png
     cd(subject_tp_path);
-    fig = openfig(strcat(subject_tp_path,'dceAIF_fitting.fig'));
-    filename = 'dceAIF_fitting.png';
+    fig = openfig(strcat(subject_tp_path,'dce/dceAIF_fitting.fig'));
+    filename = 'dce/dceAIF_fitting.png';
     saveas(fig, filename);
 
-    fig = openfig(strcat(subject_tp_path,'dce_timecurves.fig'));
-    filename = 'dce_timecurves.png';
+    fig = openfig(strcat(subject_tp_path,'dce/dce_timecurves.fig'));
+    filename = 'dce/dce_timecurves.png';
     saveas(fig, filename);
 
     %% clean up

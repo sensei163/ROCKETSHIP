@@ -26,6 +26,7 @@ end
 gpu_prefs = parse_preference_file('dce_preferences.txt',0,{'force_cpu'},{0});
 FORCE_CPU = str2num(gpu_prefs.force_cpu);
 if FORCE_CPU
+    disp("Forcing CPU for voxel fitting...")
     USE_GPU = 0;
 end
 

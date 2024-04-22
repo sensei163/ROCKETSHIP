@@ -1,4 +1,6 @@
-function results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus,roi_list,fit_voxels,neuroecon, outputft)
+function results = D_fit_voxels_func(results_b_path, B_vars, dce_model, ...
+    time_smoothing,time_smoothing_window,xy_smooth_size,number_cpus, ...
+    roi_list,fit_voxels,neuroecon, outputft, save_output)
 
 % D_fit_voxels_func - Fit DCE curve to various models on a voxel by voxel
 % or ROI basis
@@ -59,12 +61,16 @@ function results = D_fit_voxels_func(results_b_path,dce_model,time_smoothing,tim
 % Toggle options
 %************************
 r2filter = 0;		% Filter out all fits with r2 < r2filter
+if nargin < 12
+    save_output=true;
+end
 % close_pool = 0;		% Close matlabpool when done with processing
 % End options
 %************************
 
 % a) Load the data files
-load(results_b_path);
+% load(results_b_path);
+Bdata = B_vars;
 % results_a_path = Bdata.results_a_path;
 % load(results_a_path);
 
@@ -170,13 +176,13 @@ for model_index=1:numel(dce_model_list)
     disp('User selected part B results: ');
     disp(results_b_path);
     Opt.Input = 'file';
-    try
-        b_md5 = DataHash(results_b_path, Opt);
-    catch
-        disp('Problem using md5 hashing. Will continue');
-        b_md5 = 'error';
-    end
-    fprintf('File MD5 hash: %s\n\n', b_md5)
+    % try
+    %     b_md5 = DataHash(results_b_path, Opt);
+    % catch
+    %     disp('Problem using md5 hashing. Will continue');
+    %     b_md5 = 'error';
+    % end
+    % fprintf('File MD5 hash: %s\n\n', b_md5)
     disp('User selected dce model: ');
     fprintf('%s\n\n',dce_model_string{model_index});
     disp('User selected time smoothing model: ');
@@ -642,19 +648,21 @@ for model_index=1:numel(dce_model_list)
     %     Ddata.results_b_path = results_b_path;
     
     results{model_index} = [results_base,'.mat'];
-    save(results{model_index},  'xdata','fit_data','results_b_path','hdr','-v7.3')
-    %     results = fullfile(PathName, ['D_' rootname cur_dce_model '_fit_voxels.mat']);
-    Opt.Input = 'file';
-    try
-        mat_md5 = DataHash(results{model_index}, Opt);
-    catch
-        disp('Problem using md5 hashing. Will continue');
-        mat_md5 = 'error';
+    if save_output==true
+        save(results{model_index},  'xdata','fit_data','results_b_path','hdr','-v7.3')
+        %     results = fullfile(PathName, ['D_' rootname cur_dce_model '_fit_voxels.mat']);
+        Opt.Input = 'file';
+        % try
+        %     mat_md5 = DataHash(results{model_index}, Opt);
+        % catch
+        %     disp('Problem using md5 hashing. Will continue');
+        %     mat_md5 = 'error';
+        % end
+        disp(' ')
+        disp('MAT results saved to: ')
+        disp(results{model_index})
+        % disp(['File MD5 hash: ' mat_md5])
     end
-    disp(' ')
-    disp('MAT results saved to: ')
-    disp(results{model_index})
-    disp(['File MD5 hash: ' mat_md5])
     
     % d) Check if physiologically possible, if not, remove
     %************************

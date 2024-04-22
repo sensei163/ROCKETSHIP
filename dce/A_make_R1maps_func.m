@@ -1,9 +1,9 @@
 % function saved_results = A_make_R1maps_func(DYNAMIC, LV, TUMOR, NOISE, DRIFT, hdr, res,quant, rootname, dynampath, dynam_name, aif_rr_type, ... 
-function [saved_results, errormsg] = A_make_R1maps_func(filevolume, noise_pathpick, ...
+function [saved_results, RUNA_vars, errormsg] = A_make_R1maps_func(filevolume, noise_pathpick, ...
     noise_pixsize, LUT, filelist, t1aiffiles, t1roifiles, t1mapfiles, noisefiles, ...
     driftfiles, rootname, fileorder, quant, mask_roi, mask_aif, ...
     aif_rr_type, tr, fa, hematocrit, snr_filter, relaxivity, ...
-    steady_state_time, drift_global, blood_t1, injection_duration, start_t, end_t)
+    steady_state_time, drift_global, blood_t1, injection_duration, start_t, end_t, save_output)
 
 % A_make_R1maps_func - Generate concentration versus time curves for the
 % tumor region and the arterial input region. The setup follows Loveless
@@ -98,6 +98,9 @@ if ispc
     opengl('software');
 else
     disp('Non PC unable to run OpenGL software mode, there may be some graphics issues')
+end
+if nargin < 28
+    save_output = true;
 end
 
 
@@ -945,54 +948,28 @@ Adata.end_injection = end_injection;
 
 %% 14. Save the file for the next Step
 
-
 saved_results = fullfile(PathName1, ['A_' rootname 'R1info.mat']);
-save(saved_results, 'Adata','-v7.3');
-Opt.Input = 'file';
-try
-    %mat_md5 = DataHash(saved_results, Opt);
-    disp('hash disabled')
-    mat_md5 = 0;
-catch
-    disp('Problem using md5 hashing. Will continue');
-    mat_md5 = 'error';
+if save_output==true
+    save(saved_results, 'Adata','-v7.3');
+    Opt.Input = 'file';
+    try
+        %mat_md5 = DataHash(saved_results, Opt);
+        disp('hash disabled')
+        mat_md5 = 0;
+    catch
+        disp('Problem using md5 hashing. Will continue');
+        mat_md5 = 'error';
+    end
+    disp(' ')
+    disp('MAT results saved to: ')
+    disp(saved_results)
+    disp(['File MD5 hash: ' mat_md5])
+else
+    RUNA_vars=Adata;
 end
-disp(' ')
-disp('MAT results saved to: ')
-disp(saved_results)
-disp(['File MD5 hash: ' mat_md5])
-
+    
 disp(' ');
 disp('Finished A');
 disp(datestr(now))
 toc
 diary off;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

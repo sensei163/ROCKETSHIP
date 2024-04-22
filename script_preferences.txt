@@ -19,12 +19,12 @@
     % probably deprecated (COPIUM)
     LUT = 1
 
-    % input nifti datasets
-    dynamic_files = DCE_mc_bfc_norm.nii
+    % input nifti datasets, can specify subfolders and use wildcard *
+    dynamic_files = /dce/*_desc-bfcz_DCE.nii.gz
 
-    aif_files = aif.nii
-    roi_files = T1_bet_mask_dyn.nii
-    t1map_files = T1_map_t1_fa_fit_VFA.nii
+    aif_files = /dce/*desc-AIF_T1map.nii.gz
+    roi_files = /anat/*space-DCEref_desc-brain_mask.nii.gz
+    t1map_files = /anat/*_T1map.nii
     noise_files =
     drift_files =
 

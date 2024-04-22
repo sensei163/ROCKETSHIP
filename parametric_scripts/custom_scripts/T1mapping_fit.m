@@ -1,12 +1,17 @@
-function T1mapping_fit(tp_path)
+function T1mapping_fit(source_path, tp_path, file)
 % INPUTS
 %------------------------------------
-file_list = {strcat(tp_path,'VFA.nii')};
+file_list = {strcat(tp_path, '/', file)};
+if ~(exist(file_list{1}, "file"))
+    disp('VFA file missing!')
+    disp(file_list)
+    % exit;
+end
 					% must point to valid nifti files
-json_list = dir(strcat(tp_path,'*.json'));
+json_list = dir(strcat(source_path,'/*VFA.json'));
 
 % use regex to find VFA files
-pattern = '^\d+\.json$';
+pattern = 'sub-\d+_ses-\d+_flip-\d+_VFA\.json';
 
 % Initialize a count for JSON files that match the pattern
 jsonFileCount = 0;
@@ -19,18 +24,17 @@ for i = 1:numel(json_list)
     end
 end
 
-% TODO - fix to exclude dynamic
 parameter_list = zeros(size(jsonFileCount,1), 1);
 if isempty(json_list)
     % default FAs
     parameter_list = [2 5 10 12 15];
-    % if B1 map exists, load it into a 4D array
-
-    tr = 5.14;          % units ms, only used for T1 FA fitting
+    script_prefs = parse_preference_file('script_preferences.txt', 0, ...
+        {'tr'});
+    tr = script_prefs.tr;          % units ms, only used for T1 FA fitting
 else
     % extract TR and FA from jsons
     for i = 1:jsonFileCount
-        fname = strcat(tp_path, json_list(i).name);
+        fname = strcat(source_path, '/', json_list(i).name);
         fid = fopen(fname);
         raw = fread(fid,inf);
         str = char(raw');
@@ -120,4 +124,5 @@ try
     calculateMap(JOB_struct);
 catch L
     disp("T1 mapping failed! Sad!")
+    disp(L)
 end

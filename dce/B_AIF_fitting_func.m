@@ -1,4 +1,6 @@
-function results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_injection,end_injection,fit_aif,import_aif_path,time_resolution, timevectpath)
+function [results, B_vars] = B_AIF_fitting_func(results_a_path, RUNA_struct, start_time, ...
+    end_time,start_injection,end_injection,fit_aif,import_aif_path,time_resolution, ...
+    timevectpath, save_output)
 
 % B_AIF_fitting_func - This file is used to apply a model fitting to the
 % arterial input function. AIF is fit to a bi-exponential model with a
@@ -47,12 +49,16 @@ function results = B_AIF_fitting_func(results_a_path,start_time,end_time,start_i
 %% Toggle options
 % If you have a threshold value for noise (testing).
 threshold = 0;
+if nargin<11
+    save_output=true;
+end
 
 %% DO NOT ALTER BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
 
 %% 1. Load the data array from previous script
 
-load(results_a_path);
+% load(results_a_path);
+Adata=RUNA_struct;
 
 % unload the variables from previous data array
 quant    = Adata.quant;
@@ -85,13 +91,13 @@ fprintf('************** User Input **************\n\n');
 disp('User selected part A results: ');
 disp(results_a_path);
 Opt.Input = 'file';
-try
-    a_md5 = DataHash(results_a_path, Opt);
-catch
-    disp('Problem using md5 hashing. Will continue');
-    a_md5 = 'error';
-end
-fprintf('File MD5 hash: %s\n\n', a_md5)
+% try
+%     a_md5 = DataHash(results_a_path, Opt);
+% catch
+%     disp('Problem using md5 hashing. Will continue');
+%     a_md5 = 'error';
+% end
+% fprintf('File MD5 hash: %s\n\n', a_md5)
 disp('User selected start time (min): ');
 disp(start_time);
 disp('User selected end time (min): ');
@@ -223,8 +229,7 @@ xdata{1}.step = [start_injection end_injection];
 M{1} = '';
 aif_name = '';
 if isempty(import_aif_path)
-    if(fit_aif)
-        xdata{1}.raw = false;
+    if(fit_aif==1)
         [Cp_fitted xAIF xdataAIF] = AIFbiexpfithelp(xdata, 1);
         Cp_use = Cp_fitted;
  
@@ -234,11 +239,10 @@ if isempty(import_aif_path)
         %Fit raw data curve
         Cptemp = xdata{1}.Cp;
         xdata{1}.Cp = xdata{1}.Stlv;
-        xdata{1}.raw = true;
         [Stlv_fitted, ~, ~] = AIFbiexpfithelp(xdata, 1);
         xdata{1}.Cp = Cptemp;
         Stlv_use = Stlv_fitted;
-    else
+    elseif(fit_aif==2)
         Cp_use = CpROI;
         M{2} = 'Using Raw Curve';
         aif_name = 'raw';
@@ -389,19 +393,23 @@ Bdata.Ssstum      = Adata.Ssstum;
 
 results = fullfile(PathName1, ['B_' rootname aif_name '_R1info.mat']);
 
-save(results, 'Bdata','-v7.3');
+if save_output==true
+    save(results, 'Bdata','-v7.3');
 
-Opt.Input = 'file';
-try
-    mat_md5 = DataHash(results, Opt);
-catch
-    disp('Problem using md5 hashing. Will continue');
-    mat_md5 = 'error';
+    Opt.Input = 'file';
+% try
+%     mat_md5 = DataHash(results, Opt);
+% catch
+%     disp('Problem using md5 hashing. Will continue');
+%     mat_md5 = 'error';
+% end
+    disp(' ')
+    disp('MAT results saved to: ')
+    disp(results)
+% disp(['File MD5 hash: ' mat_md5])
+else
+    B_vars = Bdata;
 end
-disp(' ')
-disp('MAT results saved to: ')
-disp(results)
-disp(['File MD5 hash: ' mat_md5])
 
 disp(' ');
 disp('Finished B');

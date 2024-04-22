@@ -23,6 +23,7 @@ autoaif_sobel_threshold = 0.005
 % AIF fitting options
 %%%%%%%%%%%%%%%%%%%%%%
 % aif function = A*exp(-c*t)+B*exp(-d*t)
+% Initial Upper limits and initial values for A and B are auto-set
 % values order = A B c d
 aif_lower_limits = 0 0 0 0
 aif_upper_limits = 5 5 5 5
