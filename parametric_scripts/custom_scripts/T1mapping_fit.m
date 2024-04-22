@@ -28,12 +28,7 @@ parameter_list = zeros(size(jsonFileCount,1), 1);
 if isempty(json_list)
     % default FAs
     parameter_list = [2 5 10 12 15];
-    mfilePath = mfilename('fullpath');
-    thisPath = matlab.desktop.editor.getActiveFilename;
-    dirs = strsplit(thisPath, filesep);
-    thisPath = dirs(1:end-3);
-    thisPath = fullfile(thisPath{:});
-    preferencePath = strcat('/', thisPath, '/script_preferences.txt');
+    preferencePath = strcat('script_preferences.txt');
     script_prefs = parse_preference_file(preferencePath, 0, ...
         {'tr'});
     tr = script_prefs.tr;          % units ms, only used for T1 FA fitting
