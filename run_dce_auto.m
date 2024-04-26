@@ -1,4 +1,4 @@
-function run_dce_auto(subject_tp_path)
+function run_dce_auto(subject_tp_path, subject_source_path)
     % Use full path to the subject timepoint as this function's argument.
     % Beware, try-catches are used to keep a batch script running.
     
@@ -59,8 +59,10 @@ function run_dce_auto(subject_tp_path)
     roimaskroi = str2num(script_prefs.roimaskroi);
     aifmaskroi = str2num(script_prefs.aifmaskroi);
     time_resolution = str2double(script_prefs.time_resolution);
+    relaxivity = str2double(script_prefs.relaxivity);
+    filePattern = dir(strcat(subject_source_path,'/dce/*DCE.json'));
+    dce_json = strcat(subject_source_path, '/dce/', filePattern.name);
 
-    dce_json = strcat(subject_tp_path, 'DCE.json');
     if exist(dce_json, 'file')
         disp("DCE JSON found.")
         fid = fopen(dce_json);
@@ -68,11 +70,29 @@ function run_dce_auto(subject_tp_path)
         str = char(raw');
         fclose(fid);
         json = jsondecode(str);
+
         if isfield(json, 'RepetitionTimeExcitation')
             tr = json.RepetitionTimeExcitation;
             time_resolution = json.RepetitionTime;
+        elseif isfield(json, 'RepetitionDuration')
+            tr = json.RepetitionTime;
+            time_resolution = json.RepetitionDuration;
         else
             tr = json.RepetitionTime;
+        end
+
+        if isfield(json, 'AcquisitionDateTime')
+            date = json.AcquisitionDateTime;
+            inputDateTime = datetime(date, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss.SSSSSS');
+            inputDate = dateshift(inputDateTime, 'start', 'day');
+            contrastChangeDate = datetime('2017-10-01');
+            if inputDate < contrastChangeDate
+                % assume magnevist
+                relaxivity = 3.8;
+            elseif inputDate >= contrastChangeDate
+                % assume dotarem
+                relaxivity = 3.4;
+            end
         end
         fa = json.FlipAngle;
     else
@@ -82,7 +102,6 @@ function run_dce_auto(subject_tp_path)
     hematocrit = str2double(script_prefs.hematocrit);
     snr_filter = str2num(script_prefs.snr_filter);
     injection_time = str2num(script_prefs.injection_time);
-    relaxivity = str2double(script_prefs.relaxivity);
     drift_global = str2num(script_prefs.drift_global);
     blood_t1 = str2num(script_prefs.blood_t1);
     injection_duration = str2num(script_prefs.injection_duration);

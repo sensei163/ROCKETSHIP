@@ -28,6 +28,12 @@
     noise_files =
     drift_files =
 
+    % what t-dimension image to start from/end on
+    % useful for excluding bad data points at beginning or end
+    % leave blank to do from beginning/to end
+    start_t = 3
+    end_t = 
+
     % Name of output file
     rootname = dce
 
@@ -52,29 +58,32 @@
 aif_rr_type = aif_roi
 
 % repetition time of dynamic scan (ms), overwritten by json if it exists
-tr = 21.572
+tr = 8
 
 % flip angle of dynamic scan (degrees), overwritten by json if it exists
-fa = 20
-
-% what t-dimension image to start from/end on
-% useful for excluding bad data points at beginning or end
-% leave blank to do from beginning/to end
-start_t = 3
-end_t = 
+fa = 15
 
 % hematocrit percent (0 - 1.00) of subject
 hematocrit = 0.45
 
 % snr required for AIF voxels, snr must exceed this
 % value averaged over all time points
-snr_filter = 5
+snr_filter = 1
 
 % -1 = determine via figure, -2 = auto
 injection_time = -2
 
 % r1 relaxivity (in mM^-1*sec^-1) of contrast agent
-% dotarem 3T, human blood
+% if AcquisitionDateTime field exists in json,
+% pre-Oct 2017 assumes magnevist
+% post-Oct 2017 assumes dotarem
+% Shen 2015: https://journals.lww.com/investigativeradiology/fulltext/2015/05000/t1_relaxivities_of_gadolinium_based_magnetic.4.aspx
+% dotarem 3T, human blood = 3.43 +- 0.29, 3.19 +- 0.4 [3.4 +- 0.4]
+% magnevist 3T, human blood = 3.76 +- 0.17, 3.34 +- 0.19 [3.8 +- 0.2]
+% Szomolanyi 2019: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6738537/
+% dotarem 3T, human blood - 2.72 +- 0.17
+% magnevist 3T, human blood - 3.3 +- 0.2
+
 relaxivity = 2.8
 
 % boolean value, perform drift correction globally,
