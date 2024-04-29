@@ -1,7 +1,12 @@
 function T1mapping_fit(source_path, tp_path, file)
 % INPUTS
 %------------------------------------
-file_list = {strcat(tp_path, '/', file)};
+if (tp_path(end) ~= '/')
+    file_list = {strcat(tp_path, '/', file)};
+else
+    file_list = {strcat(tp_path, file)};
+end
+
 if ~(exist(file_list{1}, "file"))
     disp('VFA file missing!')
     disp(file_list)
@@ -28,7 +33,7 @@ parameter_list = zeros(size(jsonFileCount,1), 1);
 if isempty(json_list)
     % default FAs
     parameter_list = [2 5 10 12 15];
-    preferencePath = strcat('script_preferences.txt');
+    preferencePath = strcat('../../script_preferences.txt');
     script_prefs = parse_preference_file(preferencePath, 0, ...
         {'tr'});
     tr = script_prefs.tr;          % units ms, only used for T1 FA fitting

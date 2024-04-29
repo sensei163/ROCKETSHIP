@@ -1,9 +1,9 @@
-function run_dce_auto(subject_tp_path, subject_source_path)
+function run_dce_cli(subject_tp_path, subject_source_path)
     % Use full path to the subject timepoint as this function's argument.
     % Beware, try-catches are used to keep a batch script running.
     
     % Find and add subpaths 
-    mfilepath=fileparts(which('run_dce_auto'));
+    mfilepath=fileparts(which('run_dce_cli'));
     addpath(fullfile(mfilepath,'dce'));
     addpath(fullfile(mfilepath,'external_programs'));
     addpath(fullfile(mfilepath,'external_programs/niftitools'));
