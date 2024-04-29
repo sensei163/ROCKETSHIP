@@ -32,24 +32,24 @@ function run_dce_auto(subject_tp_path, subject_source_path)
     tmp = dir(strcat(subject_tp_path, script_prefs.dynamic_files));
     dynamic_files = cellstr(strcat(tmp.folder, '/', tmp.name));
     
-    tmp = dir(strcat(subject_tp_path, script_prefs.aif_files, '*'));
+    tmp = dir(strcat(subject_tp_path, script_prefs.aif_files));
     aif_files = cellstr(strcat(tmp.folder, '/', tmp.name));
     
-    tmp = dir(strcat(subject_tp_path, script_prefs.roi_files, '*'));
+    tmp = dir(strcat(subject_tp_path, script_prefs.roi_files));
     roi_files = cellstr(strcat(tmp.folder, '/', tmp.name));
     
-    tmp = dir(strcat(subject_tp_path, script_prefs.t1map_files, '*'));
-    t1map_files = cellstr(strcat(tmp(1).folder, '/', tmp(1).name)); 
+    tmp = dir(strcat(subject_tp_path, script_prefs.t1map_files));
+    t1map_files = cellstr(strcat(tmp.folder, '/', tmp.name));
 
     if ~strcmp(script_prefs.noise_files,'')
-        tmp = dir(strcat(subject_tp_path, script_prefs.dynamic_files, '*'));
+        tmp = dir(strcat(subject_tp_path, script_prefs.dynamic_files));
         noise_files = cellstr(strcat(tmp.folder, '/', tmp.name));
     else
         noise_files = '';
     end
 
     if ~strcmp(script_prefs.drift_files,'')
-        tmp = dir(strcat(subject_tp_path, script_prefs.dynamic_files, '*'));
+        tmp = dir(strcat(subject_tp_path, script_prefs.dynamic_files));
         drift_files = cellstr(strcat(tmp.folder, '/', tmp.name));
     else
         drift_files = '';
