@@ -20,11 +20,11 @@
     LUT = 1
 
     % input nifti datasets, can specify subfolders and use wildcard *
-    dynamic_files = /dce/*_desc-bfcz_DCE.nii.gz
+    dynamic_files = /dce/*_desc-bfcz_DCE.nii*
 
-    aif_files = /dce/*desc-AIF_T1map.nii.gz
-    roi_files = /anat/*space-DCEref_desc-brain_mask.nii.gz
-    t1map_files = /anat/*space-DCEref_T1map.nii
+    aif_files = /dce/*desc-AIF_T1map.nii*
+    roi_files = /anat/*space-DCEref_desc-brain_mask.nii*
+    t1map_files = /anat/*space-DCEref_T1map.nii*
     noise_files =
     drift_files =
 
