@@ -49,4 +49,6 @@ jobs:
         with:
           name: Ktrans_result
           path: test_data/BIDS_test/derivatives/sub-01/ses-01/dce_patlak_fit_Ktrans.nii
+          retention-days: 7
+          if-no-files-found: error
 

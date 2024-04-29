@@ -17,7 +17,7 @@ function run_dce_cli(subject_tp_path, subject_source_path)
         'rootname' 'fileorder' 'quant' 'roimaskroi' 'aifmaskroi' 'aif_rr_type' ...
         'tr' 'fa' 'hematocrit' 'snr_filter' 'relaxivity' 'injection_time' ...
         'injection_duration' 'drift_global' 'blood_t1', 'start_t', 'end_t' ...
-        'time_resolution'});
+        'time_resolution' 'force_use_default_relaxivity'});
     
     % force 4D files
     filevolume = 1;
@@ -60,6 +60,7 @@ function run_dce_cli(subject_tp_path, subject_source_path)
     aifmaskroi = str2num(script_prefs.aifmaskroi);
     time_resolution = str2double(script_prefs.time_resolution);
     relaxivity = str2double(script_prefs.relaxivity);
+    force_use_default_relaxivity = str2double(script_prefs.force_use_default_relaxivity);
     filePattern = dir(strcat(subject_source_path,'/dce/*DCE.json'));
     dce_json = strcat(subject_source_path, '/dce/', filePattern.name);
 
@@ -81,7 +82,7 @@ function run_dce_cli(subject_tp_path, subject_source_path)
             tr = json.RepetitionTime;
         end
 
-        if isfield(json, 'AcquisitionDateTime')
+        if isfield(json, 'AcquisitionDateTime') && ~force_use_default_relaxivity
             date = json.AcquisitionDateTime;
             inputDateTime = datetime(date, 'InputFormat', 'yyyy-MM-dd''T''HH:mm:ss.SSSSSS');
             inputDate = dateshift(inputDateTime, 'start', 'day');

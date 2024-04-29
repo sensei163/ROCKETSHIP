@@ -74,7 +74,7 @@ snr_filter = 1
 injection_time = -2
 
 % r1 relaxivity (in mM^-1*sec^-1) of contrast agent
-% if AcquisitionDateTime field exists in json,
+% if AcquisitionDateTime field exists in json, CLI auto determines for this study:
 % pre-Oct 2017 assumes magnevist
 % post-Oct 2017 assumes dotarem
 % Shen 2015: https://journals.lww.com/investigativeradiology/fulltext/2015/05000/t1_relaxivities_of_gadolinium_based_magnetic.4.aspx
@@ -83,8 +83,9 @@ injection_time = -2
 % Szomolanyi 2019: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6738537/
 % dotarem 3T, human blood - 2.72 +- 0.17
 % magnevist 3T, human blood - 3.3 +- 0.2
-
 relaxivity = 2.8
+% set below to 1 if you wish to use your own with the CLI command.
+force_use_default_relaxivity = 0
 
 % boolean value, perform drift correction globally,
 % not on a slice by slice basis
@@ -112,16 +113,15 @@ end_time = 0
 % disable if you really know what you're doing
 auto_find_injection = 1
     % start of contrast injection (in minutes)
-    start_injection = 0.5
+    start_injection = 0.0867
     % end of contrast injection (in minutes)
-    end_injection = 0.7
+    end_injection = 0.2167
 
 % time resolution of dynamic scan (in seconds)
-% used to be 15.4 but that caused some really dumb segfault in gpufit
-time_resolution = 15
+time_resolution = 15.36
 
 % raw = 2, fitted = 1, import = 3, raw for reference region
-aif_type = 2
+aif_type = 1
     import_aif_path = 
 
 % bool to use manual time vector
