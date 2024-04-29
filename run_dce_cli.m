@@ -1,4 +1,4 @@
-function run_dce_cli(subject_tp_path, subject_source_path)
+function run_dce_cli(subject_source_path, subject_tp_path)
     % Use full path to the subject timepoint as this function's argument.
     % Beware, try-catches are used to keep a batch script running.
     
