@@ -219,11 +219,11 @@ function run_dce_cli(subject_source_path, subject_tp_path)
     end
     % fig to png
     cd(subject_tp_path);
-    fig = openfig(strcat(subject_tp_path,'dce/dceAIF_fitting.fig'));
+    fig = openfig('dce/dceAIF_fitting.fig');
     filename = 'dce/dceAIF_fitting.png';
     saveas(fig, filename);
 
-    fig = openfig(strcat(subject_tp_path,'dce/dce_timecurves.fig'));
+    fig = openfig('dce/dce_timecurves.fig');
     filename = 'dce/dce_timecurves.png';
     saveas(fig, filename);
 
