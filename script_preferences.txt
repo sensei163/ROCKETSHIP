@@ -24,7 +24,7 @@
 
     aif_files = /dce/*desc-AIF_T1map.nii.gz
     roi_files = /anat/*space-DCEref_desc-brain_mask.nii.gz
-    t1map_files = /anat/*_T1map.nii
+    t1map_files = /anat/*space-DCEref_T1map.nii
     noise_files =
     drift_files =
 
