@@ -17,7 +17,7 @@ jobs:
       #fail-fast: false
       matrix:
         os: [ubuntu-latest, ubuntu-20.04]
-        release: [R2020a, R2021a, R2022a]
+        release: [R2020b, R2021a, R2022a]
     runs-on: ${{ matrix.os }}
 
     steps:
