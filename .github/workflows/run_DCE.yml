@@ -47,7 +47,7 @@ jobs:
       - name: Upload Ktrans result
         uses: actions/upload-artifact@v4
         with:
-          name: Ktrans_result_${{ matrix.release }}
+          name: Ktrans_result_${{ matrix.os }}-${{ matrix.release }}
           path: test_data/BIDS_test/derivatives/sub-01/ses-01/dce/dce_patlak_fit_Ktrans.nii
           retention-days: 7
           if-no-files-found: error
