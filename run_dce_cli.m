@@ -75,11 +75,20 @@ function run_dce_cli(subject_source_path, subject_tp_path)
         if isfield(json, 'RepetitionTimeExcitation')
             tr = json.RepetitionTimeExcitation;
             time_resolution = json.RepetitionTime;
-        elseif isfield(json, 'RepetitionDuration')
+        elseif isfield(json, 'AcquisitionDuration')
             tr = json.RepetitionTime;
-            time_resolution = json.RepetitionDuration;
+            time_resolution = json.AcquisitionDuration;
+        elseif isfield(json, 'TriggerDelayTime')
+            tr = json.RepetitionTime;
+            n_reps = load_untouch_header_only(dynamic_files{1});
+            n_reps = n_reps.dime.dim(5);
+            time_resolution = json.TriggerDelayTime / n_reps / 1000;
         else
             tr = json.RepetitionTime;
+        end
+
+        if isfield(json, 'NumberOfAverages')
+            time_resolution = time_resolution * json.NumberOfAverages;
         end
 
         if isfield(json, 'AcquisitionDateTime') && ~force_use_default_relaxivity
@@ -110,18 +119,32 @@ function run_dce_cli(subject_source_path, subject_tp_path)
     end_t = str2num(script_prefs.end_t);
 
     % main function call
-    try
-        [A_results, A_vars, errormsg] = A_make_R1maps_func(filevolume, noise_pathpick, ...
-            noise_pixsize, LUT, dynamic_files,aif_files, ...
-            roi_files, t1map_files, ...
-            noise_files, drift_files, ...
-            script_prefs.rootname, script_prefs.fileorder, quant, roimaskroi, ...
-            aifmaskroi, script_prefs.aif_rr_type, tr, fa, hematocrit, snr_filter, ...
-            relaxivity, injection_time, drift_global, blood_t1, injection_duration, ...
-            start_t, end_t, false);
-    catch L
-        disp(L.message)
-        return;
+    while true
+        try
+            [A_results, A_vars, errormsg] = A_make_R1maps_func(filevolume, noise_pathpick, ...
+                noise_pixsize, LUT, dynamic_files,aif_files, ...
+                roi_files, t1map_files, ...
+                noise_files, drift_files, ...
+                script_prefs.rootname, script_prefs.fileorder, quant, roimaskroi, ...
+                aifmaskroi, script_prefs.aif_rr_type, tr, fa, hematocrit, snr_filter, ...
+                relaxivity, injection_time, drift_global, blood_t1, injection_duration, ...
+                start_t, end_t, false);
+            break;
+        catch L
+            if strcmp(L.identifier,'A_make_R1maps_func:AIFVoxelsRemoved')
+                disp(L)
+                disp('Trying again by retaining 1 more baseline slice...')
+                % must chop off at least 1 frame due to severe frame 1 artifacts
+                if start_t > 2
+                    start_t = start_t - 1;
+                else
+                    disp('Not enough baseline acquisitions.')
+                    return;
+                end
+            else
+                return;
+            end
+        end
     end
 
     if ~isempty(errormsg)
@@ -134,7 +157,8 @@ function run_dce_cli(subject_source_path, subject_tp_path)
     script_prefs = parse_preference_file('script_preferences.txt', 0, ...
         {'start_time', 'end_time', 'auto_find_injection', 'start_injection', ...
         'end_injection', 'fit_aif', 'time_resolution', 'aif_type', ...
-        'import_aif_path', 'timevectyn', 'timevectpath'});
+        'import_aif_path', 'timevectyn', 'timevectpath', 'rootname', ...
+        'fileorder', 'aif_rr_type'});
 
     % type casts
     start_time = str2num(script_prefs.start_time);
@@ -167,6 +191,17 @@ function run_dce_cli(subject_source_path, subject_tp_path)
         catch L
             disp("RUNB failed. Repeating in case of bad read...")
             disp(L.message)
+            if strcmp(L.message, "Index exceeds the number of array elements. Index must not exceed 0.")
+                start_t = start_t - 1;
+                [A_results, A_vars, errormsg] = A_make_R1maps_func(filevolume, noise_pathpick, ...
+                noise_pixsize, LUT, dynamic_files,aif_files, ...
+                roi_files, t1map_files, ...
+                noise_files, drift_files, ...
+                script_prefs.rootname, script_prefs.fileorder, quant, roimaskroi, ...
+                aifmaskroi, script_prefs.aif_rr_type, tr, fa, hematocrit, snr_filter, ...
+                relaxivity, injection_time, drift_global, blood_t1, injection_duration, ...
+                start_t, end_t, false);
+            end
         end
         fail = fail + 1;
     end
