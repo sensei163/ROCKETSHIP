@@ -273,6 +273,15 @@ else
         Stlv_use = exernal.xdata{1}.Stlv_use;
         import_timer = external.xdata{1}.timer;
         import_start = external.xdata{1}.step(1);
+    elseif endsWith(import_aif_path, 'csv')
+        S_ratio = external .* (1 - exp(-Adata.tr / Adata.blood_t1)) / (1 - exp(-Adata.tr/Adata.blood_t1)*cosd(Adata.fa));
+        R1 = (1 / Adata.tr) .* log((1 - S_ratio .* cosd(Adata.fa)) ./ (1 - S_ratio));
+        Cp_use = (R1 - 1/Adata.blood_t1) / (Adata.relaxivity*(1-Adata.hematocrit));
+        Cp_use = Cp_use';
+        Stlv_use = external';
+        import_timer = timer;
+        [~, max_index] = max(Stlv_use);
+        import_start = timer(max_index);
     else
         disp('No Cp curve found in selected file')
         return

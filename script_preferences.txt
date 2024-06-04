@@ -91,9 +91,9 @@ force_use_default_relaxivity = 0
 % not on a slice by slice basis
 drift_global = 1
 
-% the T1 value of blood (in ms) only used if 
+% the T1 value of blood (in s) only used if
 % aif_rr_type is set to 'aif_auto_static' or 'aif_roi_static'
-blood_t1 = 2000
+blood_t1 = 2.000
 
 % the length of the contrast agent injection in
 % number of acquisitions, for auto AIF only

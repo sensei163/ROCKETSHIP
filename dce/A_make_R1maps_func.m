@@ -286,7 +286,7 @@ if dimt==1
 end
 
 % The TR is in ms
-tr = tr/1000; 
+tr = tr/1000;
 
 %% 3. Setup the data for next step.
 
@@ -945,6 +945,9 @@ Adata.voxelSNR_filtered = voxelSNR_filtered;
 Adata.injection_duration = injection_duration;
 Adata.start_injection = start_injection;
 Adata.end_injection = end_injection;
+Adata.tr = tr;
+Adata.fa = fa;
+Adata.blood_t1 = blood_t1;
 
 %% 14. Save the file for the next Step
 
