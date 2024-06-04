@@ -735,7 +735,7 @@ AB = A./B;
 
 [AB, T1LV, lvind, BADspacelABv, GOODspacelABv] = cleanAB(AB, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.05, quant);
 if numel(T1LV)==0
-    error('Error: all AIF voxels removed due to bad/negative values, check T1 values and AIF placement.');
+    error('A_make_R1maps_func:AIFVoxelsRemoved', 'Error: all AIF voxels removed due to bad/negative values, check T1 values and AIF placement.');
 end
 
 R1tLV = double((1/tr).*log(AB));
@@ -746,7 +746,7 @@ Stlv = Stlv(:,GOODspacelABv);
 
 [R1tLV, T1LV, lvind, BADspacelv, GOODspacelv] = cleanR1t(R1tLV, T1LV,lvind, 'AIF', min(numel(T1LV)), 0.005, quant);
 if numel(T1LV)==0
-    error('Error: all AIF voxels removed due to bad/negative values, check T1 values and AIF placement.');
+    error('A_make_R1maps_func:AIFVoxelsRemoved', 'Error: all AIF voxels removed due to bad/negative values, check T1 values and AIF placement.');
 end
 Sss = Sss(GOODspacelv);
 Stlv = Stlv(:,GOODspacelv);
