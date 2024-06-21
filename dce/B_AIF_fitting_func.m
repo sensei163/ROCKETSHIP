@@ -230,6 +230,7 @@ M{1} = '';
 aif_name = '';
 if isempty(import_aif_path)
     if(fit_aif==1)
+        xdata{1}.fittingAU = false;
         [Cp_fitted xAIF xdataAIF] = AIFbiexpfithelp(xdata, 1);
         Cp_use = Cp_fitted;
  
@@ -239,6 +240,7 @@ if isempty(import_aif_path)
         %Fit raw data curve
         Cptemp = xdata{1}.Cp;
         xdata{1}.Cp = xdata{1}.Stlv;
+        xdata{1}.fittingAU = true;
         [Stlv_fitted, ~, ~] = AIFbiexpfithelp(xdata, 1);
         xdata{1}.Cp = Cptemp;
         Stlv_use = Stlv_fitted;
