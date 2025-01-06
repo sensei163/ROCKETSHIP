@@ -40,6 +40,9 @@ output_basename     = cur_dataset.output_basename;
 roi_list            = cur_dataset.roi_list;
 fit_voxels          = cur_dataset.fit_voxels;
 xy_smooth_size      = cur_dataset.xy_smooth_size;
+if (isfield(cur_dataset, 'true_fa'))
+    true_fa = cur_dataset.true_fa;
+end
 
 % Add the location of the user input file if exists, else empty
 if strcmp(fit_type, 'user_input')
@@ -518,8 +521,16 @@ for n=1:number_of_fits
             constraint_types = int32([3,3]);
             
             % Load measured data
-            tr_array = tr*ones(size(parameter_list));
-            indie_vars = single([parameter_list' tr_array']);
+            if exist("true_fa", "var")
+                tr_array = tr*ones(size(true_fa));
+                tr_flat = reshape(tr_array, 1, numel(tr_array));
+                true_fa_flat = reshape(true_fa, 1, numel(true_fa));
+                indie_vars = single([true_fa_flat tr_flat]);
+            else
+                tr_array=tr*ones(size(parameter_list));
+                indie_vars = single([parameter_list' tr_array']);
+            end
+            
             si_single = single(si);
 
             % Execute GPU fit
@@ -576,6 +587,9 @@ for n=1:number_of_fits
 
             fit_output = cell2mat(results);
         else
+            if exist("true_fa", "var")
+                parameter_list = reshape(true_fa, 1, numel(true_fa));
+            end
             fit_output = parallelFit(parameter_list,fit_type,shaped_image,tr, submit, fit_file, ncoeffs, coeffs, tr_present,rsquared_threshold);
         end
     end

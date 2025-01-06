@@ -109,6 +109,13 @@ function run_dce_cli(subject_source_path, subject_tp_path)
         tr = str2double(script_prefs.tr);
         fa = str2double(script_prefs.fa); 
     end
+    B1_map = strcat(subject_tp_path, 'B1_scaled_dyn.nii.gz');
+    if exist(B1_map, 'file')
+        fa_matrix = load_untouch_nii(B1_map);
+        true_fa = ones([size(fa_matrix.img) 1]);
+        true_fa = fa_matrix.img * fa;
+        fa = true_fa;
+    end
     hematocrit = str2double(script_prefs.hematocrit);
     snr_filter = str2num(script_prefs.snr_filter);
     injection_time = str2num(script_prefs.injection_time);

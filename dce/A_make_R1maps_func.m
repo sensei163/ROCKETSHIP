@@ -127,8 +127,12 @@ fprintf('************** User Input **************\n\n');
 disp('User selected TR (ms): ');
 disp(tr);
 disp('User selected FA (degrees): ');
-disp(fa);
-disp('User selected hematocit (0 to 1.0): ');
+if length(fa) > 1
+    disp('B1 corrected FA map')
+else
+    disp(fa);
+end
+disp('User selected hematocrit (0 to 1.0): ');
 disp(hematocrit);
 disp('User selected SNR threshold for AIF: ');
 disp(snr_filter);
@@ -720,11 +724,20 @@ Stotallv = DYNAMLV;
 
 % Sss is the steady state Signal before injection
 Sss      = mean(Stotallv(round(steady_state_time(1)):round(steady_state_time(2)),:),1);
-Sstar    = ((1-exp(-tr./T1))./(1-cosd(fa).*exp(-tr./T1)));
+if length(fa) > 1
+    true_FA_AIF = fa(lvind);
+    Sstar = ((1 - exp(-tr ./ T1)) ./ (1 - cosd(true_FA_AIF) .* exp(-tr ./ T1)));
+else
+    Sstar    = ((1-exp(-tr./T1))./(1-cosd(fa).*exp(-tr./T1)));
+end
 Stlv     = Stotallv;%(inj(2):end,:);
 
 for j = 1:size(Stlv,2)
-    A(:,j) = 1-cosd(fa).*Sstar(j).*Stlv(:,j)./Sss(j);
+    if length(fa) > 1
+        A(:,j) = 1-cosd(true_FA_AIF(j)) .* Sstar(j) .* Stlv(:,j) ./ Sss(j);
+    else
+        A(:,j) = 1-cosd(fa).*Sstar(j).*Stlv(:,j)./Sss(j);
+    end
     B(:,j)  = 1-Sstar(j).*Stlv(:,j)./Sss(j);
 end
 
@@ -779,14 +792,21 @@ T1        = T1TUM;
 Stotaltum = DYNAM;
 
 Ssstum = mean(Stotaltum(round(steady_state_time(1)):round(steady_state_time(2)),:),1);
-Sstar    = ((1-exp(-tr./T1))./(1-cosd(fa).*exp(-tr./T1)));
+if length(fa) > 1
+    true_FA = fa(tumind);
+    Sstar = ((1 - exp(-tr ./ T1)) ./ (1 - cosd(true_FA) .* exp(-tr ./ T1)));
+else
+    Sstar    = ((1-exp(-tr./T1))./(1-cosd(fa).*exp(-tr./T1)));
+end
 Sttum = Stotaltum;
 
 for j = 1:numel(T1)
-    
-    A(:,j) = 1-cosd(fa).*Sstar(j).*Sttum(:,j)./Ssstum(j);
+    if length(fa) > 1
+        A(:,j) = 1-cosd(true_FA(j)) .* Sstar(j) .* Sttum(:,j) ./ Ssstum(j);
+    else
+        A(:,j) = 1-cosd(fa).*Sstar(j).*Sttum(:,j)./Ssstum(j);
+    end
     B(:,j)  = 1-Sstar(j).*Sttum(:,j)./Ssstum(j);
-    
 end
 
 AB = A./B;
